@@ -1,0 +1,497 @@
+-- SQLDelight Migration Baseline v1.0.0 (1.sqm)
+
+-- ==========================================
+-- 1. Currencies & Exchange Rates
+-- ==========================================
+
+CREATE TABLE currencies (
+    code TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    symbol TEXT NOT NULL,
+    decimal_places INTEGER NOT NULL,
+    locale TEXT NOT NULL,
+    CHECK (length(code) == 3),
+    CHECK (decimal_places >= 0)
+);
+
+CREATE TABLE exchange_rates (
+    id TEXT NOT NULL PRIMARY KEY,
+    base_currency TEXT NOT NULL,
+    target_currency TEXT NOT NULL,
+    rate_value INTEGER NOT NULL,
+    rate_scale INTEGER NOT NULL,
+    effective_date INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    entity_version INTEGER NOT NULL DEFAULT 1,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    updated_by TEXT,
+    deleted_at INTEGER,
+    FOREIGN KEY (base_currency) REFERENCES currencies(code) ON DELETE RESTRICT,
+    FOREIGN KEY (target_currency) REFERENCES currencies(code) ON DELETE RESTRICT,
+    CHECK (rate_value > 0),
+    CHECK (rate_scale >= 0)
+);
+
+-- ==========================================
+-- 2. Merchants & Aliases
+-- ==========================================
+
+CREATE TABLE merchants (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    default_category_id TEXT,
+    mcc TEXT,
+    logo_url TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    entity_version INTEGER NOT NULL DEFAULT 1,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    deleted_at INTEGER,
+    CHECK (length(mcc) == 4 OR mcc IS NULL)
+);
+
+CREATE TABLE merchant_aliases (
+    id TEXT NOT NULL PRIMARY KEY,
+    merchant_id TEXT NOT NULL,
+    raw_alias TEXT NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 3. Accounts & Ledger
+-- ==========================================
+
+CREATE TABLE accounts (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    currency_code TEXT NOT NULL,
+    is_archived INTEGER NOT NULL DEFAULT 0,
+    display_order INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    entity_version INTEGER NOT NULL DEFAULT 1,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    updated_by TEXT,
+    deleted_at INTEGER,
+    FOREIGN KEY (currency_code) REFERENCES currencies(code) ON DELETE RESTRICT,
+    CHECK (type IN ('CASH', 'BANK', 'CREDIT_CARD', 'WALLET', 'LOAN_LINKED', 'INVESTMENT')),
+    CHECK (is_archived IN (0, 1))
+);
+
+CREATE TABLE categories (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    parent_id TEXT,
+    is_default INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    entity_version INTEGER NOT NULL DEFAULT 1,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    deleted_at INTEGER,
+    FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
+    CHECK (type IN ('INCOME', 'EXPENSE')),
+    CHECK (is_default IN (0, 1))
+);
+
+CREATE TABLE transactions (
+    id TEXT NOT NULL PRIMARY KEY,
+    timestamp INTEGER NOT NULL,
+    description TEXT,
+    type TEXT NOT NULL,
+    merchant_id TEXT,
+    created_by TEXT NOT NULL,
+    is_recurring INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    entity_version INTEGER NOT NULL DEFAULT 1,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    updated_by TEXT,
+    deleted_at INTEGER,
+    FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE SET NULL,
+    CHECK (type IN ('INCOME', 'EXPENSE', 'TRANSFER', 'LOAN_DISBURSEMENT', 'REPAYMENT', 'ADJUSTMENT')),
+    CHECK (created_by IN ('MANUAL', 'SMS', 'OCR', 'IMPORT', 'SYNC', 'API')),
+    CHECK (is_recurring IN (0, 1))
+);
+
+CREATE TABLE transaction_splits (
+    id TEXT NOT NULL PRIMARY KEY,
+    transaction_id TEXT NOT NULL,
+    account_id TEXT NOT NULL,
+    category_id TEXT,
+    amount INTEGER NOT NULL,
+    notes TEXT,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    CHECK (amount >= 0)
+);
+
+CREATE TABLE ledger_entries (
+    id TEXT NOT NULL PRIMARY KEY,
+    transaction_id TEXT NOT NULL,
+    split_id TEXT,
+    account_id TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    entry_type TEXT NOT NULL,
+    source_type TEXT NOT NULL,
+    description TEXT,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (split_id) REFERENCES transaction_splits(id) ON DELETE SET NULL,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    CHECK (entry_type IN ('DEBIT', 'CREDIT')),
+    CHECK (source_type IN ('TRANSACTION', 'EMI', 'PREPAYMENT', 'ADJUSTMENT', 'OPENING_BALANCE', 'SYSTEM'))
+);
+
+-- ==========================================
+-- 4. Budgets
+-- ==========================================
+
+CREATE TABLE budgets (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    currency_code TEXT NOT NULL,
+    category_id TEXT,
+    period_type TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    entity_version INTEGER NOT NULL DEFAULT 1,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    deleted_at INTEGER,
+    FOREIGN KEY (currency_code) REFERENCES currencies(code) ON DELETE RESTRICT,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    CHECK (period_type IN ('WEEKLY', 'MONTHLY', 'YEARLY', 'CUSTOM')),
+    CHECK (amount > 0)
+);
+
+CREATE TABLE budget_periods (
+    id TEXT NOT NULL PRIMARY KEY,
+    budget_id TEXT NOT NULL,
+    start_date INTEGER NOT NULL,
+    end_date INTEGER NOT NULL,
+    target_amount INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (budget_id) REFERENCES budgets(id) ON DELETE CASCADE,
+    CHECK (start_date < end_date),
+    CHECK (target_amount > 0)
+);
+
+-- ==========================================
+-- 5. Loan Engine (Contract Level)
+-- ==========================================
+
+CREATE TABLE loans (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    principal INTEGER NOT NULL,
+    interest_rate_basis_points INTEGER NOT NULL,
+    interest_type TEXT NOT NULL,
+    emi_calculation_method TEXT NOT NULL,
+    compounding_frequency TEXT NOT NULL,
+    payment_frequency TEXT NOT NULL,
+    tenure_months INTEGER NOT NULL,
+    start_date INTEGER NOT NULL,
+    account_id TEXT NOT NULL,
+    disbursed_account_id TEXT NOT NULL,
+    processing_fee INTEGER NOT NULL DEFAULT 0,
+    insurance_amount INTEGER NOT NULL DEFAULT 0,
+    late_fee_policy TEXT,
+    grace_period_days INTEGER NOT NULL DEFAULT 0,
+    moratorium_months INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    entity_version INTEGER NOT NULL DEFAULT 1,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    deleted_at INTEGER,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    FOREIGN KEY (disbursed_account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    CHECK (interest_type IN ('FIXED', 'FLOATING', 'REDUCING', 'FLAT')),
+    CHECK (compounding_frequency IN ('MONTHLY', 'QUARTERLY', 'ANNUALLY', 'NONE')),
+    CHECK (payment_frequency IN ('MONTHLY')),
+    CHECK (status IN ('ACTIVE', 'CLOSED', 'DRAFT')),
+    CHECK (principal > 0),
+    CHECK (interest_rate_basis_points >= 0),
+    CHECK (tenure_months > 0),
+    CHECK (processing_fee >= 0),
+    CHECK (insurance_amount >= 0),
+    CHECK (grace_period_days >= 0),
+    CHECK (moratorium_months >= 0)
+);
+
+CREATE TABLE emi_schedules (
+    id TEXT NOT NULL PRIMARY KEY,
+    loan_id TEXT NOT NULL,
+    installment_number INTEGER NOT NULL,
+    due_date INTEGER NOT NULL,
+    opening_balance INTEGER NOT NULL,
+    emi_amount INTEGER NOT NULL,
+    principal_component INTEGER NOT NULL,
+    interest_component INTEGER NOT NULL,
+    closing_balance INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
+    CHECK (status IN ('PENDING', 'PAID', 'OVERDUE', 'WAIVED', 'ADJUSTED')),
+    CHECK (installment_number > 0),
+    CHECK (opening_balance >= 0),
+    CHECK (emi_amount >= 0),
+    CHECK (closing_balance >= 0)
+);
+
+CREATE TABLE emi_payments (
+    id TEXT NOT NULL PRIMARY KEY,
+    loan_id TEXT NOT NULL,
+    schedule_id TEXT,
+    transaction_id TEXT NOT NULL,
+    principal_amount INTEGER NOT NULL,
+    interest_amount INTEGER NOT NULL,
+    payment_date INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
+    FOREIGN KEY (schedule_id) REFERENCES emi_schedules(id) ON DELETE SET NULL,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
+    CHECK (principal_amount >= 0),
+    CHECK (interest_amount >= 0)
+);
+
+CREATE TABLE loan_prepayments (
+    id TEXT NOT NULL PRIMARY KEY,
+    loan_id TEXT NOT NULL,
+    transaction_id TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    prepayment_date INTEGER NOT NULL,
+    policy TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
+    CHECK (policy IN ('TENURE_REDUCTION', 'EMI_REDUCTION')),
+    CHECK (amount > 0)
+);
+
+CREATE TABLE loan_interest_events (
+    id TEXT NOT NULL PRIMARY KEY,
+    loan_id TEXT NOT NULL,
+    effective_date INTEGER NOT NULL,
+    old_interest_rate_basis_points INTEGER NOT NULL,
+    new_interest_rate_basis_points INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
+    CHECK (reason IN ('APR_REVISION', 'MANUAL_ADJUSTMENT')),
+    CHECK (old_interest_rate_basis_points >= 0),
+    CHECK (new_interest_rate_basis_points >= 0)
+);
+
+CREATE TABLE loan_reschedules (
+    id TEXT NOT NULL PRIMARY KEY,
+    loan_id TEXT NOT NULL,
+    reschedule_date INTEGER NOT NULL,
+    reason TEXT,
+    previous_schedule_snapshot TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE
+);
+
+CREATE TABLE loan_snapshots (
+    id TEXT NOT NULL PRIMARY KEY,
+    loan_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    snapshot_timestamp INTEGER NOT NULL,
+    schedule_rows_json TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
+    CHECK (event_type IN ('BASELINE', 'EMI_CHANGE', 'PREPAYMENT', 'FORECLOSURE', 'RESCHEDULE'))
+);
+
+CREATE TABLE loan_settlements (
+    id TEXT NOT NULL PRIMARY KEY,
+    loan_id TEXT NOT NULL,
+    transaction_id TEXT NOT NULL,
+    settlement_amount INTEGER NOT NULL,
+    write_off_amount INTEGER NOT NULL,
+    settlement_date INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
+    CHECK (settlement_amount >= 0),
+    CHECK (write_off_amount >= 0)
+);
+
+-- ==========================================
+-- 6. Tags & Attachments
+-- ==========================================
+
+CREATE TABLE tags (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    color TEXT,
+    icon TEXT,
+    created_at INTEGER NOT NULL
+);
+
+CREATE TABLE transaction_tags (
+    transaction_id TEXT NOT NULL,
+    tag_id TEXT NOT NULL,
+    PRIMARY KEY (transaction_id, tag_id),
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+CREATE TABLE attachments (
+    id TEXT NOT NULL PRIMARY KEY,
+    transaction_id TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    file_type TEXT NOT NULL,
+    file_size INTEGER NOT NULL,
+    checksum TEXT NOT NULL,
+    thumbnail_path TEXT,
+    mime_type TEXT,
+    storage_provider TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    CHECK (storage_provider IN ('LOCAL', 'CLOUD')),
+    CHECK (file_size >= 0)
+);
+
+-- ==========================================
+-- 7. Recurring Transactions & Notifications
+-- ==========================================
+
+CREATE TABLE recurring_transactions (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    account_id TEXT NOT NULL,
+    category_id TEXT NOT NULL,
+    frequency TEXT NOT NULL,
+    interval INTEGER NOT NULL DEFAULT 1,
+    start_date INTEGER NOT NULL,
+    end_date INTEGER,
+    last_run INTEGER,
+    next_run INTEGER NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    entity_version INTEGER NOT NULL DEFAULT 1,
+    sync_version INTEGER NOT NULL DEFAULT 0,
+    device_id TEXT,
+    deleted_at INTEGER,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
+    CHECK (type IN ('INCOME', 'EXPENSE', 'TRANSFER')),
+    CHECK (frequency IN ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY')),
+    CHECK (amount >= 0),
+    CHECK (interval > 0),
+    CHECK (is_active IN (0, 1))
+);
+
+CREATE TABLE reminder_rules (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    trigger_condition TEXT NOT NULL,
+    lead_time_days INTEGER NOT NULL DEFAULT 0,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    CHECK (type IN ('EMI_REMINDER', 'BUDGET_WARNING', 'RECURRING_PROMPT')),
+    CHECK (lead_time_days >= 0),
+    CHECK (is_active IN (0, 1))
+);
+
+CREATE TABLE generated_notifications (
+    id TEXT NOT NULL PRIMARY KEY,
+    reminder_rule_id TEXT,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    scheduled_time INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    reference_id TEXT,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (reminder_rule_id) REFERENCES reminder_rules(id) ON DELETE SET NULL,
+    CHECK (status IN ('PENDING', 'SENT', 'DISMISSED', 'ACTIONED'))
+);
+
+-- ==========================================
+-- 8. SMS Review Engine
+-- ==========================================
+
+CREATE TABLE sms_import_sessions (
+    id TEXT NOT NULL PRIMARY KEY,
+    start_timestamp INTEGER NOT NULL,
+    end_timestamp INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    messages_parsed INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    CHECK (status IN ('SUCCESS', 'FAILED')),
+    CHECK (start_timestamp <= end_timestamp)
+);
+
+CREATE TABLE sms_parsed_transactions (
+    id TEXT NOT NULL PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    sms_address TEXT NOT NULL,
+    sms_body TEXT NOT NULL,
+    sms_timestamp INTEGER NOT NULL,
+    parsed_amount INTEGER,
+    parsed_direction TEXT,
+    parsed_account_hint TEXT,
+    parsed_merchant_name TEXT,
+    parsed_date INTEGER,
+    confidence_level TEXT NOT NULL,
+    status TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (session_id) REFERENCES sms_import_sessions(id) ON DELETE CASCADE,
+    CHECK (parsed_direction IN ('INCOME', 'EXPENSE', 'TRANSFER') OR parsed_direction IS NULL),
+    CHECK (confidence_level IN ('HIGH', 'MEDIUM', 'LOW')),
+    CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))
+);
+
+-- ==========================================
+-- 9. Auditing & Sync
+-- ==========================================
+
+CREATE TABLE audit_metadata (
+    id TEXT NOT NULL PRIMARY KEY,
+    table_name TEXT NOT NULL,
+    record_id TEXT NOT NULL,
+    operation_type TEXT NOT NULL,
+    change_reason TEXT NOT NULL,
+    device_info TEXT,
+    correlation_id TEXT,
+    timestamp INTEGER NOT NULL,
+    is_synced INTEGER NOT NULL DEFAULT 0,
+    CHECK (operation_type IN ('INSERT', 'UPDATE', 'DELETE')),
+    CHECK (change_reason IN ('SYSTEM', 'USER', 'SYNC', 'IMPORT')),
+    CHECK (is_synced IN (0, 1))
+);
+
+-- ==========================================
+-- 10. Database Indexes Strategy
+-- ==========================================
+
+CREATE INDEX idx_ledger_account_created ON ledger_entries(account_id, created_at);
+CREATE INDEX idx_transactions_timestamp ON transactions(timestamp);
+CREATE INDEX idx_splits_transaction ON transaction_splits(transaction_id);
+CREATE INDEX idx_emi_schedules_due_date ON emi_schedules(loan_id, due_date);
+CREATE INDEX idx_merchant_aliases_raw ON merchant_aliases(raw_alias);
+CREATE INDEX idx_audit_sync ON audit_metadata(is_synced, timestamp);
+CREATE INDEX idx_transactions_merchant ON transactions(merchant_id);
+CREATE INDEX idx_transactions_creator ON transactions(created_by);
+CREATE INDEX idx_ledger_transaction ON ledger_entries(transaction_id);
+CREATE INDEX idx_sms_parsed_status ON sms_parsed_transactions(status);

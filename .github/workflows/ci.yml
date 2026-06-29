@@ -30,10 +30,10 @@ jobs:
           gradle-version: "8.10.2"
 
       - name: Build
-        run: gradle build --stacktrace
+        run: ./gradlew build --stacktrace
 
       - name: Ktlint
-        run: gradle ktlintCheck --stacktrace
+        run: ./gradlew ktlintCheck --stacktrace
 
       - name: Detekt
-        run: gradle detekt --stacktrace
+        run: ./gradlew detekt --stacktrace

@@ -4,5 +4,9 @@
     <application
         android:allowBackup="true"
         android:label="Tio Ledger"
-        android:supportsRtl="true" />
+        android:supportsRtl="true">
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+    </application>
 </manifest>
