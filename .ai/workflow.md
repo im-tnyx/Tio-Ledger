@@ -8,7 +8,7 @@ Current workflow:
 4. Verify build, lint, static analysis, and tests before pushing.
 5. Keep financial and ledger behavior covered by focused tests when affected.
 
-Ledger Engine is Frozen v1. Application Layer and Repository Contracts are implemented. The next milestone is SQLDelight Repository Implementations.
+Database Schema, Ledger Engine, Application Layer, and Data Layer are Frozen v1. Application Bootstrap v1 and UI Foundation v1 are established. The next milestone is Accounts Screen (Reference Implementation).
 
 Do not start new product implementation unless explicitly requested.
 

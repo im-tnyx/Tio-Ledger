@@ -12,8 +12,9 @@ Use reference sources in this priority order:
 
 1. Approved screenshots stored in `docs/references/`.
 2. Official Money Manager website: `https://realbyteapps.com/`.
-3. Official Play Store listing and screenshots.
-4. Approved design mockups created for Tio Ledger.
+3. Official Money Manager app: `docs/references/realbyteapps/`.
+4. Official Play Store listing and screenshots.
+5. Approved design mockups created for Tio Ledger.
 
 If local screenshots are unavailable, implementation may reference the official website to understand layouts, workflows, terminology, and feature behavior. AI should never invent major workflows or screen structures when an official reference source is available.
 

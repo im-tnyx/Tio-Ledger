@@ -32,6 +32,9 @@ jobs:
       - name: Build
         run: ./gradlew build --stacktrace
 
+      - name: Check
+        run: ./gradlew check --stacktrace
+
       - name: Ktlint
         run: ./gradlew ktlintCheck --stacktrace
 

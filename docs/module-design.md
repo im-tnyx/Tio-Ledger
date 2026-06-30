@@ -15,6 +15,7 @@ Responsibilities:
 
 Depends on:
 
+- `shared:bootstrap`
 - `shared:ui`
 - `shared:data`
 - `shared:database`
@@ -33,6 +34,7 @@ Responsibilities:
 
 Depends on:
 
+- `shared:bootstrap`
 - `shared:ui` where reusable.
 - `shared:domain`
 - `shared:data`
@@ -127,6 +129,34 @@ Responsibilities:
 Depends on:
 
 - `shared:core` only when needed for adapters.
+
+## shared/bootstrap
+
+Application startup and dependency injection composition.
+
+Responsibilities:
+
+- Koin module assembly for existing Core, Database, Data, Application, and Finance Engine implementations.
+- SQLDelight database initialization through platform driver factories.
+- Startup diagnostics and bootstrap logging.
+- Platform-neutral application startup wiring.
+
+Must not contain:
+
+- Business features.
+- Financial calculations.
+- SQL schema definitions.
+- Repository implementations.
+- Production UI screens or navigation workflows.
+
+Depends on:
+
+- `shared:core`
+- `shared:database`
+- `shared:data`
+- `shared:application`
+- `shared:domain`
+- `shared:finance-engine`
 
 ## shared/data
 
@@ -266,13 +296,21 @@ Responsibilities:
 - Shared screens where practical.
 - ViewModels and UI state models.
 - Design system tokens.
+- Stateless reusable components and templates.
 - Formatting utilities that are presentation-specific.
 - Feature flag-aware presentation of experimental surfaces.
 
 Depends on:
 
-- `shared:domain`
-- `shared:data` through injected use cases or repositories only at composition root boundaries.
+- Compose Multiplatform libraries.
+- `shared:bootstrap` only for app shell diagnostics integration.
+
+Must not contain:
+
+- Repository implementations.
+- SQL access.
+- Ledger calculations.
+- Production screen workflows without approved references.
 
 ## Coupling Rules
 

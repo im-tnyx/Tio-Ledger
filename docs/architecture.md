@@ -79,13 +79,28 @@ Owned by `apps/*` and selected expect/actual implementations in shared modules.
 - App lifecycle integration.
 - SMS access and message ingestion where a platform permits it.
 
+### Bootstrap
+
+Owned by `shared/bootstrap`.
+
+- Koin module assembly.
+- SQLDelight database initialization.
+- Startup diagnostics and logging.
+- Composition of existing frozen implementations only.
+- No business features, financial calculations, repository implementations, or production screens.
+
 ## Dependency Direction
 
 Dependencies flow inward:
 
 ```text
+apps -> shared/bootstrap -> shared/application
+apps -> shared/bootstrap -> shared/data
+apps -> shared/bootstrap -> shared/database
 apps -> shared/ui -> shared/domain
 apps -> shared/data -> shared/domain
+shared/application -> shared/domain
+shared/application -> engines
 shared/data -> shared/database
 shared/data -> engines
 engines -> shared/core

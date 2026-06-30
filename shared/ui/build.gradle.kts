@@ -5,11 +5,14 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            api(project(":shared:domain"))
-            implementation(project(":shared:data"))
+            implementation(project(":shared:application"))
+            implementation(project(":shared:bootstrap"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            implementation(compose.components.uiToolingPreview)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }
 

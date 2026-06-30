@@ -15,6 +15,7 @@ Approved architecture:
 - Offline-first local source of truth.
 - Ledger-first accounting.
 - Feature flags for experimental capabilities.
+- `shared:bootstrap` owns app startup, Koin module assembly, SQLDelight initialization, and startup diagnostics.
 
 Do not introduce Turborepo.
 

@@ -7,6 +7,7 @@ import com.tioledger.application.usecase.account.ArchiveAccountCommand
 import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountCommand
 import com.tioledger.application.usecase.account.CreateAccountUseCase
+import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.account.UpdateAccountCommand
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.category.ArchiveCategoryCommand
@@ -35,11 +36,17 @@ import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
 import com.tioledger.domain.model.Category
 import com.tioledger.domain.model.CategoryType
+import com.tioledger.domain.model.LedgerEntry
+import com.tioledger.domain.model.LedgerEntryType
+import com.tioledger.domain.model.LedgerSourceType
+import com.tioledger.domain.model.PostingTarget
 import com.tioledger.domain.model.TransactionRecord
 import com.tioledger.domain.model.TransactionType
 import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.CategoryRepository
+import com.tioledger.domain.repository.LedgerRepository
 import com.tioledger.domain.repository.TransactionRepository
+import com.tioledger.finance.engine.BalanceCalculator
 import com.tioledger.finance.engine.PostingEngine
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -135,6 +142,40 @@ class ApplicationUseCaseTest {
         val result = ArchiveAccountUseCase(accounts)(ArchiveAccountCommand("acc-1", 300L))
 
         assertTrue(assertFailure(result) is ApplicationError.Validation)
+    }
+
+    @Test
+    fun listAccountSummariesReturnsLedgerDerivedBalances() {
+        val cash = account("cash", AccountType.CASH)
+        val card = account("card", AccountType.CREDIT_CARD)
+        val accounts = FakeAccountRepository(listOf(cash, card))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[cash.id] =
+            listOf(
+                ledgerEntry(
+                    id = "cash-debit",
+                    account = cash,
+                    amount = 10_000L,
+                    entryType = LedgerEntryType.DEBIT,
+                ),
+            )
+        ledger.entriesByAccount[card.id] =
+            listOf(
+                ledgerEntry(
+                    id = "card-credit",
+                    account = card,
+                    amount = 2_500L,
+                    entryType = LedgerEntryType.CREDIT,
+                ),
+            )
+
+        val result = ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator())()
+        val overview = assertSuccess(result).value
+
+        assertEquals(2, overview.accounts.size)
+        assertEquals(10_000L, overview.totals.single().assets.amount)
+        assertEquals(2_500L, overview.totals.single().liabilities.amount)
+        assertEquals(7_500L, overview.totals.single().total.amount)
     }
 
     @Test
@@ -315,6 +356,22 @@ class ApplicationUseCaseTest {
             updatedAt = 1L,
         )
 
+    private fun ledgerEntry(
+        id: String,
+        account: Account,
+        amount: Long,
+        entryType: LedgerEntryType,
+    ): LedgerEntry =
+        LedgerEntry(
+            id = id,
+            transactionId = "txn-$id",
+            target = PostingTarget.Account(account.id, account.type.ledgerClass),
+            amount = Money(amount, usd),
+            entryType = entryType,
+            sourceType = LedgerSourceType.TRANSACTION,
+            createdAt = 1L,
+        )
+
     private fun <T> assertSuccess(result: ApplicationResult<T>): UseCaseOutcome<T> =
         when (result) {
             is ApplicationResult.Success -> result.outcome
@@ -342,6 +399,13 @@ private class FakeAccountRepository(initialAccounts: List<Account> = emptyList()
     var createError: LedgerError? = null
     var updateError: LedgerError? = null
 
+    override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> =
+        LedgerResult.Success(
+            accounts.values
+                .filter { includeArchived || !it.isArchived }
+                .sortedBy { it.displayOrder },
+        )
+
     override fun findById(accountId: String): LedgerResult<Account> =
         accounts[accountId]?.let { LedgerResult.Success(it) }
             ?: LedgerResult.Failure(LedgerError.AccountNotFound(accountId))
@@ -360,6 +424,18 @@ private class FakeAccountRepository(initialAccounts: List<Account> = emptyList()
         accounts[account.id] = account
         return LedgerResult.Success(account)
     }
+}
+
+private class FakeLedgerRepository : LedgerRepository {
+    val entriesByAccount: MutableMap<String, List<LedgerEntry>> = mutableMapOf()
+
+    override fun findEntriesByAccount(accountId: String): LedgerResult<List<LedgerEntry>> =
+        LedgerResult.Success(entriesByAccount[accountId].orEmpty())
+
+    override fun findEntriesByTransaction(transactionId: String): LedgerResult<List<LedgerEntry>> =
+        LedgerResult.Success(
+            entriesByAccount.values.flatten().filter { it.transactionId == transactionId },
+        )
 }
 
 private class FakeCategoryRepository(initialCategories: List<Category> = emptyList()) : CategoryRepository {

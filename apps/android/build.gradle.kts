@@ -3,8 +3,11 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":shared:bootstrap"))
     implementation(project(":shared:ui"))
     implementation(project(":shared:data"))
     implementation(project(":shared:database"))
     implementation(project(":shared:notifications"))
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.koin.core)
 }

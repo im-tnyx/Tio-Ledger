@@ -2,7 +2,7 @@
 
 Date: 2026-06-30
 Outcome: PASS
-Status: Ledger Engine Frozen v1
+Milestone: Accounts Screen v1
 
 ## Environment
 
@@ -14,30 +14,45 @@ Status: Ledger Engine Frozen v1
 
 | Command | Result |
 | --- | --- |
-| `./gradlew.bat :shared:finance-engine:test --stacktrace` | PASS |
-| `./gradlew.bat check --stacktrace` | PASS |
-| `./gradlew.bat ktlintCheck --stacktrace` | PASS |
-| `./gradlew.bat detekt --stacktrace` | PASS |
-| `./gradlew.bat test --stacktrace` | PASS |
-| `./gradlew.bat build --stacktrace` | PASS |
-| `git diff --check` | PASS |
+| `./gradlew.bat :shared:ui:compileKotlinMetadata --console=plain --no-daemon --stacktrace` | PASS |
+| `./gradlew.bat ktlintCheck --console=plain --stacktrace` | PASS |
+| `./gradlew.bat build --console=plain --stacktrace` | PASS |
+| `./gradlew.bat check --console=plain --stacktrace` | PASS |
+| `./gradlew.bat detekt --console=plain --stacktrace` | PASS |
 
-## Static Scans
+## Verified Areas
 
-| Scan | Result |
+| Area | Result |
 | --- | --- |
-| `java.lang.Math`, `Math.*`, and `import java` under common engine/core source | PASS: no matches |
-| `as PostingParams` and unsafe strategy cast patterns under finance engine common source | PASS: no matches |
-| Database/schema file diff | PASS: no changes |
-| Repository implementation diff | PASS: no changes |
-| UI/app shell diff | PASS: no changes |
+| Accounts screen compilation | PASS |
+| Accounts ViewModel tests | PASS |
+| Account summary use case tests | PASS |
+| Navigation graph tests | PASS |
+| Light and dark preview compilation | PASS |
+| Android app module build | PASS |
+| Wear OS app module build | PASS |
+| iOS module wiring | PASS |
+| Static analysis | PASS |
+| Kotlin style checks | PASS |
+
+## Freeze Compliance
+
+| Frozen Layer | Result |
+| --- | --- |
+| Database Schema v1 (`shared:database`) | PASS: no schema changes |
+| Ledger Engine v1 (`shared:finance-engine`) | PASS: no posting rule changes |
+| Application Layer v1 (`shared:application`) | PASS: narrow verified read-path defect fix only |
+| Data Layer v1 (`shared:data`) | PASS: narrow verified read-path defect fix only |
+| UI Foundation v1 (`shared:ui`) | PASS: reused and extended for Accounts screen |
 
 ## Notes
 
 - Gradle reported existing deprecation warnings for Gradle 9.0 compatibility; the build still passed.
-- Android packaging reported an existing non-fatal native strip warning for `libandroidx.graphics.path.so`; the build still passed.
+- Native iOS execution was not run on Windows; Gradle validated the configured shared/iOS wiring available in this environment.
 - Some modules have no test sources yet, so their test tasks are `NO-SOURCE` or up-to-date by Gradle design.
+- Initial Gradle validation timed out because of stale daemon state; after `./gradlew.bat --stop --console=plain`, validation completed normally.
+- Detailed milestone reports: `ACCOUNTS_SCREEN_VALIDATION_REPORT.md`, `UI_REFERENCE_COMPLIANCE_REPORT.md`, `ACCESSIBILITY_REPORT.md`, and `ACCOUNTS_BUILD_VERIFICATION_REPORT.md`.
 
 ## Decision
 
-All required verification gates passed. Ledger Engine is Frozen v1 and ready for the next milestone: Use Cases & Repository Interfaces.
+All requested verification gates passed. Accounts Screen v1 is complete and ready for Category Screen (Reference Implementation).

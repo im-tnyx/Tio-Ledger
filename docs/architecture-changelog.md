@@ -4,6 +4,25 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-06-30 - UI Foundation v1
+
+- Expanded `shared:ui` design tokens for colors, typography, spacing, elevation, corner radius, icons, and motion durations.
+- Added stateless reusable Compose components and screen templates without ViewModels, repositories, SQL, ledger access, or use case execution.
+- Wired the existing main navigation route to placeholder template content only.
+- Added Compose preview catalog coverage for light, dark, compact, expanded, component, and template states.
+- Updated UI module dependency boundaries so reusable UI infrastructure no longer depends directly on `shared:domain` or `shared:data`.
+- Marked UI Foundation v1 ready for the next milestone: Accounts Screen (Reference Implementation).
+
+## 2026-06-30 - Application Bootstrap v1
+
+- Added `shared:bootstrap` as the non-business KMP startup and dependency injection module.
+- Wired Koin modules for Core, Database, Data, Application, and Finance Engine using existing frozen implementations.
+- Added platform SQLDelight driver factories for Android, Wear OS, and iOS without changing the frozen database schema.
+- Added Android and Wear OS application entrypoints that initialize Koin and SQLDelight before rendering the app shell.
+- Added shared Compose design-system tokens, root navigation definitions, splash shell, root scaffold, and root navigation host without production feature screens.
+- Updated CI to run `build`, `check`, `ktlintCheck`, and `detekt`.
+- Marked Application Bootstrap v1 ready for the next milestone: Money Manager Reference UI Foundation.
+
 ## 2026-06-30 - SQLDelight Data Layer Implementation & Freeze
 
 - Implemented SQLDelight repositories (`AccountRepository`, `CategoryRepository`, `LedgerRepository`, `TransactionRepository`) in `shared:data` satisfying the Domain Layer repository contracts.

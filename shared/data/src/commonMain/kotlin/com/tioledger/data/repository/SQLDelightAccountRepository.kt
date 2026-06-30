@@ -10,6 +10,18 @@ import com.tioledger.domain.repository.AccountRepository
 class SQLDelightAccountRepository(
     private val database: TioLedgerDatabase,
 ) : AccountRepository {
+    override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> {
+        val result =
+            runDatabaseCatching {
+                database.accountsQueries
+                    .selectAllAccounts()
+                    .executeAsList()
+                    .map { it.toDomain() }
+                    .filter { includeArchived || !it.isArchived }
+            }
+        return result.toLedgerResult()
+    }
+
     override fun findById(accountId: String): LedgerResult<Account> {
         val result =
             runDatabaseCatching {

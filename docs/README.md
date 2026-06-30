@@ -31,6 +31,11 @@ The product should remain functionally familiar to Money Manager. The goal is to
 - [Build Verification Report](status/BUILD_VERIFICATION_REPORT.md)
 - [Application Layer Architecture Validation Report](status/APPLICATION_LAYER_ARCHITECTURE_VALIDATION_REPORT.md)
 - [Application Layer Build Verification Report](status/APPLICATION_LAYER_BUILD_VERIFICATION_REPORT.md)
+- [Application Bootstrap Validation Report](status/APPLICATION_BOOTSTRAP_VALIDATION_REPORT.md)
+- [DI Validation Report](status/DI_VALIDATION_REPORT.md)
+- [Navigation Validation Report](status/NAVIGATION_VALIDATION_REPORT.md)
+- [UI Foundation Validation Report](status/UI_FOUNDATION_VALIDATION_REPORT.md)
+- [Component Catalog Report](status/COMPONENT_CATALOG_REPORT.md)
 
 ## Target Repository Shape
 
@@ -44,6 +49,7 @@ shared/
   core/
   domain/
   application/
+  bootstrap/
   data/
   database/
   finance-engine/
@@ -73,9 +79,7 @@ docs/
 
 ## Immediate Priorities
 
-1. Establish the native Gradle Kotlin Multiplatform monorepo.
-2. Implement shared domain models and deterministic finance primitives.
-3. Implement the pure Kotlin application layer and repository contracts.
-4. Build SQLDelight-backed offline persistence.
-5. Deliver the Loan Engine as a heavily tested shared module.
-6. Add Android, Wear OS, and iOS presentation shells after the core business foundation is stable.
+1. Keep frozen layers stable: Database Schema, Ledger Engine, Application Layer, and Data Layer.
+2. Use Application Bootstrap v1 as the app startup, DI, navigation, and design-system foundation.
+3. Use UI Foundation v1 for reusable design tokens, stateless components, templates, and navigation placeholders.
+4. Prepare Accounts Screen (Reference Implementation) from approved references before adding production account workflows.

@@ -9,11 +9,104 @@ import com.tioledger.application.internal.validateName
 import com.tioledger.application.internal.validateTimestamp
 import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
+import com.tioledger.application.model.UseCaseOutcome
+import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.LedgerResult
+import com.tioledger.core.model.Money
 import com.tioledger.domain.event.DomainEvent
 import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
 import com.tioledger.domain.repository.AccountRepository
+import com.tioledger.domain.repository.LedgerRepository
+import com.tioledger.finance.engine.BalanceCalculator
+
+data class AccountBalanceSummary(
+    val account: Account,
+    val balance: Money,
+)
+
+data class AccountCurrencyTotals(
+    val currencyCode: String,
+    val assets: Money,
+    val liabilities: Money,
+    val total: Money,
+)
+
+data class AccountsBalanceOverview(
+    val accounts: List<AccountBalanceSummary>,
+    val totals: List<AccountCurrencyTotals>,
+)
+
+class ListAccountSummariesUseCase(
+    private val accountRepository: AccountRepository,
+    private val ledgerRepository: LedgerRepository,
+    private val balanceCalculator: BalanceCalculator,
+) {
+    operator fun invoke(includeArchived: Boolean = false): ApplicationResult<AccountsBalanceOverview> {
+        val accounts =
+            when (val result = accountRepository.findAll(includeArchived)) {
+                is LedgerResult.Success -> result.value
+                is LedgerResult.Failure -> return ApplicationResult.Failure(ApplicationError.Repository(result.error))
+            }
+
+        val summaries =
+            accounts.map { account ->
+                val entries =
+                    when (val result = ledgerRepository.findEntriesByAccount(account.id)) {
+                        is LedgerResult.Success -> result.value
+                        is LedgerResult.Failure -> {
+                            return ApplicationResult.Failure(ApplicationError.Repository(result.error))
+                        }
+                    }
+                val balance =
+                    when (
+                        val result =
+                            balanceCalculator.calculateBalance(
+                                entries = entries,
+                                normalBalance = account.type.ledgerClass.normalBalance,
+                                currency = CurrencyCode(account.currencyCode),
+                            )
+                    ) {
+                        is LedgerResult.Success -> result.value
+                        is LedgerResult.Failure -> return ApplicationResult.Failure(ApplicationError.Ledger(result.error))
+                    }
+                AccountBalanceSummary(account, balance)
+            }
+
+        return ApplicationResult.Success(
+            UseCaseOutcome(
+                value =
+                    AccountsBalanceOverview(
+                        accounts = summaries,
+                        totals = summaries.toCurrencyTotals(),
+                    ),
+            ),
+        )
+    }
+}
+
+private fun List<AccountBalanceSummary>.toCurrencyTotals(): List<AccountCurrencyTotals> {
+    return groupBy { it.account.currencyCode }
+        .map { (currencyCode, summaries) ->
+            val currency = CurrencyCode(currencyCode)
+            val zero = Money.zero(currency)
+            val assets =
+                summaries
+                    .filter { it.account.type.ledgerClass == com.tioledger.domain.model.LedgerClass.ASSET }
+                    .fold(zero) { total, summary -> total + summary.balance }
+            val liabilities =
+                summaries
+                    .filter { it.account.type.ledgerClass == com.tioledger.domain.model.LedgerClass.LIABILITY }
+                    .fold(zero) { total, summary -> total + summary.balance }
+            AccountCurrencyTotals(
+                currencyCode = currencyCode,
+                assets = assets,
+                liabilities = liabilities,
+                total = assets - liabilities,
+            )
+        }
+        .sortedBy { it.currencyCode }
+}
 
 data class CreateAccountCommand(
     val id: String,

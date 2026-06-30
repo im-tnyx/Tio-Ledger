@@ -80,9 +80,9 @@ See [docs/architecture.md](docs/architecture.md) for the canonical architecture.
 
 ## Development Status
 
-Current status: Gradle Kotlin Multiplatform foundation exists and Ledger Engine is Frozen v1.
+Current status: UI Foundation v1 is established on top of Application Bootstrap v1 and the frozen Database Schema, Ledger Engine, Application Layer, and Data Layer.
 
-The next engineering milestone is Use Cases & Repository Interfaces. Production UI, repository implementations, and database-backed workflows remain outside the frozen ledger engine scope.
+The next engineering milestone is Accounts Screen (Reference Implementation). Production account workflows remain outside the UI Foundation v1 scope.
 
 ## Roadmap
 
@@ -94,7 +94,8 @@ Next planned engineering phase:
 2. Bootstrap the Kotlin Multiplatform project foundation.
 3. Add shared core/domain primitives.
 4. Implement the Loan Engine with deterministic tests.
-5. Add persistence, app shells, and production UI from approved references.
+5. Add persistence, app bootstrap, and app shells.
+6. Implement production UI from approved references.
 
 ## Contributing
 
