@@ -23,12 +23,13 @@ No production UI should be implemented directly from AI imagination.
 
 Reference priority:
 
-1. Approved screenshots stored in `docs/references/`.
-2. Official Money Manager website: `https://realbyteapps.com/`.
-3. Official Play Store listing and screenshots.
-4. Approved design mockups created for Tio Ledger.
+1. Approved screenshots in `docs/references/`.
+2. Approved Tio Ledger mockups.
+3. Decompiled Money Manager technical reference (JADX) in `docs/references/realbyteapps/`.
+4. Official Money Manager website: `https://realbyteapps.com/`.
+5. Official Play Store screenshots.
 
-References and approval notes live under `docs/references/`.
+References and approval notes live under `docs/references/`. Decompiled technical analysis may be summarized in screen notes, but proprietary code, XML, resources, drawables, icons, strings, colors, dimensions, animations, assets, and implementation details must not be copied, translated, ported, or adapted into Tio Ledger.
 
 Any intentional deviation from the reference must be documented with justification and approved before implementation.
 
@@ -48,3 +49,4 @@ Negative:
 - Reference maintenance becomes part of product governance.
 - Experimental prototypes must be clearly separated from production UI.
 - Official web and store references may need to be captured locally to avoid drift over time.
+- Decompiled technical references require strict review discipline so no proprietary implementation enters the project.

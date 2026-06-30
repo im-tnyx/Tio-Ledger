@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,8 +28,11 @@ import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioFloatingActionButton
 import com.tioledger.ui.components.TioListItem
 import com.tioledger.ui.components.TioNavigationItem
+import com.tioledger.ui.components.TioPrimaryButton
 import com.tioledger.ui.components.TioSearchField
+import com.tioledger.ui.components.TioSecondaryButton
 import com.tioledger.ui.components.TioSectionHeader
+import com.tioledger.ui.components.TioSummaryCard
 import com.tioledger.ui.design.TioDimensions
 import com.tioledger.ui.design.TioIconToken
 import com.tioledger.ui.design.TioSpacing
@@ -169,18 +170,16 @@ fun TioFormScreenTemplate(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
             ) {
-                OutlinedButton(
+                TioSecondaryButton(
+                    label = secondaryActionLabel,
                     onClick = {},
                     modifier = Modifier.weight(1f),
-                ) {
-                    Text(secondaryActionLabel)
-                }
-                Button(
+                )
+                TioPrimaryButton(
+                    label = primaryActionLabel,
                     onClick = {},
                     modifier = Modifier.weight(1f),
-                ) {
-                    Text(primaryActionLabel)
-                }
+                )
             }
         }
     }
@@ -215,28 +214,18 @@ fun TioDashboardTemplate(
                 TioSectionHeader(title = "Overview")
             }
             items(summaryItems) { item ->
-                TioCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = item.label,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        TioAmountText(
-                            amount = item.value,
-                            tone = item.tone,
-                        )
-                    }
-                }
+                TioSummaryCard(
+                    label = item.label,
+                    value = item.value,
+                    tone = item.tone,
+                )
             }
             item {
                 TioSectionHeader(title = "Accounts")
                 TioAccountRow(
                     name = "Cash",
                     accountType = "Wallet",
-                    balance = "₹0.00",
+                    balance = "INR 0.00",
                 )
             }
             item {
@@ -261,15 +250,15 @@ object TioTemplatePreviewData {
 
     val listItems: List<TioListTemplateItem> =
         listOf(
-            TioListTemplateItem("Cash", "Wallet", "₹0.00"),
-            TioListTemplateItem("Food", "Category", "₹0.00"),
-            TioListTemplateItem("Transfer", "Placeholder", "₹0.00"),
+            TioListTemplateItem("Cash", "Wallet", "INR 0.00"),
+            TioListTemplateItem("Food", "Category", "INR 0.00"),
+            TioListTemplateItem("Transfer", "Placeholder", "INR 0.00"),
         )
 
     val summaryItems: List<TioDashboardSummaryItem> =
         listOf(
-            TioDashboardSummaryItem("Income", "₹0.00", TioAmountTone.Positive),
-            TioDashboardSummaryItem("Expense", "₹0.00", TioAmountTone.Negative),
-            TioDashboardSummaryItem("Total", "₹0.00", TioAmountTone.Neutral),
+            TioDashboardSummaryItem("Income", "INR 0.00", TioAmountTone.Positive),
+            TioDashboardSummaryItem("Expense", "INR 0.00", TioAmountTone.Negative),
+            TioDashboardSummaryItem("Total", "INR 0.00", TioAmountTone.Neutral),
         )
 }

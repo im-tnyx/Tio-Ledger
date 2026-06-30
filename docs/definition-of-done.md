@@ -19,13 +19,18 @@ A feature is considered complete only when all applicable checklist items are sa
 ## UI
 
 - Matches approved reference.
+- Reference note exists under `docs/references/notes/` for every production screen.
+- Tio UI specification is complete before implementation.
+- Pixel review completed.
 - Light and dark themes verified.
 - Responsive layouts verified.
 - Accessibility reviewed.
+- If JADX technical analysis was used, the screen note documents only workflow, navigation, hierarchy, terminology, or interaction-pattern findings and confirms no copied code, XML, resources, assets, or proprietary implementation details.
 
 ## Documentation
 
 - Relevant documentation updated.
+- Reference notes updated when screenshots, source priority, technical analysis, or intentional deviations change.
 - ADR updated if architecture changed.
 - Architecture changelog updated when applicable.
 

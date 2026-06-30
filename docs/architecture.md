@@ -177,7 +177,8 @@ The product uses reference-driven UI implementation:
 
 - `docs/references/` stores approved screenshots, fallback references, approval notes, and deviation logs for major screens.
 - Every major screen should have an approved reference source before production UI implementation.
-- Reference source priority is local approved screenshots, official Money Manager website, official Play Store listing and screenshots, then approved Tio Ledger mockups.
+- Reference source priority is approved screenshots in `docs/references/`, approved Tio Ledger mockups, decompiled Money Manager technical reference (JADX) in `docs/references/realbyteapps/`, official Money Manager website, then official Play Store screenshots.
+- Decompiled technical references may be used only for workflow, navigation, hierarchy, terminology, layout grouping, dialog flow, screen-relationship, feature-discovery, and interaction-pattern analysis. They must not be used to copy code, XML, resources, drawables, icons, strings, colors, dimensions, animations, assets, or proprietary implementation details.
 - Every production UI screen requires a reference source, functional specification, navigation definition, and acceptance checklist.
 - The first implementation target is functional familiarity, then modern polish.
 - Changes to information architecture must be treated as product decisions, not incidental UI refactors.

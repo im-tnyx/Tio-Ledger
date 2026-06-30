@@ -80,9 +80,9 @@ See [docs/architecture.md](docs/architecture.md) for the canonical architecture.
 
 ## Development Status
 
-Current status: UI Foundation v1 is established on top of Application Bootstrap v1 and the frozen Database Schema, Ledger Engine, Application Layer, and Data Layer.
+Current status: Accounts Screen v1 is established on top of UI Foundation v1, Application Bootstrap v1, and the frozen Database Schema, Ledger Engine, Application Layer, and Data Layer.
 
-The next engineering milestone is Accounts Screen (Reference Implementation). Production account workflows remain outside the UI Foundation v1 scope.
+The next engineering milestone is Category Screen (Reference Implementation). Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
 
 ## Roadmap
 

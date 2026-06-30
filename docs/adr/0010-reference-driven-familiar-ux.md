@@ -14,14 +14,15 @@ Every major UI screen must be implemented from approved reference sources.
 
 Reference priority:
 
-1. Approved screenshots stored in `docs/references/`.
-2. Official Money Manager website: `https://realbyteapps.com/`.
-3. Official Play Store listing and screenshots.
-4. Approved design mockups created for Tio Ledger.
+1. Approved screenshots in `docs/references/`.
+2. Approved Tio Ledger mockups.
+3. Decompiled Money Manager technical reference (JADX) in `docs/references/realbyteapps/`.
+4. Official Money Manager website: `https://realbyteapps.com/`.
+5. Official Play Store screenshots.
 
 Screenshots and official sources are implementation references. The team may modernize spacing, typography, animation, accessibility, responsiveness, and visual polish, but the information architecture and interaction flow should remain recognizable unless an approved reference explicitly changes them.
 
-If screenshots are unavailable, the official website may be used to understand layouts, workflows, terminology, and feature behavior. AI should never invent major workflows or screen structures when an official reference source is available.
+If screenshots are unavailable, approved Tio Ledger mockups should be used before technical analysis. The decompiled Money Manager technical reference may be inspected only to understand screen hierarchy, navigation flow, information architecture, naming conventions, interaction patterns, layout grouping, dialog flow, screen relationships, and feature discovery. Java/Kotlin source, XML layouts, resources, drawables, icons, strings, colors, dimensions, animations, assets, and proprietary implementation details must never be copied, translated, ported, or adapted into Tio Ledger. AI should never invent major workflows or screen structures when an approved reference source is available.
 
 ## Consequences
 
@@ -31,7 +32,7 @@ Positive:
 - Reduces subjective redesign drift.
 - Gives implementation teams concrete visual and behavioral targets.
 - Supports incremental modernization without product confusion.
-- Allows official public references to unblock implementation when local screenshots are not yet available.
+- Allows approved mockups, controlled technical analysis, official public references, and local screenshots to unblock implementation when primary screenshots are not yet sufficient.
 
 Negative:
 
@@ -39,3 +40,4 @@ Negative:
 - Product changes require reference updates.
 - Some platform adaptation will need careful documentation.
 - Official references may change over time, so important assumptions should be captured locally before implementation.
+- Decompiled technical references require strict review discipline so no proprietary implementation enters the project.

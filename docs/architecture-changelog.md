@@ -4,6 +4,13 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-06-30 - Decompiled Reference Governance
+
+- Formalized the priority order for UI references: approved screenshots, approved Tio Ledger mockups, JADX technical reference, official Money Manager website, then official Play Store screenshots.
+- Restricted `docs/references/realbyteapps/` usage to workflow, navigation, hierarchy, terminology, layout grouping, dialog flow, screen relationship, feature discovery, and interaction-pattern analysis.
+- Prohibited copying proprietary code, XML, resources, drawables, icons, strings, colors, dimensions, animations, assets, or implementation details from decompiled references.
+- Added screen-note governance before the next production UI milestone.
+
 ## 2026-06-30 - UI Foundation v1
 
 - Expanded `shared:ui` design tokens for colors, typography, spacing, elevation, corner radius, icons, and motion durations.
@@ -11,6 +18,7 @@ Do not use this file for feature changes or bug fixes.
 - Wired the existing main navigation route to placeholder template content only.
 - Added Compose preview catalog coverage for light, dark, compact, expanded, component, and template states.
 - Updated UI module dependency boundaries so reusable UI infrastructure no longer depends directly on `shared:domain` or `shared:data`.
+- Aligned the reusable component catalog with explicit APIs for navigation rail, buttons, currency text, rows, cards, chips, loading, error, and badge states.
 - Marked UI Foundation v1 ready for the next milestone: Accounts Screen (Reference Implementation).
 
 ## 2026-06-30 - Application Bootstrap v1

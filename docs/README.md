@@ -36,6 +36,7 @@ The product should remain functionally familiar to Money Manager. The goal is to
 - [Navigation Validation Report](status/NAVIGATION_VALIDATION_REPORT.md)
 - [UI Foundation Validation Report](status/UI_FOUNDATION_VALIDATION_REPORT.md)
 - [Component Catalog Report](status/COMPONENT_CATALOG_REPORT.md)
+- [Reference Documentation Validation Report](status/REFERENCE_DOCUMENTATION_VALIDATION_REPORT.md)
 
 ## Target Repository Shape
 
@@ -82,4 +83,5 @@ docs/
 1. Keep frozen layers stable: Database Schema, Ledger Engine, Application Layer, and Data Layer.
 2. Use Application Bootstrap v1 as the app startup, DI, navigation, and design-system foundation.
 3. Use UI Foundation v1 for reusable design tokens, stateless components, templates, and navigation placeholders.
-4. Prepare Accounts Screen (Reference Implementation) from approved references before adding production account workflows.
+4. Keep Accounts Screen v1 frozen unless a verified defect is discovered.
+5. Prepare Category Screen (Reference Implementation) from approved references, screen notes, and the documented JADX restrictions before adding production category workflows.

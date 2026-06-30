@@ -31,9 +31,13 @@ All production changes must satisfy the [Definition Of Done](definition-of-done.
 ## UI
 
 - Implement UI from approved references only.
+- Follow the reference priority and screen-note workflow in `docs/references/README.md`.
+- For every production screen, complete Approved Screenshot, Reference Notes, Technical Analysis when needed, Tio UI Specification, Compose Multiplatform Implementation, Pixel Review, Accessibility Review, and Approval in that order.
+- Use `docs/references/realbyteapps/` only as a decompiled technical reference for workflow, navigation, hierarchy, terminology, layout grouping, dialog flow, screen relationships, feature discovery, and interaction patterns.
+- Do not copy Java/Kotlin source, XML layouts, resources, drawables, icons, strings, colors, dimensions, animations, assets, or proprietary implementation details from any reference.
 - Do not redesign workflows without approval.
 - Maintain familiar Money Manager behavior unless an intentional improvement is documented and approved.
-- Do not invent major workflows or screen structures when an official reference source is available.
+- Do not invent major workflows or screen structures when an approved reference source is available.
 
 ## Testing
 
@@ -57,5 +61,8 @@ All production changes must satisfy the [Definition Of Done](definition-of-done.
 - Never invent APIs or business rules.
 - If requirements are unclear, stop and request clarification.
 - Do not replace approved architecture with personal preferences.
+- AI assistants may inspect the JADX reference only to understand workflows, navigation, hierarchy, terminology, and interaction patterns.
+- AI assistants must never reproduce or translate proprietary code, XML, resources, or implementation details into the project.
+- All implementation must be original and follow the project architecture and design system.
 - Keep commits small and reviewable.
 - Treat existing documentation and ADRs as binding unless the user approves a change.

@@ -106,7 +106,8 @@ The application should remain functionally familiar to Money Manager. Tio Ledger
 
 - Major UI screens must be implemented from approved reference screenshots stored in `docs/references/`.
 - Screenshots are implementation references, not mood-board inspiration.
-- If local screenshots are unavailable, use the official Money Manager website, official Play Store screenshots, or approved Tio Ledger mockups in that priority order.
+- If local screenshots are unavailable, use approved Tio Ledger mockups, the decompiled Money Manager technical reference (JADX), the official Money Manager website, then official Play Store screenshots in that priority order.
+- Decompiled technical references under `docs/references/realbyteapps/` may be inspected only for workflows, navigation, hierarchy, terminology, layout grouping, dialog flow, screen relationships, and interaction patterns. Do not copy Java/Kotlin source, XML layouts, resources, drawables, icons, strings, colors, dimensions, animations, assets, or proprietary implementation details.
 - Do not redesign major workflows without an approved reference.
 - Modernization should focus on spacing, typography, animation, accessibility, responsiveness, and platform fit while keeping recognizable interaction patterns.
 - Every production UI screen must have an approved screenshot reference, functional specification, navigation definition, and acceptance checklist.

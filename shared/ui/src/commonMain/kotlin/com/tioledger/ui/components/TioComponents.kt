@@ -18,8 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Badge
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -27,6 +30,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -109,6 +115,32 @@ fun TioBottomNavigation(
 }
 
 @Composable
+fun TioNavigationRail(
+    items: List<TioNavigationItem>,
+    onItemSelected: (TioNavigationItem) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    NavigationRail(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        items.forEach { item ->
+            NavigationRailItem(
+                selected = item.selected,
+                onClick = { onItemSelected(item) },
+                icon = { TioIcon(item.icon) },
+                label = {
+                    Text(
+                        text = item.label,
+                        maxLines = 1,
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
 fun TioFloatingActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -125,6 +157,48 @@ fun TioFloatingActionButton(
             token = icon,
             contentDescription = contentDescription,
         )
+    }
+}
+
+@Composable
+fun TioPrimaryButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = TioDimensions.minTouchTarget),
+        enabled = enabled,
+    ) {
+        leadingIcon?.invoke()
+        if (leadingIcon != null) {
+            Spacer(modifier = Modifier.width(TioSpacing.sm))
+        }
+        Text(label)
+    }
+}
+
+@Composable
+fun TioSecondaryButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null,
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = TioDimensions.minTouchTarget),
+        enabled = enabled,
+    ) {
+        leadingIcon?.invoke()
+        if (leadingIcon != null) {
+            Spacer(modifier = Modifier.width(TioSpacing.sm))
+        }
+        Text(label)
     }
 }
 
@@ -202,6 +276,31 @@ fun TioListItem(
 }
 
 @Composable
+fun TioTransactionRow(
+    title: String,
+    amount: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    amountTone: TioAmountTone = TioAmountTone.Neutral,
+    icon: TioIconToken = TioIconToken.Transaction,
+    onClick: (() -> Unit)? = null,
+) {
+    TioListItem(
+        title = title,
+        subtitle = subtitle,
+        modifier = modifier.heightIn(min = TioDimensions.accountRowHeight),
+        leading = { TioIconAvatar(icon) },
+        trailing = {
+            TioAmountText(
+                amount = amount,
+                tone = amountTone,
+            )
+        },
+        onClick = onClick,
+    )
+}
+
+@Composable
 fun TioAccountRow(
     name: String,
     balance: String,
@@ -223,6 +322,50 @@ fun TioAccountRow(
         },
         onClick = onClick,
     )
+}
+
+@Composable
+fun TioAccountCard(
+    name: String,
+    balance: String,
+    currencyCode: String,
+    modifier: Modifier = Modifier,
+    accountType: String? = null,
+    balanceTone: TioAmountTone = TioAmountTone.Neutral,
+) {
+    TioCard(modifier = modifier, elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
+            ) {
+                TioIconAvatar(TioIconToken.Account)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (accountType != null) {
+                        Text(
+                            text = accountType,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                TioCurrencyBadge(currencyCode)
+            }
+            TioAmountText(
+                amount = balance,
+                tone = balanceTone,
+            )
+        }
+    }
 }
 
 @Composable
@@ -281,6 +424,22 @@ fun TioAmountText(
 }
 
 @Composable
+fun TioCurrencyText(
+    code: String,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+) {
+    Text(
+        text = if (label == null) code else "$label $code",
+        modifier = modifier,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
 fun TioCurrencyBadge(
     code: String,
     modifier: Modifier = Modifier,
@@ -297,6 +456,54 @@ fun TioCurrencyBadge(
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
         )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun TioBadge(
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Badge(modifier = modifier) {
+        Text(
+            text = label,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+fun TioSummaryCard(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    tone: TioAmountTone = TioAmountTone.Neutral,
+) {
+    TioCard(modifier = modifier, elevated = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.xs)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            TioAmountText(
+                amount = value,
+                tone = tone,
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
 
@@ -333,6 +540,67 @@ fun TioEmptyState(
 }
 
 @Composable
+fun TioLoadingState(
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(TioSpacing.xl),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TioSpacing.md),
+    ) {
+        CircularProgressIndicator()
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+fun TioErrorState(
+    title: String,
+    message: String,
+    modifier: Modifier = Modifier,
+    retryLabel: String? = null,
+    onRetry: (() -> Unit)? = null,
+) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(TioSpacing.xl),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TioSpacing.md),
+    ) {
+        TioIconAvatar(
+            token = TioIconToken.Close,
+            size = 48.dp,
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.error,
+        )
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (retryLabel != null && onRetry != null) {
+            TioSecondaryButton(
+                label = retryLabel,
+                onClick = onRetry,
+            )
+        }
+    }
+}
+
+@Composable
 fun TioSearchField(
     value: String,
     onValueChange: (String) -> Unit,
@@ -346,6 +614,21 @@ fun TioSearchField(
         singleLine = true,
         leadingIcon = { TioIcon(TioIconToken.Search) },
         placeholder = { Text(placeholder) },
+    )
+}
+
+@Composable
+fun TioSearchBar(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "Search",
+) {
+    TioSearchField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        placeholder = placeholder,
     )
 }
 
@@ -389,6 +672,21 @@ fun TioFilterChip(
             } else {
                 null
             },
+    )
+}
+
+@Composable
+fun TioCategoryChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    TioFilterChip(
+        label = label,
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier,
     )
 }
 
