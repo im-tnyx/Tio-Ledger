@@ -30,17 +30,8 @@ data class PostedTransaction(
 class PostingEngine(
     private val idGenerator: IdGenerator,
     private val validator: PostingValidator = PostingValidator(),
+    private val strategyRegistry: PostingStrategyRegistry = PostingStrategyRegistry(),
 ) {
-    private val strategyMap =
-        mapOf(
-            TransactionType.INCOME to IncomePostingStrategy(),
-            TransactionType.EXPENSE to ExpensePostingStrategy(),
-            TransactionType.TRANSFER to TransferPostingStrategy(),
-            TransactionType.ADJUSTMENT to AdjustmentPostingStrategy(),
-        )
-
-    private val openingBalanceStrategy = OpeningBalancePostingStrategy()
-
     fun postIncome(
         timestamp: Long,
         description: String?,
@@ -51,9 +42,16 @@ class PostingEngine(
         createdAt: Long,
     ): LedgerResult<PostedTransaction> {
         validator.validateIncome(account, category, amount)?.let { return LedgerResult.Failure(it) }
-        val strategy = strategyMap[TransactionType.INCOME] ?: return LedgerResult.Failure(LedgerError.InvalidTransactionType("INCOME"))
         val params = PostingParams.Income(account, category, merchantId)
-        return executeStrategy(TransactionType.INCOME, timestamp, description, amount, params, strategy, createdAt)
+        return executeStrategy(
+            type = TransactionType.INCOME,
+            timestamp = timestamp,
+            description = description,
+            amount = amount,
+            params = params,
+            strategy = strategyRegistry.resolveIncome(),
+            createdAt = createdAt,
+        )
     }
 
     fun postExpense(
@@ -66,9 +64,16 @@ class PostingEngine(
         createdAt: Long,
     ): LedgerResult<PostedTransaction> {
         validator.validateExpense(account, category, amount)?.let { return LedgerResult.Failure(it) }
-        val strategy = strategyMap[TransactionType.EXPENSE] ?: return LedgerResult.Failure(LedgerError.InvalidTransactionType("EXPENSE"))
         val params = PostingParams.Expense(account, category, merchantId)
-        return executeStrategy(TransactionType.EXPENSE, timestamp, description, amount, params, strategy, createdAt)
+        return executeStrategy(
+            type = TransactionType.EXPENSE,
+            timestamp = timestamp,
+            description = description,
+            amount = amount,
+            params = params,
+            strategy = strategyRegistry.resolveExpense(),
+            createdAt = createdAt,
+        )
     }
 
     fun postTransfer(
@@ -80,9 +85,16 @@ class PostingEngine(
         createdAt: Long,
     ): LedgerResult<PostedTransaction> {
         validator.validateTransfer(sourceAccount, targetAccount, amount)?.let { return LedgerResult.Failure(it) }
-        val strategy = strategyMap[TransactionType.TRANSFER] ?: return LedgerResult.Failure(LedgerError.InvalidTransactionType("TRANSFER"))
         val params = PostingParams.Transfer(sourceAccount, targetAccount)
-        return executeStrategy(TransactionType.TRANSFER, timestamp, description, amount, params, strategy, createdAt)
+        return executeStrategy(
+            type = TransactionType.TRANSFER,
+            timestamp = timestamp,
+            description = description,
+            amount = amount,
+            params = params,
+            strategy = strategyRegistry.resolveTransfer(),
+            createdAt = createdAt,
+        )
     }
 
     fun postOpeningBalance(
@@ -100,7 +112,7 @@ class PostingEngine(
             description = description,
             amount = amount,
             params = params,
-            strategy = openingBalanceStrategy,
+            strategy = strategyRegistry.resolveOpeningBalance(),
             createdAt = createdAt,
         )
     }
@@ -114,9 +126,6 @@ class PostingEngine(
         createdAt: Long,
     ): LedgerResult<PostedTransaction> {
         validator.validateAdjustment(account, amount)?.let { return LedgerResult.Failure(it) }
-        val strategy =
-            strategyMap[TransactionType.ADJUSTMENT]
-                ?: return LedgerResult.Failure(LedgerError.InvalidTransactionType("ADJUSTMENT"))
         val params = PostingParams.Adjustment(account, amount, isDebit)
         return executeStrategy(
             type = TransactionType.ADJUSTMENT,
@@ -124,24 +133,34 @@ class PostingEngine(
             description = description,
             amount = amount,
             params = params,
-            strategy = strategy,
+            strategy = strategyRegistry.resolveAdjustment(),
             createdAt = createdAt,
         )
     }
 
-    private fun executeStrategy(
+    private fun <P : PostingParams> executeStrategy(
         type: TransactionType,
         timestamp: Long,
         description: String?,
         amount: Money,
-        params: PostingParams,
-        strategy: LedgerPostingStrategy,
+        params: P,
+        strategy: LedgerPostingStrategy<P>,
         createdAt: Long,
     ): LedgerResult<PostedTransaction> {
         val txId = idGenerator.nextId()
-        val parts = strategy.post(txId, timestamp, description, amount, params, idGenerator, createdAt)
+        val parts =
+            strategy.post(
+                PostingContext(
+                    transactionId = txId,
+                    timestamp = timestamp,
+                    description = description,
+                    amount = amount,
+                    params = params,
+                    idGenerator = idGenerator,
+                    createdAt = createdAt,
+                ),
+            )
 
-        // Validate Debit == Credit invariant
         val debits = parts.entries.filter { it.entryType == LedgerEntryType.DEBIT }.sumOf { it.amount.amount }
         val credits = parts.entries.filter { it.entryType == LedgerEntryType.CREDIT }.sumOf { it.amount.amount }
         val isBalanced = debits == credits
@@ -164,12 +183,7 @@ class PostingEngine(
                 timestamp = timestamp,
                 description = description,
                 type = type,
-                merchantId =
-                    when (params) {
-                        is PostingParams.Income -> params.merchantId
-                        is PostingParams.Expense -> params.merchantId
-                        else -> null
-                    },
+                merchantId = params.merchantId,
                 createdBy = "MANUAL",
                 isRecurring = false,
                 createdAt = createdAt,

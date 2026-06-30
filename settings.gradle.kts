@@ -24,6 +24,7 @@ include(":apps:ios")
 
 include(":shared:core")
 include(":shared:domain")
+include(":shared:application")
 include(":shared:data")
 include(":shared:database")
 include(":shared:finance-engine")

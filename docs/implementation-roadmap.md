@@ -1,5 +1,12 @@
 # Implementation Roadmap
 
+## Current Milestone Status
+
+- Ledger Engine: Frozen v1 as of 2026-06-30.
+- Approved architectural blockers for commonMain compatibility, type-safe posting strategies, and strategy registry separation are resolved.
+- Application Layer and Repository Contracts milestone is implemented as pure Kotlin Multiplatform shared code.
+- Next milestone: SQLDelight Repository Implementations.
+
 ## Phase 0: Documentation And Decisions
 
 Objectives:
@@ -58,7 +65,8 @@ Deliverables:
 
 - `shared/core`
 - `shared/domain`
-- Unit tests for value objects and validation.
+- `shared/application`
+- Unit tests for value objects, validation, and application use cases.
 - Ledger invariant tests.
 
 ## Phase 3: Loan Engine MVP

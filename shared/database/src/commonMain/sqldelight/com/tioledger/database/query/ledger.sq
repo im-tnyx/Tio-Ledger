@@ -1,0 +1,17 @@
+insertLedgerEntry:
+INSERT INTO ledger_entries (id, transaction_id, split_id, account_id, amount, entry_type, source_type, description, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectLedgerEntriesByAccountId:
+SELECT le.*, a.currency_code, a.type AS account_type, s.category_id AS split_category_id
+FROM ledger_entries le
+JOIN accounts a ON le.account_id = a.id
+LEFT JOIN transaction_splits s ON le.split_id = s.id
+WHERE le.account_id = ?;
+
+selectLedgerEntriesByTransactionId:
+SELECT le.*, a.currency_code, a.type AS account_type, s.category_id AS split_category_id
+FROM ledger_entries le
+JOIN accounts a ON le.account_id = a.id
+LEFT JOIN transaction_splits s ON le.split_id = s.id
+WHERE le.transaction_id = ?;

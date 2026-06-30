@@ -1,6 +1,6 @@
 ## Summary
 
-Describe the change.
+- Describe the change.
 
 ## Type Of Change
 
@@ -11,6 +11,17 @@ Describe the change.
 - [ ] Product behavior
 - [ ] Financial logic
 - [ ] UI
+- [ ] Tests only
+
+## Scope
+
+Changed areas:
+
+- List changed folders/files.
+
+Out of scope:
+
+- List intentional non-goals.
 
 ## Documentation And ADRs
 
@@ -27,7 +38,7 @@ Describe the change.
 - [ ] Financial calculations validated, if applicable.
 - [ ] Unit tests pass.
 - [ ] Integration tests pass, where applicable.
-- [ ] No TODO, FIXME, or placeholder code.
+- [ ] No TODO, FIXME, or placeholder code in production paths.
 - [ ] No compiler warnings introduced.
 - [ ] UI matches approved reference, if applicable.
 - [ ] Light and dark themes verified, if applicable.
@@ -35,6 +46,24 @@ Describe the change.
 - [ ] Accessibility reviewed, if applicable.
 - [ ] No measurable performance regression.
 
+## Validation
+
+Follow `.github/PUSH_TEMPLATE.md` before push. List only checks actually run.
+
+- [ ] `./gradlew build --stacktrace`
+- [ ] `./gradlew ktlintCheck --stacktrace`
+- [ ] `./gradlew detekt --stacktrace`
+- [ ] Other:
+- [ ] Not run. Reason:
+
+## Safety Notes
+
+- [ ] No generated/cache/secrets committed.
+- [ ] No unrelated refactor included.
+- [ ] No package, module, app ID, root project name, or persistence contract renamed without documented impact.
+- [ ] Financial history remains immutable, if applicable.
+- [ ] Automation still requires user confirmation for financial mutations, if applicable.
+
 ## Notes
 
-Add implementation notes, intentional deviations, or non-applicable checklist explanations.
+Add implementation notes, intentional deviations, skipped checks, or non-applicable checklist explanations.

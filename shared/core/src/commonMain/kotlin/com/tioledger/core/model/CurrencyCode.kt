@@ -12,4 +12,14 @@ data class CurrencyCode(val code: String) {
     }
 
     override fun toString(): String = normalized
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CurrencyCode) return false
+        return this.normalized == other.normalized
+    }
+
+    override fun hashCode(): Int {
+        return normalized.hashCode()
+    }
 }

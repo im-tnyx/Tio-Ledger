@@ -1,0 +1,16 @@
+insertTransaction:
+INSERT INTO transactions (id, timestamp, description, type, merchant_id, created_by, is_recurring, created_at, updated_at, entity_version, sync_version, device_id, updated_by, deleted_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectTransactionById:
+SELECT * FROM transactions WHERE id = ? LIMIT 1;
+
+insertTransactionSplit:
+INSERT INTO transaction_splits (id, transaction_id, account_id, category_id, amount, notes, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+selectSplitsByTransactionId:
+SELECT s.*, a.currency_code
+FROM transaction_splits s
+JOIN accounts a ON s.account_id = a.id
+WHERE s.transaction_id = ?;

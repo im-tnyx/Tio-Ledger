@@ -13,9 +13,20 @@ import com.tioledger.domain.model.PostingTarget
 import com.tioledger.domain.model.TransactionSplit
 
 sealed interface PostingParams {
-    data class Income(val account: Account, val category: Category?, val merchantId: String?) : PostingParams
+    val merchantId: String?
+        get() = null
 
-    data class Expense(val account: Account, val category: Category?, val merchantId: String?) : PostingParams
+    data class Income(
+        val account: Account,
+        val category: Category?,
+        override val merchantId: String?,
+    ) : PostingParams
+
+    data class Expense(
+        val account: Account,
+        val category: Category?,
+        override val merchantId: String?,
+    ) : PostingParams
 
     data class Transfer(val sourceAccount: Account, val targetAccount: Account) : PostingParams
 
@@ -24,71 +35,65 @@ sealed interface PostingParams {
     data class Adjustment(val account: Account, val deltaAmount: Money, val isDebit: Boolean) : PostingParams
 }
 
+data class PostingContext<P : PostingParams>(
+    val transactionId: String,
+    val timestamp: Long,
+    val description: String?,
+    val amount: Money,
+    val params: P,
+    val idGenerator: IdGenerator,
+    val createdAt: Long,
+)
+
 data class PostedTransactionParts(
     val splits: List<TransactionSplit>,
     val entries: List<LedgerEntry>,
 )
 
-interface LedgerPostingStrategy {
-    fun post(
-        transactionId: String,
-        timestamp: Long,
-        description: String?,
-        amount: Money,
-        params: PostingParams,
-        idGenerator: IdGenerator,
-        createdAt: Long,
-    ): PostedTransactionParts
+interface LedgerPostingStrategy<P : PostingParams> {
+    fun post(context: PostingContext<P>): PostedTransactionParts
 }
 
-class IncomePostingStrategy : LedgerPostingStrategy {
-    override fun post(
-        transactionId: String,
-        timestamp: Long,
-        description: String?,
-        amount: Money,
-        params: PostingParams,
-        idGenerator: IdGenerator,
-        createdAt: Long,
-    ): PostedTransactionParts {
-        val p = params as PostingParams.Income
-        val splitId = idGenerator.nextId()
+class IncomePostingStrategy : LedgerPostingStrategy<PostingParams.Income> {
+    override fun post(context: PostingContext<PostingParams.Income>): PostedTransactionParts {
+        val params = context.params
+        val splitId = context.idGenerator.nextId()
 
         val split =
             TransactionSplit(
                 id = splitId,
-                transactionId = transactionId,
-                accountId = p.account.id,
-                categoryId = p.category?.id,
-                amount = amount,
-                notes = description,
-                createdAt = createdAt,
+                transactionId = context.transactionId,
+                accountId = params.account.id,
+                categoryId = params.category?.id,
+                amount = context.amount,
+                notes = context.description,
+                createdAt = context.createdAt,
             )
 
         val assetEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitId,
-                target = PostingTarget.Account(p.account.id, p.account.type.ledgerClass),
-                amount = amount,
+                target = PostingTarget.Account(params.account.id, params.account.type.ledgerClass),
+                amount = context.amount,
                 entryType = LedgerEntryType.DEBIT,
                 sourceType = LedgerSourceType.TRANSACTION,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         val incomeEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitId,
-                target = PostingTarget.Virtual(p.category?.id, LedgerClass.INCOME),
-                amount = amount,
+                target = PostingTarget.Virtual(params.category?.id, LedgerClass.INCOME),
+                amount = context.amount,
                 entryType = LedgerEntryType.CREDIT,
                 sourceType = LedgerSourceType.TRANSACTION,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         return PostedTransactionParts(
@@ -98,54 +103,46 @@ class IncomePostingStrategy : LedgerPostingStrategy {
     }
 }
 
-class ExpensePostingStrategy : LedgerPostingStrategy {
-    override fun post(
-        transactionId: String,
-        timestamp: Long,
-        description: String?,
-        amount: Money,
-        params: PostingParams,
-        idGenerator: IdGenerator,
-        createdAt: Long,
-    ): PostedTransactionParts {
-        val p = params as PostingParams.Expense
-        val splitId = idGenerator.nextId()
+class ExpensePostingStrategy : LedgerPostingStrategy<PostingParams.Expense> {
+    override fun post(context: PostingContext<PostingParams.Expense>): PostedTransactionParts {
+        val params = context.params
+        val splitId = context.idGenerator.nextId()
 
         val split =
             TransactionSplit(
                 id = splitId,
-                transactionId = transactionId,
-                accountId = p.account.id,
-                categoryId = p.category?.id,
-                amount = amount,
-                notes = description,
-                createdAt = createdAt,
+                transactionId = context.transactionId,
+                accountId = params.account.id,
+                categoryId = params.category?.id,
+                amount = context.amount,
+                notes = context.description,
+                createdAt = context.createdAt,
             )
 
         val expenseEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitId,
-                target = PostingTarget.Virtual(p.category?.id, LedgerClass.EXPENSE),
-                amount = amount,
+                target = PostingTarget.Virtual(params.category?.id, LedgerClass.EXPENSE),
+                amount = context.amount,
                 entryType = LedgerEntryType.DEBIT,
                 sourceType = LedgerSourceType.TRANSACTION,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         val assetEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitId,
-                target = PostingTarget.Account(p.account.id, p.account.type.ledgerClass),
-                amount = amount,
+                target = PostingTarget.Account(params.account.id, params.account.type.ledgerClass),
+                amount = context.amount,
                 entryType = LedgerEntryType.CREDIT,
                 sourceType = LedgerSourceType.TRANSACTION,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         return PostedTransactionParts(
@@ -155,66 +152,58 @@ class ExpensePostingStrategy : LedgerPostingStrategy {
     }
 }
 
-class TransferPostingStrategy : LedgerPostingStrategy {
-    override fun post(
-        transactionId: String,
-        timestamp: Long,
-        description: String?,
-        amount: Money,
-        params: PostingParams,
-        idGenerator: IdGenerator,
-        createdAt: Long,
-    ): PostedTransactionParts {
-        val p = params as PostingParams.Transfer
-        val splitSourceId = idGenerator.nextId()
-        val splitTargetId = idGenerator.nextId()
+class TransferPostingStrategy : LedgerPostingStrategy<PostingParams.Transfer> {
+    override fun post(context: PostingContext<PostingParams.Transfer>): PostedTransactionParts {
+        val params = context.params
+        val splitSourceId = context.idGenerator.nextId()
+        val splitTargetId = context.idGenerator.nextId()
 
         val splitSource =
             TransactionSplit(
                 id = splitSourceId,
-                transactionId = transactionId,
-                accountId = p.sourceAccount.id,
+                transactionId = context.transactionId,
+                accountId = params.sourceAccount.id,
                 categoryId = null,
-                amount = amount,
-                notes = description,
-                createdAt = createdAt,
+                amount = context.amount,
+                notes = context.description,
+                createdAt = context.createdAt,
             )
 
         val splitTarget =
             TransactionSplit(
                 id = splitTargetId,
-                transactionId = transactionId,
-                accountId = p.targetAccount.id,
+                transactionId = context.transactionId,
+                accountId = params.targetAccount.id,
                 categoryId = null,
-                amount = amount,
-                notes = description,
-                createdAt = createdAt,
+                amount = context.amount,
+                notes = context.description,
+                createdAt = context.createdAt,
             )
 
         val sourceEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitSourceId,
-                target = PostingTarget.Account(p.sourceAccount.id, p.sourceAccount.type.ledgerClass),
-                amount = amount,
+                target = PostingTarget.Account(params.sourceAccount.id, params.sourceAccount.type.ledgerClass),
+                amount = context.amount,
                 entryType = LedgerEntryType.CREDIT,
                 sourceType = LedgerSourceType.TRANSACTION,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         val targetEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitTargetId,
-                target = PostingTarget.Account(p.targetAccount.id, p.targetAccount.type.ledgerClass),
-                amount = amount,
+                target = PostingTarget.Account(params.targetAccount.id, params.targetAccount.type.ledgerClass),
+                amount = context.amount,
                 entryType = LedgerEntryType.DEBIT,
                 sourceType = LedgerSourceType.TRANSACTION,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         return PostedTransactionParts(
@@ -224,31 +213,23 @@ class TransferPostingStrategy : LedgerPostingStrategy {
     }
 }
 
-class OpeningBalancePostingStrategy : LedgerPostingStrategy {
-    override fun post(
-        transactionId: String,
-        timestamp: Long,
-        description: String?,
-        amount: Money,
-        params: PostingParams,
-        idGenerator: IdGenerator,
-        createdAt: Long,
-    ): PostedTransactionParts {
-        val p = params as PostingParams.OpeningBalance
-        val splitId = idGenerator.nextId()
+class OpeningBalancePostingStrategy : LedgerPostingStrategy<PostingParams.OpeningBalance> {
+    override fun post(context: PostingContext<PostingParams.OpeningBalance>): PostedTransactionParts {
+        val params = context.params
+        val splitId = context.idGenerator.nextId()
 
         val split =
             TransactionSplit(
                 id = splitId,
-                transactionId = transactionId,
-                accountId = p.account.id,
+                transactionId = context.transactionId,
+                accountId = params.account.id,
                 categoryId = null,
-                amount = amount,
-                notes = description,
-                createdAt = createdAt,
+                amount = context.amount,
+                notes = context.description,
+                createdAt = context.createdAt,
             )
 
-        val normalBalance = p.account.type.ledgerClass.normalBalance
+        val normalBalance = params.account.type.ledgerClass.normalBalance
 
         val accountEntryType =
             when (normalBalance) {
@@ -264,28 +245,28 @@ class OpeningBalancePostingStrategy : LedgerPostingStrategy {
 
         val accountEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitId,
-                target = PostingTarget.Account(p.account.id, p.account.type.ledgerClass),
-                amount = amount,
+                target = PostingTarget.Account(params.account.id, params.account.type.ledgerClass),
+                amount = context.amount,
                 entryType = accountEntryType,
                 sourceType = LedgerSourceType.OPENING_BALANCE,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         val equityEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitId,
                 target = PostingTarget.Virtual(null, LedgerClass.EQUITY),
-                amount = amount,
+                amount = context.amount,
                 entryType = equityEntryType,
                 sourceType = LedgerSourceType.OPENING_BALANCE,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         return PostedTransactionParts(
@@ -295,57 +276,49 @@ class OpeningBalancePostingStrategy : LedgerPostingStrategy {
     }
 }
 
-class AdjustmentPostingStrategy : LedgerPostingStrategy {
-    override fun post(
-        transactionId: String,
-        timestamp: Long,
-        description: String?,
-        amount: Money,
-        params: PostingParams,
-        idGenerator: IdGenerator,
-        createdAt: Long,
-    ): PostedTransactionParts {
-        val p = params as PostingParams.Adjustment
-        val splitId = idGenerator.nextId()
+class AdjustmentPostingStrategy : LedgerPostingStrategy<PostingParams.Adjustment> {
+    override fun post(context: PostingContext<PostingParams.Adjustment>): PostedTransactionParts {
+        val params = context.params
+        val splitId = context.idGenerator.nextId()
 
         val split =
             TransactionSplit(
                 id = splitId,
-                transactionId = transactionId,
-                accountId = p.account.id,
+                transactionId = context.transactionId,
+                accountId = params.account.id,
                 categoryId = null,
-                amount = amount,
-                notes = description,
-                createdAt = createdAt,
+                amount = context.amount,
+                notes = context.description,
+                createdAt = context.createdAt,
             )
 
-        val accountEntryType = if (p.isDebit) LedgerEntryType.DEBIT else LedgerEntryType.CREDIT
-        val equityEntryType = if (p.isDebit) LedgerEntryType.CREDIT else LedgerEntryType.DEBIT
+        val accountEntryType = if (params.isDebit) LedgerEntryType.DEBIT else LedgerEntryType.CREDIT
+        val equityEntryType = if (params.isDebit) LedgerEntryType.CREDIT else LedgerEntryType.DEBIT
 
         val accountEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitId,
-                target = PostingTarget.Account(p.account.id, p.account.type.ledgerClass),
-                amount = amount,
+                target = PostingTarget.Account(params.account.id, params.account.type.ledgerClass),
+                amount = context.amount,
                 entryType = accountEntryType,
                 sourceType = LedgerSourceType.ADJUSTMENT,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         val equityEntry =
             LedgerEntry(
-                id = idGenerator.nextId(),
-                transactionId = transactionId,
+                id = context.idGenerator.nextId(),
+                transactionId = context.transactionId,
                 splitId = splitId,
                 target = PostingTarget.Virtual(null, LedgerClass.EQUITY),
-                amount = amount,
+                amount = context.amount,
                 entryType = equityEntryType,
                 sourceType = LedgerSourceType.ADJUSTMENT,
-                description = description,
-                createdAt = createdAt,
+                description = context.description,
+                createdAt = context.createdAt,
             )
 
         return PostedTransactionParts(

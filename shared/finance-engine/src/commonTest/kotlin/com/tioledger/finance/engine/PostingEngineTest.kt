@@ -83,6 +83,7 @@ class PostingEngineTest {
     fun testCurrencyCodeValidation() {
         assertEquals("USD", CurrencyCode("usd").toString())
         assertEquals("INR", CurrencyCode("INR").toString())
+        assertEquals(CurrencyCode("usd"), CurrencyCode("USD"))
 
         assertFailsWith<IllegalArgumentException> {
             CurrencyCode("US")
@@ -115,6 +116,22 @@ class PostingEngineTest {
         val inrMoney = Money(100L, inr)
         assertFailsWith<IllegalArgumentException> {
             m1 + inrMoney
+        }
+
+        assertFailsWith<ArithmeticException> {
+            Money(Long.MAX_VALUE, usd) + Money(1L, usd)
+        }
+        assertFailsWith<ArithmeticException> {
+            Money(Long.MIN_VALUE, usd) - Money(1L, usd)
+        }
+        assertFailsWith<ArithmeticException> {
+            Money(Long.MAX_VALUE / 2 + 1, usd) * 2L
+        }
+        assertFailsWith<ArithmeticException> {
+            -Money(Long.MIN_VALUE, usd)
+        }
+        assertFailsWith<ArithmeticException> {
+            Money(Long.MIN_VALUE, usd) * -1L
         }
     }
 

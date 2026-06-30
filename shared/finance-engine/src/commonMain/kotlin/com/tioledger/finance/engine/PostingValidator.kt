@@ -32,7 +32,7 @@ object AccountRule : PostingRule<Account> {
 
 class CurrencyRule(private val expectedCurrency: String) : PostingRule<Money> {
     override fun validate(input: Money): LedgerError? {
-        return if (input.currency.toString() != expectedCurrency) {
+        return if (input.currency.toString() != expectedCurrency.uppercase()) {
             LedgerError.CurrencyMismatch(expectedCurrency, input.currency.toString())
         } else {
             null
@@ -95,7 +95,7 @@ class PostingValidator {
         if (sourceAccount.id == targetAccount.id) {
             return LedgerError.InvalidTransfer("Source and target accounts must be distinct: ${sourceAccount.id}")
         }
-        if (sourceAccount.currencyCode != targetAccount.currencyCode) {
+        if (sourceAccount.currencyCode.uppercase() != targetAccount.currencyCode.uppercase()) {
             return LedgerError.CurrencyMismatch(sourceAccount.currencyCode, targetAccount.currencyCode)
         }
         return null

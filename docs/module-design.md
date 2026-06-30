@@ -78,14 +78,39 @@ Responsibilities:
 - Entities: Account, Transaction, Category, Budget, Loan.
 - Ledger entities and operation models.
 - Value objects: Money, InterestRate, Tenure, PaymentFrequency.
-- Repository interfaces.
-- Use case interfaces or implementations when pure domain coordination is enough.
+- Repository interfaces only; no database implementation.
+- Lightweight domain events.
 - Domain errors.
 - Transaction suggestion and confirmation models.
 
 Depends on:
 
 - `shared:core`
+
+## shared/application
+
+Pure Kotlin application orchestration.
+
+Responsibilities:
+
+- Use cases for account, category, and transaction workflows.
+- Input validation at application boundaries.
+- Ledger Engine dispatch for posting financial transactions.
+- Typed application results and errors.
+- Domain event emission for successful business operations.
+- Repository contract consumption without knowing persistence details.
+
+Must not contain:
+
+- SQL queries.
+- SQLDelight implementations.
+- UI, ViewModel, Android, iOS, or Wear OS dependencies.
+
+Depends on:
+
+- `shared:core`
+- `shared:domain`
+- `shared:finance-engine`
 
 ## shared/database
 

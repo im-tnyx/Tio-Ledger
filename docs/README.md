@@ -24,6 +24,14 @@ The product should remain functionally familiar to Money Manager. The goal is to
 - [Reference Screenshots](references/README.md)
 - [ADRs](adr/README.md)
 
+## Status Reports
+
+- [Financial Correctness Validation Report](status/FINANCIAL_CORRECTNESS_VALIDATION_REPORT.md)
+- [Architecture Validation Report](status/ARCHITECTURE_VALIDATION_REPORT.md)
+- [Build Verification Report](status/BUILD_VERIFICATION_REPORT.md)
+- [Application Layer Architecture Validation Report](status/APPLICATION_LAYER_ARCHITECTURE_VALIDATION_REPORT.md)
+- [Application Layer Build Verification Report](status/APPLICATION_LAYER_BUILD_VERIFICATION_REPORT.md)
+
 ## Target Repository Shape
 
 ```text
@@ -35,6 +43,7 @@ apps/
 shared/
   core/
   domain/
+  application/
   data/
   database/
   finance-engine/
@@ -66,6 +75,7 @@ docs/
 
 1. Establish the native Gradle Kotlin Multiplatform monorepo.
 2. Implement shared domain models and deterministic finance primitives.
-3. Build SQLDelight-backed offline persistence.
-4. Deliver the Loan Engine as a heavily tested shared module.
-5. Add Android, Wear OS, and iOS presentation shells after the core business foundation is stable.
+3. Implement the pure Kotlin application layer and repository contracts.
+4. Build SQLDelight-backed offline persistence.
+5. Deliver the Loan Engine as a heavily tested shared module.
+6. Add Android, Wear OS, and iOS presentation shells after the core business foundation is stable.

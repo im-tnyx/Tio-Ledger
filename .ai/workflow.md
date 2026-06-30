@@ -2,23 +2,31 @@
 
 Current workflow:
 
-1. Treat Documentation v1.0 as frozen.
-2. Prepare repository foundation.
-3. Commit, push, and tag the documentation baseline.
-4. Bootstrap the Kotlin Multiplatform project foundation later.
+1. Treat the checked-in documentation and ADRs as the product and architecture source of truth.
+2. Keep the Gradle Kotlin Multiplatform repository foundation healthy.
+3. Make small, reviewable changes on focused branches.
+4. Verify build, lint, static analysis, and tests before pushing.
+5. Keep financial and ledger behavior covered by focused tests when affected.
 
-Do not start implementation until explicitly requested.
+Ledger Engine is Frozen v1. Application Layer and Repository Contracts are implemented. The next milestone is SQLDelight Repository Implementations.
 
-For future implementation:
+Do not start new product implementation unless explicitly requested.
 
-- Follow the approved roadmap.
-- Keep changes small and reviewable.
-- Update documentation only when architecture or documented behavior changes.
+For implementation work:
+
+- Follow the approved roadmap and existing module boundaries.
+- Inspect existing code before adding new code.
+- Keep unrelated refactors out of feature branches.
+- Update documentation only when architecture, workflow, or documented behavior changes.
 - Update the architecture changelog only for project structure, data flow, module boundary, or engineering practice changes.
 - Satisfy the Definition of Done before merge.
+- Before commit, push, or PR creation, read and follow `../.github/PUSH_TEMPLATE.md`.
+- After a PR is merged, follow `../.github/POST_MERGE_SYNC.md` for local synchronization and branch cleanup.
 
 Canonical references:
 
 - [../docs/implementation-roadmap.md](../docs/implementation-roadmap.md)
 - [../docs/definition-of-done.md](../docs/definition-of-done.md)
 - [../docs/architecture-changelog.md](../docs/architecture-changelog.md)
+- [../.github/PUSH_TEMPLATE.md](../.github/PUSH_TEMPLATE.md)
+- [../.github/POST_MERGE_SYNC.md](../.github/POST_MERGE_SYNC.md)

@@ -1,0 +1,11 @@
+insertCategory:
+INSERT INTO categories (id, name, type, parent_id, is_default, created_at, updated_at, entity_version, sync_version, device_id, deleted_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateCategory:
+UPDATE categories
+SET name = ?, type = ?, parent_id = ?, is_default = ?, updated_at = ?, entity_version = ?, sync_version = ?, device_id = ?, deleted_at = ?
+WHERE id = ?;
+
+selectCategoryById:
+SELECT * FROM categories WHERE id = ? LIMIT 1;

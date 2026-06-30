@@ -80,9 +80,9 @@ See [docs/architecture.md](docs/architecture.md) for the canonical architecture.
 
 ## Development Status
 
-Current status: documentation baseline and repository foundation.
+Current status: Gradle Kotlin Multiplatform foundation exists and Ledger Engine is Frozen v1.
 
-No Kotlin Multiplatform implementation, Gradle configuration, business logic, or UI has been started yet.
+The next engineering milestone is Use Cases & Repository Interfaces. Production UI, repository implementations, and database-backed workflows remain outside the frozen ledger engine scope.
 
 ## Roadmap
 

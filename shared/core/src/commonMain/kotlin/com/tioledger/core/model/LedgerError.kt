@@ -26,4 +26,12 @@ sealed interface LedgerError {
     data class InvalidAdjustment(val reason: String) : LedgerError
 
     data class DuplicateAccountId(val accountId: String) : LedgerError
+
+    data object StorageUnavailable : LedgerError
+
+    data class DuplicateTransactionId(val transactionId: String) : LedgerError
+
+    data object ConstraintViolation : LedgerError
+
+    data class Unknown(val message: String) : LedgerError
 }

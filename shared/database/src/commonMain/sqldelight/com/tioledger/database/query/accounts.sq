@@ -1,0 +1,14 @@
+insertAccount:
+INSERT INTO accounts (id, name, type, currency_code, is_archived, display_order, created_at, updated_at, entity_version, sync_version, device_id, updated_by, deleted_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectAllAccounts:
+SELECT * FROM accounts WHERE deleted_at IS NULL ORDER BY display_order ASC;
+
+selectAccountById:
+SELECT * FROM accounts WHERE id = ? LIMIT 1;
+
+updateAccount:
+UPDATE accounts
+SET name = ?, type = ?, currency_code = ?, is_archived = ?, display_order = ?, updated_at = ?, entity_version = ?, sync_version = ?, device_id = ?, updated_by = ?, deleted_at = ?
+WHERE id = ?;
