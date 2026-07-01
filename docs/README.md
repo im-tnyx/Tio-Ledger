@@ -83,5 +83,5 @@ docs/
 1. Keep frozen layers stable: Database Schema, Ledger Engine, Application Layer, and Data Layer.
 2. Use Application Bootstrap v1 as the app startup, DI, navigation, and design-system foundation.
 3. Use UI Foundation v1 for reusable design tokens, stateless components, templates, and navigation placeholders.
-4. Keep Accounts Screen v1 frozen unless a verified defect is discovered.
-5. Prepare Category Screen (Reference Implementation) from approved references, screen notes, and the documented JADX restrictions before adding production category workflows.
+4. Keep Dashboard Screen v1 and Transaction Entry Screen v1 frozen unless a verified defect is discovered.
+5. Start Transaction Entry Integration v1 using the finalized entry screen UI and existing architecture boundaries.

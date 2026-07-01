@@ -1,46 +1,43 @@
-# UI Reference Compliance Report
+# Transaction Entry Screen v1 - UI Reference Compliance Report
 
 Status: Passed
-Milestone: Accounts Screen v1
+Milestone: Transaction Entry Screen v1
 Date: 2026-07-01
 
-## Reference Source Used
+## Reference Sources Used
 
-Primary approved reference:
+Primary references:
 
-- `docs/references/accounts/Screenshot_20260630_164106_Money Manager.jpg`
-
-Additional context:
-
-- Supporting approved screenshots in `docs/references/accounts/`
-- `docs/references/accounts/README.md`
-- `docs/references/realbyteapps/` remained optional and analysis-only
+- `docs/references/transaction/README.md`
+- `docs/references/notes/transaction.md`
+- Official Money Manager Play Store listing
+- Official Money Manager website
 
 ## Matched Reference Elements
 
-- Screen title: `Accounts`
-- Top app bar with right-side actions
-- Total balance summary row with `Assets`, `Liabilities`, and `Total`
-- Search field
-- Grouped account sections
-- Account rows with name, type/currency context, and right-aligned balance
-- Bottom navigation with Accounts selected
-- Empty, loading, and error states
-- Dense accounting-first layout consistent with Money Manager behavior
+- Transaction type selector with `Expense`, `Income`, `Transfer`
+- Prominent amount entry with numeric input style
+- Account, category, and date selector rows
+- Optional note field
+- Tags placeholder section
+- Save and Cancel actions
+- Empty-ready form state, loading state, and error state rendering paths
+- State-driven rendering using shared UI patterns
 
 ## Intentional Deviations
 
-- Icons are token-based placeholders from the existing Compose design system because production icon assets are not yet part of the frozen UI foundation.
-- Amount display uses deterministic currency-code formatting (`INR 0.00`, `USD 0.00`) instead of locale symbols until a shared currency formatter is approved.
-- The credit-card payable/outstanding sublayout is not specialized in this milestone because that workflow remains outside Accounts Screen v1 scope.
+- Tags remain placeholder-only in v1 (no picker or persistence).
+- Transfer-specific destination-account flow is deferred to integration milestone.
+- Visual style follows Tio design tokens/components rather than pixel-copying Money Manager assets.
 
 ## Non-Goals Confirmed
 
-- No Dashboard implementation.
-- No account creation flow.
-- No account editing workflow.
-- No transaction, loan, report, or settings feature implementation.
+- No repository calls
+- No SQL or persistence writes
+- No ledger posting
+- No financial calculations in composables
+- No business validation workflow
 
 ## Result
 
-The wired Accounts screen follows the approved local Money Manager screenshot set while preserving current architecture boundaries and the existing design system.
+Transaction Entry Screen v1 UI is reference-compliant for approved scope and remains within presentation-only boundaries.
