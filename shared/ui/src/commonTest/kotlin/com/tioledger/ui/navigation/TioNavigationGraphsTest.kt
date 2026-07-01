@@ -24,6 +24,7 @@ class TioNavigationGraphsTest {
                 MainRoute.Dashboard,
                 MainRoute.Accounts,
                 MainRoute.Transactions,
+                MainRoute.TransactionEntry,
                 MainRoute.Categories,
                 MainRoute.Reports,
                 MainRoute.Loans,

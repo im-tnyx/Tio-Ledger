@@ -80,9 +80,9 @@ See [docs/architecture.md](docs/architecture.md) for the canonical architecture.
 
 ## Development Status
 
-Current status: Accounts Screen v1 is established on top of UI Foundation v1, Application Bootstrap v1, and the frozen Database Schema, Ledger Engine, Application Layer, and Data Layer.
+Current status: Dashboard Screen v1 and Transaction Entry Screen v1 are complete and frozen on top of UI Foundation v1, Application Bootstrap v1, and the frozen Database Schema, Ledger Engine, Application Layer, and Data Layer.
 
-The next engineering milestone is Category Screen (Reference Implementation). Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
+The next engineering milestone is Transaction Entry Integration v1. Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
 
 ## Roadmap
 

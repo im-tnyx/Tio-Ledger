@@ -11,6 +11,14 @@ Do not use this file for feature changes or bug fixes.
 - Wired `RootNavigationHost` to the existing `AccountsRoute()` implementation for `MainRoute.Accounts` and preserved placeholders for the remaining prepared routes.
 - Reused the existing read-only UI/Application path without changing database, repository, data, finance, or ledger source.
 
+## 2026-07-01 - Transaction Entry Screen v1 Wiring
+
+- Added `shared/ui/transactions` presentation package with stateless transaction-entry composables and preview coverage.
+- Introduced UI-only transaction-entry state/action models and lightweight state holder in `shared:ui` without repository, SQL, ledger, or financial-calculation logic.
+- Wired `MainRoute.TransactionEntry` into root destination rendering so the transaction route resolves to a real screen instead of placeholder content.
+- Registered transaction-entry state holder in UI DI module while keeping frozen Database, Finance Engine, Application, and Data layers untouched.
+- Added transaction reference documentation under `docs/references/transaction/` and updated workflow/reference notes for the new milestone.
+
 ## 2026-07-01 - Navigation Graph v1
 
 - Replaced the single-route navigation placeholder with a typed app-route model split into `RootRoute` and `MainRoute`.
