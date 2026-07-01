@@ -10,6 +10,7 @@ jobs:
   build-lint-test:
     name: Build, lint, and unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -32,14 +33,14 @@ jobs:
       - name: Ensure Gradle wrapper is executable
         run: chmod +x ./gradlew
 
-      - name: Build
-        run: ./gradlew build --stacktrace --no-daemon --console=plain
+      - name: Compile shared UI metadata
+        run: ./gradlew :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
 
       - name: Check
-        run: ./gradlew check --stacktrace --no-daemon --console=plain
+        run: ./gradlew check --no-daemon --console=plain --stacktrace
 
       - name: Ktlint
-        run: ./gradlew ktlintCheck --stacktrace --no-daemon --console=plain
+        run: ./gradlew ktlintCheck --no-daemon --console=plain --stacktrace
 
       - name: Detekt
-        run: ./gradlew detekt --stacktrace --no-daemon --console=plain
+        run: ./gradlew detekt --no-daemon --console=plain --stacktrace
