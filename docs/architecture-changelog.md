@@ -4,6 +4,13 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-07-01 - Accounts Screen v1 Activation
+
+- Formalized the Accounts reference set under `docs/references/accounts/` so the first production screen now has a dedicated approved screenshot folder.
+- Promoted `Accounts` to the typed main-entry route while keeping Splash as the root start destination.
+- Wired `RootNavigationHost` to the existing `AccountsRoute()` implementation for `MainRoute.Accounts` and preserved placeholders for the remaining prepared routes.
+- Reused the existing read-only UI/Application path without changing database, repository, data, finance, or ledger source.
+
 ## 2026-07-01 - Navigation Graph v1
 
 - Replaced the single-route navigation placeholder with a typed app-route model split into `RootRoute` and `MainRoute`.

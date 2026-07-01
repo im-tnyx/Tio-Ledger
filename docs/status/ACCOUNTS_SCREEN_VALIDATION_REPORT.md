@@ -2,46 +2,37 @@
 
 Status: Passed
 Milestone: Accounts Screen v1
-Date: 2026-06-30
+Date: 2026-07-01
 
 ## Scope Verified
 
-- Implemented the Accounts screen as the first production UI screen.
-- Connected the screen through the existing root navigation host.
-- Added immutable `AccountsUiState`, `AccountsAction`, `AccountsEvent`, and `AccountsEffect` contracts.
-- Added a dedicated `AccountsViewModel` that invokes the Application Layer only.
-- Added Koin registration for the Accounts ViewModel.
-- Added preview-only states for empty, one account, multiple accounts, large balance, light theme, and dark theme.
+- Reused the existing Accounts screen UI in `shared:ui` as the first reachable production destination.
+- Wired `MainRoute.Accounts` through the root navigation host to the real `AccountsRoute()` implementation.
+- Reused immutable `AccountsUiState`, `AccountsAction`, `AccountsEvent`, and `AccountsEffect` contracts.
+- Kept the Accounts ViewModel read-only and limited to existing Application Layer reads.
+- Kept empty, loading, error, and preview states available in the screen implementation.
+
+## Reference Compliance
+
+- Reviewed `docs/references/README.md` before UI changes.
+- Confirmed approved screenshots exist locally, so website and Play Store fallbacks were not needed.
+- Added `docs/references/accounts/README.md` as the Accounts reference set summary.
+- Kept the canonical note in `docs/references/notes/account.md` aligned to the approved Accounts screenshot folder.
 
 ## Architecture Compliance
 
 - UI does not access SQLDelight.
 - UI does not access repositories directly.
-- ViewModel invokes `ListAccountSummariesUseCase`.
-- Balance derivation remains in Application/Finance Engine using `BalanceCalculator`.
-- SQLDelight schema was not modified.
-- No business feature beyond Accounts screen read/display was introduced.
+- No database, data-layer, application-layer, finance-engine, or ledger-engine source was modified for this milestone.
+- Balance display remains state-driven; composables do not compute financial totals.
+- No account creation, editing, transaction, loan, or reporting workflow was introduced.
 
-## Frozen Layer Note
+## Tests And Coverage
 
-A narrow verified defect was found before implementing the production screen: the frozen Account/Application read path did not expose account listing or ledger-derived balance summaries, while the milestone requires `Screen -> ViewModel -> Application Use Case -> Repository Interface -> Data Layer -> SQLDelight`.
-
-The fix was limited to:
-
-- `AccountRepository.findAll(...)`
-- `SQLDelightAccountRepository.findAll(...)` using the existing `selectAllAccounts` query
-- `ListAccountSummariesUseCase`
-- Koin registration for the new use case
-
-No database schema, ledger posting rule, transaction write behavior, or UI workflow was changed.
-
-## Tests Added
-
-- Application use case test for ledger-derived account balance summaries.
-- UI ViewModel tests for grouped account state and search filtering.
-- UI preview data test coverage for Accounts reference scenarios.
-- Navigation graph test updated to validate Accounts as the main graph start route.
+- Navigation graph tests now validate `Accounts` as the main entry destination.
+- Existing Accounts screen previews remain available for light and dark theme review.
+- Existing empty, loading, and error branches remain exercised through UI state.
 
 ## Result
 
-Accounts Screen v1 satisfies the milestone acceptance criteria and is ready for the next milestone: Category Screen Reference Implementation.
+Accounts Screen v1 is wired into the app shell and satisfies the current milestone scope without changing frozen business or persistence layers.

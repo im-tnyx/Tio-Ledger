@@ -6,13 +6,14 @@ Accounts
 
 ## Primary Reference
 
-- `docs/references/Screenshot_20260630_164106_Money Manager.jpg`
+- `docs/references/accounts/Screenshot_20260630_164106_Money Manager.jpg`
 
 ## Supporting References
 
-- `docs/status/ACCOUNTS_SCREEN_VALIDATION_REPORT.md`
-- `docs/status/UI_REFERENCE_COMPLIANCE_REPORT.md`
-- `docs/status/ACCESSIBILITY_REPORT.md`
+- `docs/references/accounts/Screenshot_20260630_164124_Money Manager.jpg`
+- `docs/references/accounts/Screenshot_20260630_164134_Money Manager.jpg`
+- `docs/references/accounts/Screenshot_20260630_164139_Money Manager.jpg`
+- `docs/references/accounts/README.md`
 - `docs/references/realbyteapps/` only if additional workflow, navigation, hierarchy, terminology, or interaction-pattern analysis is required.
 
 ## Workflow Summary

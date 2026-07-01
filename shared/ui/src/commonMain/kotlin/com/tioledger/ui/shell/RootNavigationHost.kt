@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tioledger.ui.accounts.AccountsRoute
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
@@ -25,7 +26,12 @@ fun RootNavigationHost(
     content: @Composable (RootRoute) -> Unit = { route ->
         when (route) {
             RootRoute.Splash -> Splash()
-            is RootRoute.Main -> MainPlaceholderDestination(route.destination)
+            is RootRoute.Main -> {
+                when (route.destination) {
+                    MainRoute.Accounts -> AccountsRoute()
+                    else -> MainPlaceholderDestination(route.destination)
+                }
+            }
         }
     },
 ) {

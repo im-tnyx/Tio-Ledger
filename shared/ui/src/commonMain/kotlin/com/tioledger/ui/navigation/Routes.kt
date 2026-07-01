@@ -12,7 +12,7 @@ sealed interface RootRoute : AppRoute {
     }
 
     data class Main(
-        val destination: MainRoute = MainRoute.Dashboard,
+        val destination: MainRoute = MainRoute.Accounts,
     ) : RootRoute {
         override val path: String = "main/${destination.path}"
     }
@@ -80,7 +80,7 @@ data class MainGraph(
 object TioNavigationGraphs {
     val main: MainGraph =
         MainGraph(
-            startRoute = MainRoute.Dashboard,
+            startRoute = MainRoute.Accounts,
             routes =
                 listOf(
                     MainRoute.Dashboard,

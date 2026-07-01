@@ -6,11 +6,11 @@ import kotlin.test.assertTrue
 
 class TioNavigationGraphsTest {
     @Test
-    fun rootGraphStartsAtSplashAndLinksToMainEntry() {
+    fun rootGraphStartsAtSplashAndLinksToAccountsMainEntry() {
         val root = TioNavigationGraphs.root
 
         assertEquals(RootRoute.Splash, root.startRoute)
-        assertEquals(MainRoute.Dashboard, root.mainEntry.destination)
+        assertEquals(MainRoute.Accounts, root.mainEntry.destination)
         assertTrue(root.routes.contains(root.mainEntry))
     }
 
@@ -18,7 +18,7 @@ class TioNavigationGraphsTest {
     fun mainGraphPreparesAllTopLevelRoutes() {
         val main = TioNavigationGraphs.main
 
-        assertEquals(MainRoute.Dashboard, main.startRoute)
+        assertEquals(MainRoute.Accounts, main.startRoute)
         assertEquals(
             listOf(
                 MainRoute.Dashboard,
