@@ -4,6 +4,14 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-07-01 - Navigation Graph v1
+
+- Replaced the single-route navigation placeholder with a typed app-route model split into `RootRoute` and `MainRoute`.
+- Defined `RootGraph` with a deterministic splash start route and a typed main entry route.
+- Defined `MainGraph` with prepared placeholder destinations for Dashboard, Accounts, Transactions, Categories, Reports, Loans, and Settings.
+- Added bottom-navigation route structure for the primary main destinations without wiring real feature screens.
+- Kept destination wiring placeholder-only so no ViewModel, repository, SQL, or business logic is introduced by navigation.
+
 ## 2026-06-30 - Decompiled Reference Governance
 
 - Formalized the priority order for UI references: approved screenshots, approved Tio Ledger mockups, JADX technical reference, official Money Manager website, then official Play Store screenshots.
@@ -18,7 +26,6 @@ Do not use this file for feature changes or bug fixes.
 - Wired the existing main navigation route to placeholder template content only.
 - Added Compose preview catalog coverage for light, dark, compact, expanded, component, and template states.
 - Updated UI module dependency boundaries so reusable UI infrastructure no longer depends directly on `shared:domain` or `shared:data`.
-- Aligned the reusable component catalog with explicit APIs for navigation rail, buttons, currency text, rows, cards, chips, loading, error, and badge states.
 - Marked UI Foundation v1 ready for the next milestone: Accounts Screen (Reference Implementation).
 
 ## 2026-06-30 - Application Bootstrap v1

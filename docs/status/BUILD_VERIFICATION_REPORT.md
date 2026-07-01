@@ -1,8 +1,8 @@
 # Build Verification Report
 
-Date: 2026-06-30
+Date: 2026-07-01
 Outcome: PASS
-Milestone: Accounts Screen v1
+Milestone: Navigation Graph v1
 
 ## Environment
 
@@ -14,45 +14,42 @@ Milestone: Accounts Screen v1
 
 | Command | Result |
 | --- | --- |
-| `./gradlew.bat :shared:ui:compileKotlinMetadata --console=plain --no-daemon --stacktrace` | PASS |
-| `./gradlew.bat ktlintCheck --console=plain --stacktrace` | PASS |
-| `./gradlew.bat build --console=plain --stacktrace` | PASS |
-| `./gradlew.bat check --console=plain --stacktrace` | PASS |
-| `./gradlew.bat detekt --console=plain --stacktrace` | PASS |
+| `./gradlew.bat build --stacktrace --no-daemon` | PASS |
+| `./gradlew.bat check --stacktrace --no-daemon` | PASS |
+| `./gradlew.bat ktlintCheck --stacktrace --no-daemon` | PASS |
+| `./gradlew.bat detekt --stacktrace --no-daemon` | PASS |
+| `git diff --check` | PASS |
 
 ## Verified Areas
 
 | Area | Result |
 | --- | --- |
-| Accounts screen compilation | PASS |
-| Accounts ViewModel tests | PASS |
-| Account summary use case tests | PASS |
-| Navigation graph tests | PASS |
-| Light and dark preview compilation | PASS |
+| Navigation route model compilation | PASS |
+| Root and main graph tests | PASS |
+| Placeholder destination host compilation | PASS |
 | Android app module build | PASS |
 | Wear OS app module build | PASS |
-| iOS module wiring | PASS |
-| Static analysis | PASS |
+| iOS shared wiring available in Gradle build | PASS |
 | Kotlin style checks | PASS |
+| Static analysis | PASS |
 
 ## Freeze Compliance
 
 | Frozen Layer | Result |
 | --- | --- |
-| Database Schema v1 (`shared:database`) | PASS: no schema changes |
-| Ledger Engine v1 (`shared:finance-engine`) | PASS: no posting rule changes |
-| Application Layer v1 (`shared:application`) | PASS: narrow verified read-path defect fix only |
-| Data Layer v1 (`shared:data`) | PASS: narrow verified read-path defect fix only |
-| UI Foundation v1 (`shared:ui`) | PASS: reused and extended for Accounts screen |
+| Database (`shared:database`) | PASS: no changes |
+| Ledger Engine (`shared:finance-engine`) | PASS: no changes |
+| Application Layer (`shared:application`) | PASS: no changes |
+| Data Layer (`shared:data`) | PASS: no changes |
+| Bootstrap (`shared:bootstrap`) | PASS: no changes |
+| UI Foundation (`shared:ui` tokens/components/templates) | PASS: navigation changes reused the frozen foundation without altering design tokens, reusable components, or templates |
 
 ## Notes
 
-- Gradle reported existing deprecation warnings for Gradle 9.0 compatibility; the build still passed.
+- The repository currently contains newer feature work outside this navigation-only milestone, but this validation pass was limited to the navigation graph changes and their build impact.
+- The Gradle wrapper required user-approved access to the user-level Gradle cache outside the workspace.
 - Native iOS execution was not run on Windows; Gradle validated the configured shared/iOS wiring available in this environment.
-- Some modules have no test sources yet, so their test tasks are `NO-SOURCE` or up-to-date by Gradle design.
-- Initial Gradle validation timed out because of stale daemon state; after `./gradlew.bat --stop --console=plain`, validation completed normally.
-- Detailed milestone reports: `ACCOUNTS_SCREEN_VALIDATION_REPORT.md`, `UI_REFERENCE_COMPLIANCE_REPORT.md`, `ACCESSIBILITY_REPORT.md`, and `ACCOUNTS_BUILD_VERIFICATION_REPORT.md`.
 
 ## Decision
 
-All requested verification gates passed. Accounts Screen v1 is complete and ready for Category Screen (Reference Implementation).
+All requested verification gates passed for Navigation Graph v1.

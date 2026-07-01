@@ -4,15 +4,16 @@ package com.tioledger.ui.shell
 
 import androidx.compose.runtime.Composable
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
-import com.tioledger.ui.navigation.TioRoute
+import com.tioledger.ui.navigation.RootRoute
+import com.tioledger.ui.navigation.TioNavigationGraphs
 
 @Composable
 fun TioAppShell(
     diagnostics: StartupDiagnostics,
     darkTheme: Boolean,
-    currentRoute: TioRoute = TioRoute.Accounts,
+    currentRoute: RootRoute = TioNavigationGraphs.root.mainEntry,
 ) {
-    val route = if (diagnostics.koinStarted) currentRoute else TioRoute.Splash
+    val route = if (diagnostics.koinStarted) currentRoute else TioNavigationGraphs.root.startRoute
     TioRootScaffold(darkTheme = darkTheme) {
         RootNavigationHost(currentRoute = route)
     }

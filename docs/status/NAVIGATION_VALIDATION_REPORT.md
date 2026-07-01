@@ -1,36 +1,40 @@
 # Navigation Validation Report
 
-Date: 2026-06-30
+Date: 2026-07-01
 Outcome: PASS
-Milestone: Application Bootstrap v1
+Milestone: Navigation Graph v1
 
 ## Scope
 
-Validated navigation infrastructure only. No production screens, feature navigation, ViewModels, or business flows were introduced.
+Validated navigation infrastructure only. No production screens, feature workflows, ViewModels, repositories, SQL, or business logic were introduced.
 
 ## Navigation Model
 
 | Item | Result |
 | --- | --- |
-| Route definitions | `TioRoute.Splash`, `TioRoute.Main` |
-| Root graph | Starts at `TioRoute.Splash` |
-| Main graph | Defines main app route placeholder only |
-| Root navigation host | Routes only to splash or empty main shell |
+| App route model | Typed `AppRoute`, `RootRoute`, and `MainRoute` hierarchy |
+| Root graph | Starts at `RootRoute.Splash` and links to typed main entry |
+| Main graph | Prepares placeholder routes for Dashboard, Accounts, Transactions, Categories, Reports, Loans, and Settings |
+| Bottom navigation | Structured for Dashboard, Accounts, Transactions, Categories, and Reports |
+| Root navigation host | Routes only to splash or placeholder main destinations |
 
 ## Validation
 
 | Check | Result |
 | --- | --- |
-| Root graph has a deterministic start route | PASS |
-| Route paths are unique | PASS |
-| Root host composes without business logic | PASS |
-| No feature screens were introduced | PASS |
+| Root graph has a deterministic splash start route | PASS |
+| Main graph start route is deterministic | PASS |
+| All prepared route paths are unique | PASS |
+| Bottom navigation routes stay within the main graph | PASS |
+| Placeholder destinations do not invoke real feature screens | PASS |
+| No ViewModel, repository, SQL, or business logic added to navigation wiring | PASS |
 
 ## Evidence
 
-- Navigation unit test passed through `./gradlew.bat build`
-- Navigation unit test passed through `./gradlew.bat check`
+- Navigation unit tests passed through `./gradlew.bat build --stacktrace`.
+- Navigation unit tests passed through `./gradlew.bat check --stacktrace`.
+- `ktlintCheck` and `detekt` passed after the navigation refactor.
 
 ## Decision
 
-Navigation foundation is valid for Application Bootstrap v1.
+Navigation Graph v1 is valid and ready to host future production screen wiring without bypassing the application architecture.

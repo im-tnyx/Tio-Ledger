@@ -6,24 +6,57 @@ import kotlin.test.assertTrue
 
 class TioNavigationGraphsTest {
     @Test
-    fun rootGraphStartsAtSplashAndContainsMainRoute() {
+    fun rootGraphStartsAtSplashAndLinksToMainEntry() {
         val root = TioNavigationGraphs.root
 
-        assertEquals(TioRoute.Splash, root.startRoute)
-        assertTrue(root.routes.contains(TioRoute.Main))
+        assertEquals(RootRoute.Splash, root.startRoute)
+        assertEquals(MainRoute.Dashboard, root.mainEntry.destination)
+        assertTrue(root.routes.contains(root.mainEntry))
     }
 
     @Test
-    fun mainGraphStartsAtAccountsRoute() {
+    fun mainGraphPreparesAllTopLevelRoutes() {
         val main = TioNavigationGraphs.main
 
-        assertEquals(TioRoute.Accounts, main.startRoute)
-        assertTrue(main.routes.contains(TioRoute.Accounts))
+        assertEquals(MainRoute.Dashboard, main.startRoute)
+        assertEquals(
+            listOf(
+                MainRoute.Dashboard,
+                MainRoute.Accounts,
+                MainRoute.Transactions,
+                MainRoute.Categories,
+                MainRoute.Reports,
+                MainRoute.Loans,
+                MainRoute.Settings,
+            ),
+            main.routes,
+        )
     }
 
     @Test
-    fun routePathsAreUnique() {
-        val paths = (TioNavigationGraphs.root.routes + TioNavigationGraphs.main.routes).map { it.path }
+    fun bottomNavigationRoutesStayWithinMainGraph() {
+        val main = TioNavigationGraphs.main
+
+        assertEquals(
+            listOf(
+                MainRoute.Dashboard,
+                MainRoute.Accounts,
+                MainRoute.Transactions,
+                MainRoute.Categories,
+                MainRoute.Reports,
+            ),
+            main.bottomNavigationRoutes,
+        )
+        assertTrue(main.bottomNavigationRoutes.all { it in main.routes })
+    }
+
+    @Test
+    fun preparedRoutePathsAreUnique() {
+        val paths =
+            buildList {
+                addAll(TioNavigationGraphs.root.routes.map { it.path })
+                addAll(TioNavigationGraphs.main.routes.map { it.path })
+            }
 
         assertEquals(paths.size, paths.toSet().size)
     }
