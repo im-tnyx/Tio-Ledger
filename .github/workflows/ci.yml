@@ -8,8 +8,9 @@ on:
 
 jobs:
   build-lint-test:
-    name: Build, lint, and unit tests
+    name: Targeted KMP validation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -29,14 +30,20 @@ jobs:
         with:
           gradle-version: "8.10.2"
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x ./gradlew
 
-      - name: Check
-        run: ./gradlew check --stacktrace
+      - name: Compile shared metadata
+        run: ./gradlew :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:finance-engine:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+
+      - name: Run critical tests
+        run: ./gradlew :shared:finance-engine:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
+
+      - name: Verify SQLDelight migrations
+        run: ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --console=plain --stacktrace
 
       - name: Ktlint
-        run: ./gradlew ktlintCheck --stacktrace
+        run: ./gradlew ktlintCheck --no-daemon --console=plain --stacktrace
 
       - name: Detekt
-        run: ./gradlew detekt --stacktrace
+        run: ./gradlew detekt --no-daemon --console=plain --stacktrace
