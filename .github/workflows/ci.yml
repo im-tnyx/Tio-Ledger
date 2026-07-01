@@ -33,13 +33,13 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build --stacktrace --no-daemon --console=plain
 
       - name: Check
-        run: ./gradlew check --stacktrace
+        run: ./gradlew check --stacktrace --no-daemon --console=plain
 
       - name: Ktlint
-        run: ./gradlew ktlintCheck --stacktrace
+        run: ./gradlew ktlintCheck --stacktrace --no-daemon --console=plain
 
       - name: Detekt
-        run: ./gradlew detekt --stacktrace
+        run: ./gradlew detekt --stacktrace --no-daemon --console=plain
