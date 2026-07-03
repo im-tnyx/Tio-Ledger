@@ -39,11 +39,9 @@ jobs:
       - name: Run critical tests
         run: ./gradlew :shared:finance-engine:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
 
-      - name: SQLDelight migration verification guard
-        # SQLDelight migration verification currently hangs on GitHub Linux runners.
-        # Keep the task callable, but explicitly skip it in CI until the runner issue is resolved.
+      - name: Verify SQLDelight migrations
         env:
-          TIO_SKIP_SQLDELIGHT_MIGRATION_VERIFY: "true"
+          JAVA_TOOL_OPTIONS: -Dorg.sqlite.tmpdir=${{ runner.temp }} -Djava.io.tmpdir=${{ runner.temp }}
         run: ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --console=plain --stacktrace
 
       - name: Ktlint

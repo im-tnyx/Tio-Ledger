@@ -16,9 +16,8 @@ configure<SqlDelightExtension> {
 
 val isWindows = System.getProperty("os.name").contains("Windows", ignoreCase = true)
 val isCi = System.getenv("CI") != null || System.getenv("GITHUB_ACTIONS") != null
-val skipMigrationVerification = System.getenv("TIO_SKIP_SQLDELIGHT_MIGRATION_VERIFY") == "true"
 
-if ((isWindows && !isCi) || skipMigrationVerification) {
+if (isWindows && !isCi) {
     tasks.withType<app.cash.sqldelight.gradle.VerifyMigrationTask>().configureEach {
         enabled = false
     }
