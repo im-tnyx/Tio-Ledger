@@ -74,4 +74,4 @@ jobs:
       - name: Verify SQLDelight migrations
         env:
           JAVA_TOOL_OPTIONS: -Dorg.sqlite.tmpdir=${{ runner.temp }} -Djava.io.tmpdir=${{ runner.temp }}
-        run: ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --console=plain --stacktrace
+        run: ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-parallel --max-workers=1 --console=plain --stacktrace --info
