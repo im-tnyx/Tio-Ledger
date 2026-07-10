@@ -73,6 +73,6 @@ jobs:
 
       - name: Verify SQLDelight migrations
         env:
-          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx10g
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
           JAVA_TOOL_OPTIONS: -Dorg.sqlite.tmpdir=${{ runner.temp }} -Djava.io.tmpdir=${{ runner.temp }}
         run: ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace
