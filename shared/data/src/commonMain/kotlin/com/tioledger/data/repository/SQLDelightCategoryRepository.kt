@@ -10,6 +10,17 @@ import com.tioledger.domain.repository.CategoryRepository
 class SQLDelightCategoryRepository(
     private val database: TioLedgerDatabase,
 ) : CategoryRepository {
+    override fun findAll(): LedgerResult<List<Category>> {
+        val result =
+            runDatabaseCatching {
+                database.categoriesQueries
+                    .selectAllCategories()
+                    .executeAsList()
+                    .map { it.toDomain() }
+            }
+        return result.toLedgerResult()
+    }
+
     override fun findById(categoryId: String): LedgerResult<Category> {
         val result =
             runDatabaseCatching {

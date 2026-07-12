@@ -4,6 +4,8 @@ import com.tioledger.core.model.LedgerResult
 import com.tioledger.domain.model.Category
 
 interface CategoryRepository {
+    fun findAll(): LedgerResult<List<Category>>
+
     fun findById(categoryId: String): LedgerResult<Category>
 
     fun create(category: Category): LedgerResult<Category>

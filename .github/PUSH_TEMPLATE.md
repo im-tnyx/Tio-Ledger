@@ -22,29 +22,39 @@ Use this checklist before committing, pushing, or opening a Pull Request. It is 
   ```powershell
   java -version
   ```
-- [ ] On Windows, if Java is not on `PATH`, use the Android Studio JBR for this shell:
-  ```powershell
-  $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
-  ```
+- [ ] On Windows, if Java is not on `PATH`, set `JAVA_HOME` for this shell.
+- [ ] When local sandboxed Gradle state is noisy, keep `GRADLE_USER_HOME` and `ANDROID_USER_HOME` explicit for repeatable validation.
 
 ## 3. Required Validation Before Push
 
-Run these from the repository root. Use `./gradlew` on bash/macOS/Linux and `.\gradlew.bat` on Windows PowerShell.
+Run these from the repository root. Use `./gradlew` on bash/macOS/Linux and `./gradlew.bat` on Windows PowerShell.
 
-- [ ] Build and unit-test the Gradle project:
+- [ ] Compile shared metadata:
   ```powershell
-  .\gradlew.bat build --stacktrace
+  .\gradlew.bat :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:finance-engine:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+  ```
+- [ ] Run critical tests:
+  ```powershell
+  .\gradlew.bat :shared:finance-engine:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
+  ```
+- [ ] Verify SQLDelight migrations explicitly:
+  ```powershell
+  .\gradlew.bat :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --console=plain --stacktrace
   ```
 - [ ] Run Kotlin formatting validation:
   ```powershell
-  .\gradlew.bat ktlintCheck --stacktrace
+  .\gradlew.bat ktlintCheck --no-daemon --console=plain --stacktrace
   ```
 - [ ] Run static analysis:
   ```powershell
-  .\gradlew.bat detekt --stacktrace
+  .\gradlew.bat detekt --no-daemon --console=plain --stacktrace
+  ```
+- [ ] Check whitespace and patch integrity before push:
+  ```powershell
+  git diff --check
   ```
 
-Do not use `./gradlew clean compileKotlin` as a root validation command. In this KMP/Android project, `compileKotlin` is ambiguous from the root project.
+Do not rely on broad root `build` or broad root `check` as the default CI-equivalent validation path for this repository.
 
 ## 4. Optional Local Formatting
 
