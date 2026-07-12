@@ -14,6 +14,7 @@ import com.tioledger.application.usecase.category.ArchiveCategoryCommand
 import com.tioledger.application.usecase.category.ArchiveCategoryUseCase
 import com.tioledger.application.usecase.category.CreateCategoryCommand
 import com.tioledger.application.usecase.category.CreateCategoryUseCase
+import com.tioledger.application.usecase.category.ListCategoriesUseCase
 import com.tioledger.application.usecase.category.UpdateCategoryCommand
 import com.tioledger.application.usecase.category.UpdateCategoryUseCase
 import com.tioledger.application.usecase.transaction.RecordAdjustmentCommand
@@ -235,6 +236,23 @@ class ApplicationUseCaseTest {
     }
 
     @Test
+    fun listCategoriesReturnsFilteredActiveCategories() {
+        val categories =
+            FakeCategoryRepository(
+                listOf(
+                    category("income-default", CategoryType.INCOME).copy(isDefault = true),
+                    category("income-secondary", CategoryType.INCOME),
+                    category("expense-hidden", CategoryType.EXPENSE).copy(deletedAt = 400L),
+                ),
+            )
+
+        val result = ListCategoriesUseCase(categories)(CategoryType.INCOME)
+        val outcome = assertSuccess(result)
+
+        assertEquals(listOf("income-default", "income-secondary"), outcome.value.map { it.id })
+    }
+
+    @Test
     fun recordIncomeUsesLedgerEngineAndRecordsTransaction() {
         val accounts = FakeAccountRepository(listOf(account("acc-1")))
         val categories = FakeCategoryRepository(listOf(category("cat-income", CategoryType.INCOME)))
@@ -438,8 +456,12 @@ private class FakeLedgerRepository : LedgerRepository {
         )
 }
 
-private class FakeCategoryRepository(initialCategories: List<Category> = emptyList()) : CategoryRepository {
+private class FakeCategoryRepository(
+    initialCategories: List<Category> = emptyList(),
+) : CategoryRepository {
     val categories: MutableMap<String, Category> = initialCategories.associateBy { it.id }.toMutableMap()
+
+    override fun findAll(): LedgerResult<List<Category>> = LedgerResult.Success(categories.values.toList())
 
     override fun findById(categoryId: String): LedgerResult<Category> =
         categories[categoryId]?.let { LedgerResult.Success(it) }

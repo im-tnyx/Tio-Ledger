@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName", "UnusedPrivateMember")
+﻿@file:Suppress("FunctionName", "UnusedPrivateMember")
 
 package com.tioledger.ui.transactions
 
@@ -14,12 +14,29 @@ private fun TransactionEntryLightPreview() {
             state =
                 TransactionEntryUiState(
                     transactionType = TransactionType.Expense,
-                    amount = "1250",
-                    selectedAccount = "Cash",
-                    selectedCategory = "Food",
-                    selectedDate = "Today",
+                    amount = "1250.00",
                     note = "Lunch",
-                    canSave = true,
+                    selectedDate = "Today",
+                    accountOptions =
+                        listOf(
+                            TransactionAccountOption(
+                                id = "cash",
+                                name = "Cash",
+                                currencyCode = "INR",
+                                subtitle = "Cash • INR 1250.00",
+                            ),
+                        ),
+                    categoryOptions =
+                        listOf(
+                            TransactionCategoryOption(
+                                id = "food",
+                                name = "Food",
+                                subtitle = "expense",
+                            ),
+                        ),
+                    selectedAccountId = "cash",
+                    selectedCategoryId = "food",
+                    isLoading = false,
                 ),
             onAction = {},
             onNavigateBack = {},
@@ -34,13 +51,28 @@ private fun TransactionEntryDarkPreview() {
         TransactionEntryScreen(
             state =
                 TransactionEntryUiState(
-                    transactionType = TransactionType.Income,
-                    amount = "45000",
-                    selectedAccount = "Bank",
-                    selectedCategory = "Salary",
+                    transactionType = TransactionType.Transfer,
+                    amount = "4500.00",
+                    note = "Wallet top-up",
                     selectedDate = "Today",
-                    note = "Monthly salary",
-                    canSave = true,
+                    accountOptions =
+                        listOf(
+                            TransactionAccountOption(
+                                id = "bank",
+                                name = "Bank",
+                                currencyCode = "INR",
+                                subtitle = "Bank • INR 25000.00",
+                            ),
+                            TransactionAccountOption(
+                                id = "wallet",
+                                name = "Wallet",
+                                currencyCode = "INR",
+                                subtitle = "Wallet • INR 4500.00",
+                            ),
+                        ),
+                    selectedAccountId = "bank",
+                    selectedTargetAccountId = "wallet",
+                    isLoading = false,
                 ),
             onAction = {},
             onNavigateBack = {},

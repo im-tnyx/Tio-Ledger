@@ -6,6 +6,7 @@ import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.category.ArchiveCategoryUseCase
 import com.tioledger.application.usecase.category.CreateCategoryUseCase
+import com.tioledger.application.usecase.category.ListCategoriesUseCase
 import com.tioledger.application.usecase.category.UpdateCategoryUseCase
 import com.tioledger.application.usecase.transaction.RecordAdjustmentUseCase
 import com.tioledger.application.usecase.transaction.RecordExpenseUseCase
@@ -58,6 +59,7 @@ fun applicationModule(): Module =
         factory { UpdateAccountUseCase(get()) }
         factory { ArchiveAccountUseCase(get()) }
         factory { ListAccountSummariesUseCase(get(), get(), get()) }
+        factory { ListCategoriesUseCase(get()) }
         factory { CreateCategoryUseCase(get()) }
         factory { UpdateCategoryUseCase(get()) }
         factory { ArchiveCategoryUseCase(get()) }

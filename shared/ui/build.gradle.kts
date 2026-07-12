@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     id("tio.compose.multiplatform.library")
 }
 
@@ -12,6 +12,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }

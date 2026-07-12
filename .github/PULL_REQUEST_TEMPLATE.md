@@ -50,9 +50,12 @@ Out of scope:
 
 Follow `.github/PUSH_TEMPLATE.md` before push. List only checks actually run.
 
-- [ ] `./gradlew build --stacktrace`
-- [ ] `./gradlew ktlintCheck --stacktrace`
-- [ ] `./gradlew detekt --stacktrace`
+- [ ] `./gradlew :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:finance-engine:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace`
+- [ ] `./gradlew :shared:finance-engine:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace`
+- [ ] `./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --console=plain --stacktrace`
+- [ ] `./gradlew ktlintCheck --no-daemon --console=plain --stacktrace`
+- [ ] `./gradlew detekt --no-daemon --console=plain --stacktrace`
+- [ ] `git diff --check`
 - [ ] Other:
 - [ ] Not run. Reason:
 

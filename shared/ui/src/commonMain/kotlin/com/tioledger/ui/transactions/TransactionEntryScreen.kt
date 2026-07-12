@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -29,6 +29,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,7 +40,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioEmptyState
+import com.tioledger.ui.components.TioErrorState
 import com.tioledger.ui.components.TioIcon
+import com.tioledger.ui.components.TioListItem
+import com.tioledger.ui.components.TioLoadingState
 import com.tioledger.ui.design.TioIconToken
 import com.tioledger.ui.design.TioSpacing
 import org.koin.compose.koinInject
@@ -50,6 +54,15 @@ fun TransactionEntryRoute(
     onNavigateBack: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
+    val event by viewModel.event.collectAsState()
+
+    LaunchedEffect(event) {
+        if (event is TransactionEntryEvent.TransactionSaved) {
+            viewModel.onAction(TransactionEntryAction.EventConsumed)
+            onNavigateBack()
+        }
+    }
+
     TransactionEntryScreen(
         state = state,
         onAction = viewModel::onAction,
@@ -78,8 +91,35 @@ fun TransactionEntryScreen(
         },
     ) { padding ->
         when {
-            state.isLoading -> TransactionEntryLoading()
-            state.errorMessage != null -> TransactionEntryError(state.errorMessage)
+            state.isLoading -> {
+                TioLoadingState(
+                    label = "Loading transaction form...",
+                    modifier = Modifier.padding(padding),
+                )
+            }
+            state.loadErrorMessage != null -> {
+                TioErrorState(
+                    title = "Transaction entry unavailable",
+                    message = state.loadErrorMessage,
+                    retryLabel = "Retry",
+                    onRetry = { onAction(TransactionEntryAction.Retry) },
+                    modifier = Modifier.padding(padding),
+                )
+            }
+            state.accountOptions.isEmpty() -> {
+                TioEmptyState(
+                    title = "No accounts",
+                    message = "Create an account before recording a transaction.",
+                    modifier = Modifier.padding(padding),
+                )
+            }
+            !state.isTransfer && state.categoryOptions.isEmpty() -> {
+                TioEmptyState(
+                    title = "No categories",
+                    message = "Create a category before recording a ${state.transactionType.displayName.lowercase()} transaction.",
+                    modifier = Modifier.padding(padding),
+                )
+            }
             else -> {
                 Column(
                     modifier =
@@ -96,21 +136,55 @@ fun TransactionEntryScreen(
                         onTypeSelected = { onAction(TransactionEntryAction.TypeChanged(it)) },
                     )
 
+                    InlineMessageCard(
+                        message = state.validationErrorMessage,
+                        tone = MessageTone.Error,
+                        onDismiss = { onAction(TransactionEntryAction.MessageDismissed) },
+                    )
+                    InlineMessageCard(
+                        message = state.persistenceErrorMessage,
+                        tone = MessageTone.Error,
+                        onDismiss = { onAction(TransactionEntryAction.MessageDismissed) },
+                    )
+                    InlineMessageCard(
+                        message = state.saveSuccessMessage,
+                        tone = MessageTone.Success,
+                        onDismiss = { onAction(TransactionEntryAction.MessageDismissed) },
+                    )
+
                     AmountInputCard(
                         amount = state.amount,
+                        currencyCode = state.selectedCurrencyCode,
                         onAmountChanged = { onAction(TransactionEntryAction.AmountChanged(it)) },
                         transactionType = state.transactionType,
                     )
 
-                    AccountSelectorCard(
-                        selectedAccount = state.selectedAccount,
-                        onAccountClicked = { onAction(TransactionEntryAction.AccountClicked) },
-                    )
-
-                    CategorySelectorCard(
-                        selectedCategory = state.selectedCategory,
-                        onCategoryClicked = { onAction(TransactionEntryAction.CategoryClicked) },
-                    )
+                    if (state.isTransfer) {
+                        AccountSelectorCard(
+                            label = "From account",
+                            selectedAccount = state.selectedAccount?.name,
+                            subtitle = state.selectedAccount?.subtitle,
+                            onAccountClicked = { onAction(TransactionEntryAction.SourceAccountClicked) },
+                        )
+                        AccountSelectorCard(
+                            label = "To account",
+                            selectedAccount = state.selectedTargetAccount?.name,
+                            subtitle = state.selectedTargetAccount?.subtitle,
+                            onAccountClicked = { onAction(TransactionEntryAction.TargetAccountClicked) },
+                        )
+                    } else {
+                        AccountSelectorCard(
+                            label = "Account",
+                            selectedAccount = state.selectedAccount?.name,
+                            subtitle = state.selectedAccount?.subtitle,
+                            onAccountClicked = { onAction(TransactionEntryAction.SourceAccountClicked) },
+                        )
+                        CategorySelectorCard(
+                            selectedCategory = state.selectedCategory?.name,
+                            subtitle = state.selectedCategory?.subtitle,
+                            onCategoryClicked = { onAction(TransactionEntryAction.CategoryClicked) },
+                        )
+                    }
 
                     DateSelectorCard(
                         selectedDate = state.selectedDate,
@@ -139,18 +213,37 @@ fun TransactionEntryScreen(
 
                         Button(
                             onClick = { onAction(TransactionEntryAction.SaveClicked) },
-                            modifier =
-                                Modifier.weight(1f).semantics {
-                                    contentDescription = "Save transaction button"
-                                },
+                            modifier = Modifier.weight(1f).semantics { contentDescription = "Save transaction button" },
                             enabled = state.canSave,
                         ) {
-                            Text("Save")
+                            Text(if (state.isSaving) "Saving..." else "Save")
                         }
                     }
                 }
             }
         }
+    }
+
+    if (state.activeAccountPicker != null) {
+        AccountPickerDialog(
+            title =
+                if (state.activeAccountPicker == TransactionAccountPickerTarget.Source) {
+                    "Select account"
+                } else {
+                    "Select destination account"
+                },
+            options = state.accountOptions,
+            onDismiss = { onAction(TransactionEntryAction.AccountPickerDismissed) },
+            onSelected = { onAction(TransactionEntryAction.AccountSelected(it)) },
+        )
+    }
+
+    if (state.isCategoryPickerVisible) {
+        CategoryPickerDialog(
+            options = state.categoryOptions,
+            onDismiss = { onAction(TransactionEntryAction.CategoryPickerDismissed) },
+            onSelected = { onAction(TransactionEntryAction.CategorySelected(it)) },
+        )
     }
 }
 
@@ -163,10 +256,7 @@ private fun TransactionTypeSelector(
     val types = TransactionType.entries
     TabRow(
         selectedTabIndex = types.indexOf(selectedType),
-        modifier =
-            modifier.semantics {
-                contentDescription = "Transaction type selector"
-            },
+        modifier = modifier.semantics { contentDescription = "Transaction type selector" },
     ) {
         types.forEach { type ->
             Tab(
@@ -181,20 +271,16 @@ private fun TransactionTypeSelector(
 @Composable
 private fun AmountInputCard(
     amount: String,
+    currencyCode: String,
     onAmountChanged: (String) -> Unit,
     transactionType: TransactionType,
     modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column(
-            modifier = Modifier.padding(TioSpacing.lg),
-        ) {
+        Column(modifier = Modifier.padding(TioSpacing.lg)) {
             Text(
                 text = "Amount",
                 style = MaterialTheme.typography.labelLarge,
@@ -204,10 +290,7 @@ private fun AmountInputCard(
             OutlinedTextField(
                 value = amount,
                 onValueChange = onAmountChanged,
-                modifier =
-                    Modifier.fillMaxWidth().semantics {
-                        contentDescription = "Transaction amount input"
-                    },
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Transaction amount input" },
                 textStyle =
                     MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold,
@@ -221,7 +304,7 @@ private fun AmountInputCard(
                 placeholder = { Text("0.00", style = MaterialTheme.typography.headlineLarge) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
-                prefix = { Text("₹ ", style = MaterialTheme.typography.headlineLarge) },
+                prefix = { Text("$currencyCode ", style = MaterialTheme.typography.headlineLarge) },
             )
         }
     }
@@ -229,37 +312,36 @@ private fun AmountInputCard(
 
 @Composable
 private fun AccountSelectorCard(
+    label: String,
     selectedAccount: String?,
+    subtitle: String?,
     onAccountClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SelectorCard(
-        label = "Account",
+        label = label,
         value = selectedAccount ?: "Select account",
+        subtitle = subtitle,
         icon = TioIconToken.Account,
         onClick = onAccountClicked,
-        modifier =
-            modifier.semantics {
-                contentDescription = "Account selector"
-            },
+        modifier = modifier.semantics { contentDescription = "$label selector" },
     )
 }
 
 @Composable
 private fun CategorySelectorCard(
     selectedCategory: String?,
+    subtitle: String?,
     onCategoryClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SelectorCard(
         label = "Category",
         value = selectedCategory ?: "Select category",
+        subtitle = subtitle,
         icon = TioIconToken.Category,
         onClick = onCategoryClicked,
-        modifier =
-            modifier.semantics {
-                contentDescription = "Category selector"
-            },
+        modifier = modifier.semantics { contentDescription = "Category selector" },
     )
 }
 
@@ -272,12 +354,10 @@ private fun DateSelectorCard(
     SelectorCard(
         label = "Date",
         value = selectedDate,
+        subtitle = "Uses current device time",
         icon = TioIconToken.Calendar,
         onClick = onDateClicked,
-        modifier =
-            modifier.semantics {
-                contentDescription = "Date selector"
-            },
+        modifier = modifier.semantics { contentDescription = "Date selector" },
     )
 }
 
@@ -285,6 +365,7 @@ private fun DateSelectorCard(
 private fun SelectorCard(
     label: String,
     value: String,
+    subtitle: String?,
     icon: TioIconToken,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -292,10 +373,7 @@ private fun SelectorCard(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Row(
             modifier = Modifier.padding(TioSpacing.lg),
@@ -320,6 +398,14 @@ private fun SelectorCard(
                             MaterialTheme.colorScheme.onSurface
                         },
                 )
+                if (subtitle != null) {
+                    Spacer(modifier = Modifier.height(TioSpacing.xs))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             TioIcon(TioIconToken.Settings, contentDescription = "Select $label")
         }
@@ -334,14 +420,9 @@ private fun NoteInputCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
-        Column(
-            modifier = Modifier.padding(TioSpacing.lg),
-        ) {
+        Column(modifier = Modifier.padding(TioSpacing.lg)) {
             Text(
                 text = "Note",
                 style = MaterialTheme.typography.labelMedium,
@@ -351,10 +432,7 @@ private fun NoteInputCard(
             OutlinedTextField(
                 value = note,
                 onValueChange = onNoteChanged,
-                modifier =
-                    Modifier.fillMaxWidth().semantics {
-                        contentDescription = "Transaction note input"
-                    },
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Transaction note input" },
                 placeholder = { Text("Add a note (optional)") },
                 minLines = 3,
                 maxLines = 5,
@@ -367,10 +445,7 @@ private fun NoteInputCard(
 private fun TagsPlaceholderCard(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-            ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
     ) {
         Column(
             modifier = Modifier.padding(TioSpacing.lg),
@@ -383,7 +458,7 @@ private fun TagsPlaceholderCard(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(TioSpacing.sm))
             Text(
-                text = "Tag functionality coming in v2",
+                text = "Tag functionality remains out of scope for this milestone",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             )
@@ -392,31 +467,106 @@ private fun TagsPlaceholderCard(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun TransactionEntryLoading(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize().padding(TioSpacing.lg),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        CircularProgressIndicator()
-        Spacer(modifier = Modifier.height(TioSpacing.md))
-        Text("Loading transaction form...")
-    }
+private fun AccountPickerDialog(
+    title: String,
+    options: List<TransactionAccountOption>,
+    onDismiss: () -> Unit,
+    onSelected: (String) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        title = { Text(title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.xs)) {
+                options.forEach { account ->
+                    TioListItem(
+                        title = account.name,
+                        subtitle = account.subtitle,
+                        onClick = { onSelected(account.id) },
+                    )
+                }
+            }
+        },
+    )
 }
 
 @Composable
-private fun TransactionEntryError(
-    errorMessage: String,
-    modifier: Modifier = Modifier,
+private fun CategoryPickerDialog(
+    options: List<TransactionCategoryOption>,
+    onDismiss: () -> Unit,
+    onSelected: (String) -> Unit,
 ) {
-    Column(
-        modifier = modifier.fillMaxSize().padding(TioSpacing.lg),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        title = { Text("Select category") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.xs)) {
+                options.forEach { category ->
+                    TioListItem(
+                        title = category.name,
+                        subtitle = category.subtitle,
+                        onClick = { onSelected(category.id) },
+                    )
+                }
+            }
+        },
+    )
+}
+
+private enum class MessageTone {
+    Error,
+    Success,
+}
+
+@Composable
+private fun InlineMessageCard(
+    message: String?,
+    tone: MessageTone,
+    onDismiss: () -> Unit,
+) {
+    if (message == null) {
+        return
+    }
+
+    val containerColor =
+        when (tone) {
+            MessageTone.Error -> MaterialTheme.colorScheme.errorContainer
+            MessageTone.Success -> MaterialTheme.colorScheme.secondaryContainer
+        }
+    val contentColor =
+        when (tone) {
+            MessageTone.Error -> MaterialTheme.colorScheme.onErrorContainer
+            MessageTone.Success -> MaterialTheme.colorScheme.onSecondaryContainer
+        }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        TioEmptyState(
-            title = "Error",
-            message = errorMessage,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(TioSpacing.md),
+            horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = message,
+                modifier = Modifier.weight(1f),
+                color = contentColor,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            TextButton(onClick = onDismiss) {
+                Text("Dismiss")
+            }
+        }
     }
 }

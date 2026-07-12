@@ -8,11 +8,33 @@ import com.tioledger.application.internal.validateOptionalId
 import com.tioledger.application.internal.validateTimestamp
 import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
+import com.tioledger.application.model.UseCaseOutcome
 import com.tioledger.core.model.LedgerResult
 import com.tioledger.domain.event.DomainEvent
 import com.tioledger.domain.model.Category
 import com.tioledger.domain.model.CategoryType
 import com.tioledger.domain.repository.CategoryRepository
+
+class ListCategoriesUseCase(private val categoryRepository: CategoryRepository) {
+    operator fun invoke(type: CategoryType? = null): ApplicationResult<List<Category>> {
+        return when (val result = categoryRepository.findAll()) {
+            is LedgerResult.Success -> {
+                val categories =
+                    result.value
+                        .asSequence()
+                        .filter { it.deletedAt == null }
+                        .filter { category -> type == null || category.type == type }
+                        .sortedWith(
+                            compareByDescending<Category> { it.isDefault }
+                                .thenBy { it.name.lowercase() },
+                        )
+                        .toList()
+                ApplicationResult.Success(UseCaseOutcome(value = categories))
+            }
+            is LedgerResult.Failure -> ApplicationResult.Failure(ApplicationError.Repository(result.error))
+        }
+    }
+}
 
 data class CreateCategoryCommand(
     val id: String,
