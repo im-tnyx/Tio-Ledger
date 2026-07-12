@@ -11,7 +11,7 @@ koin = "4.0.0"
 kotlin = "2.0.21"
 kotlinx-serialization = "1.7.3"
 ktlint-gradle = "12.1.2"
-sqldelight = "2.0.2"
+sqldelight = "2.3.2"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
