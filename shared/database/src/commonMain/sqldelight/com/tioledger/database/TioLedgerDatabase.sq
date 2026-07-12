@@ -30,8 +30,8 @@ CREATE TABLE exchange_rates (
     updated_by TEXT,
     deleted_at INTEGER,
     
-    FOREIGN KEY (base_currency) REFERENCES currencies(code) ON DELETE RESTRICT,
-    FOREIGN KEY (target_currency) REFERENCES currencies(code) ON DELETE RESTRICT,
+    CONSTRAINT fk_exchange_rates_base_currency FOREIGN KEY (base_currency) REFERENCES currencies(code) ON DELETE RESTRICT,
+    CONSTRAINT fk_exchange_rates_target_currency FOREIGN KEY (target_currency) REFERENCES currencies(code) ON DELETE RESTRICT,
     CHECK (rate_value > 0),
     CHECK (rate_scale >= 0)
 );
@@ -64,7 +64,7 @@ CREATE TABLE merchant_aliases (
     raw_alias TEXT NOT NULL UNIQUE,  -- Match text (e.g. 'Reliance Smart Bazaar')
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE CASCADE
+    CONSTRAINT fk_merchant_aliases_merchant FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE CASCADE
 );
 
 -- ==========================================
@@ -88,7 +88,7 @@ CREATE TABLE accounts (
     updated_by TEXT,
     deleted_at INTEGER,
     
-    FOREIGN KEY (currency_code) REFERENCES currencies(code) ON DELETE RESTRICT,
+    CONSTRAINT fk_accounts_currency FOREIGN KEY (currency_code) REFERENCES currencies(code) ON DELETE RESTRICT,
     CHECK (type IN ('CASH', 'BANK', 'CREDIT_CARD', 'WALLET', 'LOAN_LINKED', 'INVESTMENT')),
     CHECK (is_archived IN (0, 1))
 );
@@ -108,7 +108,7 @@ CREATE TABLE categories (
     device_id TEXT,
     deleted_at INTEGER,
     
-    FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
+    CONSTRAINT fk_categories_parent FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
     CHECK (type IN ('INCOME', 'EXPENSE')),
     CHECK (is_default IN (0, 1))
 );
@@ -131,7 +131,7 @@ CREATE TABLE transactions (
     updated_by TEXT,
     deleted_at INTEGER,
     
-    FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE SET NULL,
+    CONSTRAINT fk_transactions_merchant FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE SET NULL,
     CHECK (type IN ('INCOME', 'EXPENSE', 'TRANSFER', 'LOAN_DISBURSEMENT', 'REPAYMENT', 'ADJUSTMENT')),
     CHECK (created_by IN ('MANUAL', 'SMS', 'OCR', 'IMPORT', 'SYNC', 'API')),
     CHECK (is_recurring IN (0, 1))
@@ -146,9 +146,9 @@ CREATE TABLE transaction_splits (
     notes TEXT,
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
-    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    CONSTRAINT fk_transaction_splits_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_transaction_splits_account FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_transaction_splits_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
     CHECK (amount >= 0)
 );
 
@@ -163,9 +163,9 @@ CREATE TABLE ledger_entries (
     description TEXT,
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
-    FOREIGN KEY (split_id) REFERENCES transaction_splits(id) ON DELETE SET NULL,
-    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_ledger_entries_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ledger_entries_split FOREIGN KEY (split_id) REFERENCES transaction_splits(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ledger_entries_account FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
     CHECK (entry_type IN ('DEBIT', 'CREDIT')),
     CHECK (source_type IN ('TRANSACTION', 'EMI', 'PREPAYMENT', 'ADJUSTMENT', 'OPENING_BALANCE', 'SYSTEM'))
 );
@@ -190,8 +190,8 @@ CREATE TABLE budgets (
     device_id TEXT,
     deleted_at INTEGER,
     
-    FOREIGN KEY (currency_code) REFERENCES currencies(code) ON DELETE RESTRICT,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    CONSTRAINT fk_budgets_currency FOREIGN KEY (currency_code) REFERENCES currencies(code) ON DELETE RESTRICT,
+    CONSTRAINT fk_budgets_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
     CHECK (period_type IN ('WEEKLY', 'MONTHLY', 'YEARLY', 'CUSTOM')),
     CHECK (amount > 0)
 );
@@ -204,7 +204,7 @@ CREATE TABLE budget_periods (
     target_amount INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (budget_id) REFERENCES budgets(id) ON DELETE CASCADE,
+    CONSTRAINT fk_budget_periods_budget FOREIGN KEY (budget_id) REFERENCES budgets(id) ON DELETE CASCADE,
     CHECK (start_date < end_date),
     CHECK (target_amount > 0)
 );
@@ -241,8 +241,8 @@ CREATE TABLE loans (
     device_id TEXT,
     deleted_at INTEGER,
     
-    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
-    FOREIGN KEY (disbursed_account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_loans_account FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_loans_disbursed_account FOREIGN KEY (disbursed_account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
     CHECK (interest_type IN ('FIXED', 'FLOATING', 'REDUCING', 'FLAT')),
     CHECK (compounding_frequency IN ('MONTHLY', 'QUARTERLY', 'ANNUALLY', 'NONE')),
     CHECK (payment_frequency IN ('MONTHLY')),
@@ -270,7 +270,7 @@ CREATE TABLE emi_schedules (
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     
-    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
+    CONSTRAINT fk_emi_schedules_loan FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
     CHECK (status IN ('PENDING', 'PAID', 'OVERDUE', 'WAIVED', 'ADJUSTED')),
     CHECK (installment_number > 0),
     CHECK (opening_balance >= 0),
@@ -288,9 +288,9 @@ CREATE TABLE emi_payments (
     payment_date INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
-    FOREIGN KEY (schedule_id) REFERENCES emi_schedules(id) ON DELETE SET NULL,
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_emi_payments_loan FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_emi_payments_schedule FOREIGN KEY (schedule_id) REFERENCES emi_schedules(id) ON DELETE SET NULL,
+    CONSTRAINT fk_emi_payments_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
     CHECK (principal_amount >= 0),
     CHECK (interest_amount >= 0)
 );
@@ -304,8 +304,8 @@ CREATE TABLE loan_prepayments (
     policy TEXT NOT NULL,                         -- TENURE_REDUCTION, EMI_REDUCTION
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_loan_prepayments_loan FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_loan_prepayments_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
     CHECK (policy IN ('TENURE_REDUCTION', 'EMI_REDUCTION')),
     CHECK (amount > 0)
 );
@@ -319,7 +319,7 @@ CREATE TABLE loan_interest_events (
     reason TEXT NOT NULL,                         -- APR_REVISION, MANUAL_ADJUSTMENT
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
+    CONSTRAINT fk_loan_interest_events_loan FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
     CHECK (reason IN ('APR_REVISION', 'MANUAL_ADJUSTMENT')),
     CHECK (old_interest_rate_basis_points >= 0),
     CHECK (new_interest_rate_basis_points >= 0)
@@ -333,7 +333,7 @@ CREATE TABLE loan_reschedules (
     previous_schedule_snapshot TEXT NOT NULL,     -- Serialization of schedules rows
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE
+    CONSTRAINT fk_loan_reschedules_loan FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE
 );
 
 CREATE TABLE loan_snapshots (
@@ -344,7 +344,7 @@ CREATE TABLE loan_snapshots (
     schedule_rows_json TEXT NOT NULL,             -- Serialized complete schedule array
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
+    CONSTRAINT fk_loan_snapshots_loan FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE,
     CHECK (event_type IN ('BASELINE', 'EMI_CHANGE', 'PREPAYMENT', 'FORECLOSURE', 'RESCHEDULE'))
 );
 
@@ -357,8 +357,8 @@ CREATE TABLE loan_settlements (
     settlement_date INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_loan_settlements_loan FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_loan_settlements_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
     CHECK (settlement_amount >= 0),
     CHECK (write_off_amount >= 0)
 );
@@ -380,8 +380,8 @@ CREATE TABLE transaction_tags (
     tag_id TEXT NOT NULL,
     
     PRIMARY KEY (transaction_id, tag_id),
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
-    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+    CONSTRAINT fk_transaction_tags_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_transaction_tags_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
 CREATE TABLE attachments (
@@ -396,7 +396,7 @@ CREATE TABLE attachments (
     storage_provider TEXT NOT NULL,               -- LOCAL, CLOUD
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_attachments_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
     CHECK (storage_provider IN ('LOCAL', 'CLOUD')),
     CHECK (file_size >= 0)
 );
@@ -428,8 +428,8 @@ CREATE TABLE recurring_transactions (
     device_id TEXT,
     deleted_at INTEGER,
     
-    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_recurring_transactions_account FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_recurring_transactions_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
     CHECK (type IN ('INCOME', 'EXPENSE', 'TRANSFER')),
     CHECK (frequency IN ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY')),
     CHECK (amount >= 0),
@@ -462,7 +462,7 @@ CREATE TABLE generated_notifications (
     reference_id TEXT,
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (reminder_rule_id) REFERENCES reminder_rules(id) ON DELETE SET NULL,
+    CONSTRAINT fk_generated_notifications_reminder_rule FOREIGN KEY (reminder_rule_id) REFERENCES reminder_rules(id) ON DELETE SET NULL,
     CHECK (status IN ('PENDING', 'SENT', 'DISMISSED', 'ACTIONED'))
 );
 
@@ -497,7 +497,7 @@ CREATE TABLE sms_parsed_transactions (
     status TEXT NOT NULL,                         -- PENDING, APPROVED, REJECTED
     created_at INTEGER NOT NULL,
     
-    FOREIGN KEY (session_id) REFERENCES sms_import_sessions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_sms_parsed_transactions_session FOREIGN KEY (session_id) REFERENCES sms_import_sessions(id) ON DELETE CASCADE,
     CHECK (parsed_direction IN ('INCOME', 'EXPENSE', 'TRANSFER') OR parsed_direction IS NULL),
     CHECK (confidence_level IN ('HIGH', 'MEDIUM', 'LOW')),
     CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))

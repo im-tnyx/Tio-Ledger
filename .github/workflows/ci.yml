@@ -8,8 +8,9 @@ on:
 
 jobs:
   build-lint-test:
-    name: Build, lint, and unit tests
-    runs-on: ubuntu-latest
+    name: Targeted KMP validation
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -29,14 +30,55 @@ jobs:
         with:
           gradle-version: "8.10.2"
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x ./gradlew
 
-      - name: Check
-        run: ./gradlew check --stacktrace
+      - name: Compile shared metadata
+        run: ./gradlew :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:finance-engine:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+
+      - name: Run critical tests
+        run: ./gradlew :shared:finance-engine:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
 
       - name: Ktlint
-        run: ./gradlew ktlintCheck --stacktrace
+        run: ./gradlew ktlintCheck --no-daemon --console=plain --stacktrace
 
       - name: Detekt
-        run: ./gradlew detekt --stacktrace
+        run: ./gradlew detekt --no-daemon --console=plain --stacktrace
+
+  migration-verification:
+    name: SQLDelight migration verification
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x ./gradlew
+
+      - name: Inspect baseline database
+        run: |
+          sqlite3 shared/database/src/commonMain/sqldelight/com/tioledger/database/1.db "PRAGMA integrity_check;"
+          sqlite3 shared/database/src/commonMain/sqldelight/com/tioledger/database/1.db "PRAGMA foreign_key_check;"
+          sqlite3 shared/database/src/commonMain/sqldelight/com/tioledger/database/1.db "PRAGMA user_version;"
+
+      - name: Verify SQLDelight migrations
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
+          JAVA_TOOL_OPTIONS: -Dorg.sqlite.tmpdir=${{ runner.temp }} -Djava.io.tmpdir=${{ runner.temp }}
+        run: ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace

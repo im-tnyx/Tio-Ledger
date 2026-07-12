@@ -22,4 +22,3 @@ if (isWindows && !isCi) {
         enabled = false
     }
 }
-
