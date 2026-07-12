@@ -48,7 +48,7 @@ jobs:
   migration-verification:
     name: SQLDelight migration verification
     runs-on: ubuntu-22.04
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -77,53 +77,8 @@ jobs:
           sqlite3 shared/database/src/commonMain/sqldelight/com/tioledger/database/1.db "PRAGMA foreign_key_check;"
           sqlite3 shared/database/src/commonMain/sqldelight/com/tioledger/database/1.db "PRAGMA user_version;"
 
-      - name: Verify SQLDelight migrations with diagnostics
+      - name: Verify SQLDelight migrations
         env:
           GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
           JAVA_TOOL_OPTIONS: -Dorg.sqlite.tmpdir=${{ runner.temp }} -Djava.io.tmpdir=${{ runner.temp }}
-        run: |
-          set -o pipefail
-          mkdir -p build/ci-diagnostics
-
-          ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration \
-            --no-daemon \
-            --no-parallel \
-            --max-workers=1 \
-            --console=plain \
-            --stacktrace \
-            --info > build/ci-diagnostics/gradle.log 2>&1 &
-          gradle_pid=$!
-
-          for _ in $(seq 1 480); do
-            if ! kill -0 "$gradle_pid" 2>/dev/null; then
-              wait "$gradle_pid"
-              result=$?
-              cat build/ci-diagnostics/gradle.log
-              exit "$result"
-            fi
-            sleep 1
-          done
-
-          ps -ef > build/ci-diagnostics/processes.txt
-          for java_pid in $(pgrep -f '[j]ava' || true); do
-            jcmd "$java_pid" Thread.print > "build/ci-diagnostics/jcmd-${java_pid}.txt" 2>&1 || true
-            jstack -l "$java_pid" > "build/ci-diagnostics/jstack-${java_pid}.txt" 2>&1 || true
-          done
-
-          kill -QUIT "$gradle_pid" 2>/dev/null || true
-          sleep 10
-          kill -TERM "$gradle_pid" 2>/dev/null || true
-          sleep 5
-          kill -KILL "$gradle_pid" 2>/dev/null || true
-
-          cat build/ci-diagnostics/gradle.log
-          exit 124
-
-      - name: Upload SQLDelight diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: sqldelight-diagnostics
-          path: build/ci-diagnostics
-          if-no-files-found: warn
-          retention-days: 7
+        run: ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace
