@@ -52,10 +52,8 @@ class TransactionEntryViewModel(
             TransactionEntryAction.SourceAccountClicked -> openAccountPicker(TransactionAccountPickerTarget.Source)
             TransactionEntryAction.TargetAccountClicked -> openAccountPicker(TransactionAccountPickerTarget.Destination)
             is TransactionEntryAction.AccountSelected -> selectAccount(action.accountId)
-            TransactionEntryAction.AccountPickerDismissed -> {
-                _uiState.update { it.copy(activeAccountPicker = null) }
-            }
-            TransactionEntryAction.CategoryClicked -> {
+            TransactionEntryAction.AccountPickerDismissed -> _uiState.update { it.copy(activeAccountPicker = null) }
+            TransactionEntryAction.CategoryClicked ->
                 _uiState.update {
                     it.copy(
                         isCategoryPickerVisible = true,
@@ -64,13 +62,12 @@ class TransactionEntryViewModel(
                         saveSuccessMessage = null,
                     )
                 }
-            }
             is TransactionEntryAction.CategorySelected -> selectCategory(action.categoryId)
-            TransactionEntryAction.CategoryPickerDismissed -> {
-                _uiState.update { it.copy(isCategoryPickerVisible = false) }
-            }
-            TransactionEntryAction.DateClicked -> Unit
-            is TransactionEntryAction.NoteChanged -> {
+            TransactionEntryAction.CategoryPickerDismissed -> _uiState.update { it.copy(isCategoryPickerVisible = false) }
+            TransactionEntryAction.DateClicked ->
+                _event.value = TransactionEntryEvent.DateSelectionRequested(_uiState.value.selectedTimestamp)
+            is TransactionEntryAction.DateSelected -> selectDate(action.timestamp, action.label)
+            is TransactionEntryAction.NoteChanged ->
                 _uiState.update {
                     it.copy(
                         note = action.note,
@@ -79,9 +76,8 @@ class TransactionEntryViewModel(
                         saveSuccessMessage = null,
                     )
                 }
-            }
             TransactionEntryAction.SaveClicked -> saveTransaction()
-            TransactionEntryAction.MessageDismissed -> {
+            TransactionEntryAction.MessageDismissed ->
                 _uiState.update {
                     it.copy(
                         validationErrorMessage = null,
@@ -89,10 +85,7 @@ class TransactionEntryViewModel(
                         saveSuccessMessage = null,
                     )
                 }
-            }
-            TransactionEntryAction.EventConsumed -> {
-                _event.value = null
-            }
+            TransactionEntryAction.EventConsumed -> _event.value = null
         }
     }
 
@@ -115,24 +108,11 @@ class TransactionEntryViewModel(
 
         val accountsResult = listAccountSummariesUseCase()
         val categoriesResult = listCategoriesUseCase()
-
         when {
-            accountsResult is ApplicationResult.Failure -> {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        loadErrorMessage = accountsResult.error.toLoadMessage(),
-                    )
-                }
-            }
-            categoriesResult is ApplicationResult.Failure -> {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        loadErrorMessage = categoriesResult.error.toLoadMessage(),
-                    )
-                }
-            }
+            accountsResult is ApplicationResult.Failure ->
+                _uiState.update { it.copy(isLoading = false, loadErrorMessage = accountsResult.error.toLoadMessage()) }
+            categoriesResult is ApplicationResult.Failure ->
+                _uiState.update { it.copy(isLoading = false, loadErrorMessage = categoriesResult.error.toLoadMessage()) }
             accountsResult is ApplicationResult.Success && categoriesResult is ApplicationResult.Success -> {
                 allCategories = categoriesResult.outcome.value
                 _uiState.update { current ->
@@ -158,7 +138,7 @@ class TransactionEntryViewModel(
             current.copy(
                 transactionType = type,
                 categoryOptions = availableCategories,
-                selectedCategoryId = current.selectedCategoryId.takeIf { selectedId -> availableCategories.any { it.id == selectedId } },
+                selectedCategoryId = current.selectedCategoryId.takeIf { id -> availableCategories.any { it.id == id } },
                 validationErrorMessage = null,
                 persistenceErrorMessage = null,
                 saveSuccessMessage = null,
@@ -191,7 +171,7 @@ class TransactionEntryViewModel(
     private fun selectAccount(accountId: String) {
         _uiState.update { current ->
             when (current.activeAccountPicker) {
-                TransactionAccountPickerTarget.Source -> {
+                TransactionAccountPickerTarget.Source ->
                     current.copy(
                         selectedAccountId = accountId,
                         activeAccountPicker = null,
@@ -199,8 +179,7 @@ class TransactionEntryViewModel(
                         persistenceErrorMessage = null,
                         saveSuccessMessage = null,
                     ).normalizedForType()
-                }
-                TransactionAccountPickerTarget.Destination -> {
+                TransactionAccountPickerTarget.Destination ->
                     current.copy(
                         selectedTargetAccountId = accountId,
                         activeAccountPicker = null,
@@ -208,7 +187,6 @@ class TransactionEntryViewModel(
                         persistenceErrorMessage = null,
                         saveSuccessMessage = null,
                     ).normalizedForType()
-                }
                 null -> current
             }
         }
@@ -226,16 +204,28 @@ class TransactionEntryViewModel(
         }
     }
 
+    private fun selectDate(timestamp: Long, label: String) {
+        if (timestamp < 0L || label.isBlank()) return
+        _uiState.update {
+            it.copy(
+                selectedTimestamp = timestamp,
+                selectedDate = label,
+                validationErrorMessage = null,
+                persistenceErrorMessage = null,
+                saveSuccessMessage = null,
+            )
+        }
+        _event.value = null
+    }
+
     private fun saveTransaction() {
         val state = _uiState.value
         val sourceAccountId = state.selectedAccountId
-        val currencyCode = state.selectedCurrencyCode
-        val amount = parseMoney(state.amount, currencyCode)
-        val validationError = validate(state, amount)
-        if (validationError != null) {
+        val amount = parseMoney(state.amount, state.selectedCurrencyCode)
+        validate(state, amount)?.let { message ->
             _uiState.update {
                 it.copy(
-                    validationErrorMessage = validationError,
+                    validationErrorMessage = message,
                     persistenceErrorMessage = null,
                     saveSuccessMessage = null,
                 )
@@ -245,7 +235,6 @@ class TransactionEntryViewModel(
 
         requireNotNull(sourceAccountId)
         requireNotNull(amount)
-
         _uiState.update {
             it.copy(
                 isSaving = true,
@@ -255,7 +244,7 @@ class TransactionEntryViewModel(
             )
         }
 
-        val saveResult =
+        val result =
             when (state.transactionType) {
                 TransactionType.Income ->
                     recordIncomeUseCase(
@@ -294,16 +283,12 @@ class TransactionEntryViewModel(
                     )
             }
 
-        when (saveResult) {
-            is ApplicationResult.Success -> onSaveSucceeded(saveResult.outcome.value)
-            is ApplicationResult.Failure -> {
+        when (result) {
+            is ApplicationResult.Success -> onSaveSucceeded(result.outcome.value)
+            is ApplicationResult.Failure ->
                 _uiState.update {
-                    it.copy(
-                        isSaving = false,
-                        persistenceErrorMessage = saveResult.error.toPersistenceMessage(),
-                    )
+                    it.copy(isSaving = false, persistenceErrorMessage = result.error.toPersistenceMessage())
                 }
-            }
         }
     }
 
@@ -322,28 +307,15 @@ class TransactionEntryViewModel(
         _event.value = TransactionEntryEvent.TransactionSaved(record.transaction.id)
     }
 
-    private fun validate(
-        state: TransactionEntryUiState,
-        amount: Money?,
-    ): String? {
-        if (state.isLoading) {
-            return "Transaction form is still loading."
-        }
-        if (state.accountOptions.isEmpty()) {
-            return "At least one account is required before recording a transaction."
-        }
-        if (state.selectedAccountId == null) {
-            return "Select an account."
-        }
-        if (amount == null) {
-            return amountValidationMessage(state.amount)
-        }
+    private fun validate(state: TransactionEntryUiState, amount: Money?): String? {
+        if (state.isLoading) return "Transaction form is still loading."
+        if (state.accountOptions.isEmpty()) return "At least one account is required before recording a transaction."
+        if (state.selectedAccountId == null) return "Select an account."
+        if (amount == null) return amountValidationMessage(state.amount)
         if (state.transactionType != TransactionType.Transfer && state.categoryOptions.isEmpty()) {
             return "No categories are available for this transaction type."
         }
-        if (state.transactionType != TransactionType.Transfer && state.selectedCategoryId == null) {
-            return "Select a category."
-        }
+        if (state.transactionType != TransactionType.Transfer && state.selectedCategoryId == null) return "Select a category."
         if (state.transactionType == TransactionType.Transfer && state.selectedTargetAccountId == null) {
             return "Select a destination account."
         }
@@ -353,53 +325,21 @@ class TransactionEntryViewModel(
         return null
     }
 
-    private fun parseMoney(
-        rawAmount: String,
-        currencyCode: String,
-    ): Money? {
+    private fun parseMoney(rawAmount: String, currencyCode: String): Money? {
         val normalized = rawAmount.trim().replace(",", "")
-        if (normalized.isBlank()) {
-            return null
-        }
-        if (normalized.count { it == '.' } > 1 || normalized.any { it != '.' && it !in '0'..'9' }) {
-            return null
-        }
-
+        if (normalized.isBlank()) return null
+        if (normalized.count { it == '.' } > 1 || normalized.any { it != '.' && it !in '0'..'9' }) return null
         val parts = normalized.split('.')
-        if (parts.size > 2) {
-            return null
-        }
-
+        if (parts.size > 2) return null
         val majorPart = parts.firstOrNull().orEmpty().ifBlank { "0" }
         val fractionPart = parts.getOrNull(1).orEmpty()
-        if (fractionPart.length > 2) {
-            return null
-        }
-
+        if (fractionPart.length > 2) return null
         val majorUnits = majorPart.toLongOrNull() ?: return null
-        val fractionUnits =
-            when (fractionPart.length) {
-                0 -> 0L
-                1 -> fractionPart.toLong() * 10L
-                else -> fractionPart.toLong()
-            }
-
-        if (
-            majorUnits > Long.MAX_VALUE / 100L ||
-            (majorUnits == Long.MAX_VALUE / 100L && fractionUnits > Long.MAX_VALUE % 100L)
-        ) {
-            return null
-        }
-
-        val minorUnits = (majorUnits * 100L) + fractionUnits
-        if (minorUnits <= 0L) {
-            return null
-        }
-
-        return Money(
-            amount = minorUnits,
-            currency = CurrencyCode(currencyCode),
-        )
+        val fractionUnits = when (fractionPart.length) { 0 -> 0L; 1 -> fractionPart.toLong() * 10L; else -> fractionPart.toLong() }
+        if (majorUnits > Long.MAX_VALUE / 100L || (majorUnits == Long.MAX_VALUE / 100L && fractionUnits > Long.MAX_VALUE % 100L)) return null
+        val minorUnits = majorUnits * 100L + fractionUnits
+        if (minorUnits <= 0L) return null
+        return Money(minorUnits, CurrencyCode(currencyCode))
     }
 
     private fun amountValidationMessage(rawAmount: String): String {
@@ -407,52 +347,20 @@ class TransactionEntryViewModel(
         return when {
             normalized.isBlank() -> "Enter an amount."
             normalized.count { it == '.' } > 1 || normalized.any { it != '.' && it !in '0'..'9' } -> "Amount must contain digits only."
-            normalized.split('.').getOrNull(1)?.length ?: 0 > 2 -> "Use at most 2 decimal places."
-            else -> {
-                val parts = normalized.split('.')
-                val majorUnits = parts.firstOrNull().orEmpty().ifBlank { "0" }.toLongOrNull()
-                if (majorUnits == null) {
-                    "Enter a valid amount."
-                } else {
-                    val fractionText = parts.getOrNull(1).orEmpty()
-                    val fractionUnits =
-                        when (fractionText.length) {
-                            0 -> 0L
-                            1 -> fractionText.toLong() * 10L
-                            else -> fractionText.toLong()
-                        }
-                    if (
-                        majorUnits > Long.MAX_VALUE / 100L ||
-                        (majorUnits == Long.MAX_VALUE / 100L && fractionUnits > Long.MAX_VALUE % 100L)
-                    ) {
-                        "Amount is too large."
-                    } else if (
-                        (majorUnits * 100L) + fractionUnits <= 0L
-                    ) {
-                        "Amount must be greater than zero."
-                    } else {
-                        "Enter a valid amount."
-                    }
-                }
-            }
+            (normalized.split('.').getOrNull(1)?.length ?: 0) > 2 -> "Use at most 2 decimal places."
+            else -> "Enter a valid amount."
         }
     }
 
     private fun categoriesFor(type: TransactionType): List<TransactionCategoryOption> {
-        val categoryType =
-            when (type) {
-                TransactionType.Expense -> CategoryType.EXPENSE
-                TransactionType.Income -> CategoryType.INCOME
-                TransactionType.Transfer -> null
-            }
-        return allCategories
-            .asSequence()
-            .filter { category -> categoryType == null || category.type == categoryType }
-            .map { category ->
+        val categoryType = when (type) { TransactionType.Expense -> CategoryType.EXPENSE; TransactionType.Income -> CategoryType.INCOME; TransactionType.Transfer -> null }
+        return allCategories.asSequence()
+            .filter { categoryType == null || it.type == categoryType }
+            .map {
                 TransactionCategoryOption(
-                    id = category.id,
-                    name = category.name,
-                    subtitle = if (category.isDefault) "Default ${category.type.name.lowercase()}" else category.type.name.lowercase(),
+                    id = it.id,
+                    name = it.name,
+                    subtitle = if (it.isDefault) "Default ${it.type.name.lowercase()}" else it.type.name.lowercase(),
                 )
             }
             .toList()
@@ -467,13 +375,8 @@ private fun AccountBalanceSummary.toOption(): TransactionAccountOption =
         subtitle = "${account.type.displayName()} - ${balance.toDisplayAmount()}",
     )
 
-private fun TransactionEntryUiState.normalizedForType(): TransactionEntryUiState {
-    return if (transactionType == TransactionType.Transfer) {
-        copy(selectedCategoryId = null)
-    } else {
-        copy(selectedTargetAccountId = null)
-    }
-}
+private fun TransactionEntryUiState.normalizedForType(): TransactionEntryUiState =
+    if (transactionType == TransactionType.Transfer) copy(selectedCategoryId = null) else copy(selectedTargetAccountId = null)
 
 private fun AccountType.displayName(): String =
     when (this) {
