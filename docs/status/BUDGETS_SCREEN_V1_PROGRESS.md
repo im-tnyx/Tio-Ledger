@@ -1,6 +1,6 @@
 # Budgets Screen v1 Progress
 
-Status: In progress — CRUD foundation ready for local validation
+Status: In progress — budget summary foundation ready for local validation
 Issue: #10
 Branch: `feat/budgets-screen-v1`
 Draft PR: #11
@@ -15,9 +15,9 @@ Replace the budget-management navigation gap with a production Budgets screen ba
 - The frozen SQLDelight schema already contained `budgets` and `budget_periods` tables.
 - No Budget Domain model, repository contract, Application use case, SQLDelight query file, Data adapter, Koin registration, or production UI path existed.
 - `TioIconToken.Budget` existed, but `MainRoute.Budgets` did not.
-- Existing Categories and Transaction History paths provide the category scope and immutable expense records required for later spend aggregation.
+- Existing Categories and Transaction History paths provide the category scope and immutable expense records required for spend aggregation.
 - No database schema change is required for Budgets Screen v1.
-- V1 will support weekly, monthly, and yearly recurring budgets. Custom periods remain unsupported until explicit start/end editing is designed.
+- V1 supports weekly, monthly, and yearly recurring budgets. Custom periods remain unsupported until explicit start/end editing is designed.
 
 ## Completed CRUD Foundation Slice
 
@@ -31,10 +31,29 @@ Replace the budget-management navigation gap with a production Budgets screen ba
 - Registered the budget repository and use cases in Bootstrap/Koin diagnostics.
 - Added focused Application and SQLDelight integration tests.
 
+## CRUD Foundation Validation Passed
+
+```text
+./gradlew :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 15s
+17 actionable tasks: 8 executed, 9 up-to-date
+
+./gradlew :shared:application:test :shared:data:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 40s
+191 actionable tasks: 55 executed, 136 up-to-date
+```
+
+## Completed Budget Summary Slice
+
+- Added timezone-aware weekly, monthly, and yearly current-period calculation in `shared:budget-engine`.
+- Added deterministic category-scoped expense aggregation from immutable transaction-history records.
+- Added fixed-integer utilization permille, remaining amount, and on-track/warning/reached/exceeded status calculation without floating-point money math.
+- Added `BudgetSummary` and `ListBudgetSummariesUseCase` in the Application layer.
+- Added repository-failure, invalid-time-zone, period-boundary, category, currency, and status tests.
+- Registered budget calculators and summary use case in Bootstrap/Koin diagnostics.
+
 ## Remaining Implementation Slices
 
-- Add pure current-period calculation and spend/progress aggregation in `shared:budget-engine`.
-- Add an Application budget-summary read path using immutable transaction history.
 - Add `BudgetsViewModel`, immutable UI state/actions, and production loading/empty/error/list/create/edit states.
 - Add `MainRoute.Budgets`, route wiring, navigation entry, previews, and UI tests.
 - Finalize roadmap/status documentation and validation evidence.
@@ -49,8 +68,9 @@ Replace the budget-management navigation gap with a production Budgets screen ba
 
 ## Validation Pending
 
-- CRUD foundation metadata compilation and focused Application/Data tests.
-- Budget-engine, summary, Bootstrap, and UI validation after their slices land.
+- Budget-engine, Application summary, and Bootstrap metadata compilation.
+- Focused budget-engine and Application tests.
+- UI compile/tests after the production screen slice lands.
 - `ktlintCheck`.
 - `detekt`.
 - SQLDelight migration verification.
