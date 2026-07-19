@@ -1,6 +1,6 @@
 # Loan Creation and Loan Details v1 Progress
 
-Status: Engine and Domain foundation implemented — static-analysis rerun pending
+Status: Engine and Domain validated; Data/SQLDelight foundation implemented — local validation pending
 Issue: #12
 Branch: `feat/loan-creation-details-v1`
 PR: #13 (draft)
@@ -32,9 +32,8 @@ Replace the Loans placeholder/navigation gap with production loan creation and l
 - `MainRoute.Loans` and the Loan icon token already exist and are registered in the main graph.
 - The accepted loan-engine design and precision ADR require deterministic EMI/schedule calculations, integer minor-unit persistence, explicit rounding, and no floating-point money arithmetic.
 
-### Missing executable paths
+### Remaining executable gaps
 
-- No SQLDelight loan query file, row mapper, Data repository, or atomic loan-plus-schedule persistence path exists.
 - `shared:application` does not depend on `shared:loan-engine` and contains no loan use cases.
 - Bootstrap/Koin does not depend on or register the loan engine, loan repository, or loan use cases.
 - The posting engine supports income, expense, transfer, opening balance, and adjustment only; loan disbursement, EMI, and prepayment posting strategies are not implemented.
@@ -44,10 +43,6 @@ Replace the Loans placeholder/navigation gap with production loan creation and l
 ### Schema decision
 
 No schema change is required for the baseline v1 workflow. Currency is derived from the linked loan account and must match the disbursed account. Existing schema fields are sufficient for a monthly reducing-balance loan and persisted amortization schedule.
-
-### Verified architecture blocker
-
-The deterministic loan calculation layer and Domain contracts had to be implemented before Application/Data/UI work. That foundation is now present and ready for local validation.
 
 ## Implemented Loan-Engine Foundation
 
@@ -68,7 +63,18 @@ The deterministic loan calculation layer and Domain contracts had to be implemen
 - Added `DomainEvent.LoanCreated`.
 - Added typed `LoanNotFound` and `DuplicateLoanId` repository errors.
 
-## Current Local Validation
+## Implemented Data And SQLDelight Foundation
+
+- Added deterministic loan insert, schedule insert, loan-list, loan-details, and ordered-installment SQLDelight queries.
+- Derived loan currency from the linked account rather than duplicating currency in the frozen loan schema.
+- Added SQLDelight row mappers for Loan and LoanInstallment Domain models.
+- Added `SQLDelightLoanRepository` with deterministic list/details reads and typed missing/duplicate results.
+- Persisted the loan and complete baseline schedule in one database transaction.
+- Added schedule-ownership validation so installments cannot be persisted against another loan ID.
+- Added integration coverage for deterministic ordering, details reconstruction, typed duplicate/missing errors, and full rollback after an installment insert failure.
+- No schema or migration change was introduced.
+
+## Validated Engine And Domain Gate
 
 ```text
 Metadata compilation
@@ -76,18 +82,18 @@ BUILD SUCCESSFUL in 1m 18s
 13 actionable tasks: 4 executed, 9 up-to-date
 
 Loan-engine tests
-BUILD SUCCESSFUL in 54s
-104 actionable tasks: 34 executed, 3 from cache, 67 up-to-date
+BUILD SUCCESSFUL in 55s
+104 actionable tasks: 15 executed, 89 up-to-date
 
 ktlintCheck detekt
-FAILED: one ktlint expression-body formatting issue in LoanCalculator.kt
-Fix pushed; rerun pending.
+BUILD SUCCESSFUL in 20s
+74 actionable tasks: 4 executed, 70 up-to-date
 
 git diff --check
 (no output)
 
 git status
-clean and up to date before the formatting fix was pulled locally
+clean and up to date
 ```
 
 ## Approved Initial V1 Scope
@@ -127,13 +133,23 @@ These follow-up workflows require dedicated posting strategies and transactional
 
 ## Remaining Implementation Sequence
 
-1. Complete the static-analysis rerun for the loan-engine and Domain foundation.
-2. Add SQLDelight CRUD/schedule queries, mappers, and atomic Data repository integration tests.
-3. Add Application create/list/details use cases with account/currency/status validation.
-4. Register engine/repository/use cases in Bootstrap/Koin diagnostics.
-5. Resolve the approved Loan UI reference note before production Compose work.
-6. Add loan list/create/details UI, typed navigation, previews, and tests.
-7. Run final metadata, tests, static analysis, migration, and repository-integrity gates.
+1. Validate the Data/SQLDelight foundation locally.
+2. Add Application create/list/details use cases with account/currency/status validation.
+3. Register engine/repository/use cases in Bootstrap/Koin diagnostics.
+4. Resolve the approved Loan UI reference note before production Compose work.
+5. Add loan list/create/details UI, typed navigation, previews, and tests.
+6. Run final metadata, tests, static analysis, migration, and repository-integrity gates.
+
+## Current Validation Gate
+
+```text
+./gradlew :shared:database:compileKotlinMetadata :shared:data:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+./gradlew :shared:data:test --no-daemon --console=plain --stacktrace
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace
+git diff --check
+git status
+```
 
 ## Architecture Constraints
 
@@ -144,15 +160,3 @@ These follow-up workflows require dedicated posting strategies and transactional
 - Baseline loan creation must not silently invent disbursement/payment transactions.
 - Schema changes require a verified blocker and explicit review.
 - Kotlin Multiplatform `commonMain` compatibility must be preserved.
-
-## Planned Validation Gates
-
-```text
-Metadata compilation
-Focused loan-engine/application/data/UI tests
-ktlintCheck
-detekt
-SQLDelight migration verification
-git diff --check
-clean working tree
-```
