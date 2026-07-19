@@ -137,22 +137,22 @@ fun BudgetsScreen(
     }
 
     state.editor?.let { editor ->
-        BudgetEditorDialog(
-            editor = editor,
-            categoryLabel = state.categoryOptions.selectedName(editor.categoryId),
-            isSaving = state.isSaving,
-            validationErrorMessage = state.validationErrorMessage,
-            persistenceErrorMessage = state.persistenceErrorMessage,
-            onAction = onAction,
-        )
-    }
-
-    if (state.editor != null && state.isCategoryPickerVisible) {
-        BudgetCategoryPickerDialog(
-            options = state.categoryOptions,
-            selectedCategoryId = state.editor.categoryId,
-            onAction = onAction,
-        )
+        if (state.isCategoryPickerVisible) {
+            BudgetCategoryPickerDialog(
+                options = state.categoryOptions,
+                selectedCategoryId = editor.categoryId,
+                onAction = onAction,
+            )
+        } else {
+            BudgetEditorDialog(
+                editor = editor,
+                categoryLabel = state.categoryOptions.selectedName(editor.categoryId),
+                isSaving = state.isSaving,
+                validationErrorMessage = state.validationErrorMessage,
+                persistenceErrorMessage = state.persistenceErrorMessage,
+                onAction = onAction,
+            )
+        }
     }
 }
 
@@ -455,7 +455,10 @@ private fun BudgetProgressStatus.toStatusColor(): Color =
     }
 
 private fun List<BudgetCategoryOption>.selectedName(categoryId: String?): String =
-    firstOrNull { it.id == categoryId }?.name ?: "All expenses"
+    when {
+        categoryId == null -> "All expenses"
+        else -> firstOrNull { it.id == categoryId }?.name ?: "Unavailable category"
+    }
 
 private fun BudgetPeriodType.editorLabel(): String =
     when (this) {
