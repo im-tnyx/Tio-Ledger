@@ -57,7 +57,7 @@ The deterministic loan calculation layer and Domain contracts had to be implemen
 - Added overflow-safe multiplication, addition, and subtraction paths with typed arithmetic failure.
 - Added exact final-payment adjustment so the schedule closes at zero without negative balances.
 - Added due-date generation by calendar month with month-end clamping and leap-year handling.
-- Added golden tests for a representative 875-basis-point fixture, zero-interest loans, final-payment adjustment, month-end dates, half-up rounding, invalid inputs, overflow handling, and schedule invariants.
+- Added golden tests for a representative 875-basis-point regression fixture, zero-interest loans, final-payment adjustment, month-end dates, half-up rounding, invalid inputs, overflow handling, and schedule invariants.
 - The 875-basis-point value is only a regression fixture; production rates are supplied dynamically through `LoanTerms`.
 
 ## Implemented Domain Foundation
