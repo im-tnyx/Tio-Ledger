@@ -11,18 +11,27 @@ Replace the `MainRoute.Transactions` placeholder with a production transaction-h
 ## Verified Starting Gaps
 
 - `MainRoute.Transactions` currently falls through to `MainPlaceholderDestination`.
-- `TransactionRepository` exposes only `record(...)`; no transaction-history read contract exists.
-- No `ListTransactionsUseCase`, `TransactionsViewModel`, or production Transactions screen exists.
+- The write repository exposes only `record(...)`; no transaction-history read contract existed.
+- No `ListTransactionsUseCase`, `TransactionsViewModel`, or production Transactions screen existed.
 - README and roadmap status text still point to already-completed milestones.
 
-## Planned Work
+## Completed In Read-Path Slice
 
-- Define a narrow transaction-summary read model and repository contract.
-- Implement deterministic newest-first SQLDelight retrieval with account/category context.
-- Add Application use case and Data-layer mapping/tests.
+- Added immutable transaction-history record and split models in the Domain layer.
+- Added a separate read-only `TransactionHistoryRepository` contract so existing write-repository fakes remain source-compatible.
+- Added deterministic SQLDelight retrieval of active transactions with split, account, category, currency, and ledger-entry context.
+- Implemented the read contract in `SQLDelightTransactionRepository`.
+- Added `ListTransactionsUseCase` and UI-ready `TransactionSummary` mapping.
+- Added transfer source/destination resolution from persisted ledger direction and account type.
+- Registered the read repository and use case in Koin.
+- Added focused Application and SQLDelight integration tests.
+
+## Remaining Work
+
+- Validate the read-path slice locally and resolve generated SQLDelight/formatting issues, if any.
 - Implement Transactions UI states, ViewModel, navigation, previews, and focused tests.
 - Wire add transaction and refresh-after-save flows.
-- Update status documentation and validation evidence.
+- Update stale roadmap/status documentation and final validation evidence.
 
 ## Validation Gate
 
