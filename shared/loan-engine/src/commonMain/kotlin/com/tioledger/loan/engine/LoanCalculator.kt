@@ -245,8 +245,7 @@ private fun daysInMonth(
         else -> throw LoanCalculationException(LoanCalculationError.DateOutOfRange)
     }
 
-private fun isLeapYear(year: Int): Boolean =
-    year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+private fun isLeapYear(year: Int): Boolean = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
 
 private fun floorDiv(
     value: Long,
