@@ -26,6 +26,7 @@ class TioNavigationGraphsTest {
                 MainRoute.Transactions,
                 MainRoute.TransactionEntry,
                 MainRoute.Categories,
+                MainRoute.Budgets,
                 MainRoute.Reports,
                 MainRoute.Loans,
                 MainRoute.Settings,
@@ -44,7 +45,7 @@ class TioNavigationGraphsTest {
                 MainRoute.Accounts,
                 MainRoute.Transactions,
                 MainRoute.Categories,
-                MainRoute.Reports,
+                MainRoute.Budgets,
             ),
             main.bottomNavigationRoutes,
         )
