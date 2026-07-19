@@ -19,7 +19,7 @@ import com.tioledger.ui.navigation.MainGraph
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
-import com.tioledger.ui.transactions.TransactionEntryRoute
+import com.tioledger.ui.transactions.TransactionEntryHost
 
 @Composable
 fun RootNavigationHost(
@@ -32,7 +32,7 @@ fun RootNavigationHost(
                 when (route.destination) {
                     MainRoute.Accounts -> AccountsRoute()
                     MainRoute.TransactionEntry ->
-                        TransactionEntryRoute(
+                        TransactionEntryHost(
                             onNavigateBack = {
                                 onNavigate(RootRoute.Main(MainRoute.Transactions))
                             },
