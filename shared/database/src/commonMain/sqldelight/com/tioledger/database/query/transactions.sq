@@ -14,3 +14,31 @@ SELECT s.*, a.currency_code
 FROM transaction_splits s
 JOIN accounts a ON s.account_id = a.id
 WHERE s.transaction_id = ?;
+
+selectTransactionHistoryRows:
+SELECT
+    t.id AS transaction_id,
+    t.timestamp,
+    t.description,
+    t.type AS transaction_type,
+    s.id AS split_id,
+    s.amount,
+    a.id AS account_id,
+    a.name AS account_name,
+    a.type AS account_type,
+    a.currency_code,
+    c.id AS category_id,
+    c.name AS category_name,
+    (
+        SELECT le.entry_type
+        FROM ledger_entries le
+        WHERE le.split_id = s.id
+        ORDER BY le.id ASC
+        LIMIT 1
+    ) AS ledger_entry_type
+FROM transactions t
+JOIN transaction_splits s ON s.transaction_id = t.id
+JOIN accounts a ON a.id = s.account_id
+LEFT JOIN categories c ON c.id = s.category_id
+WHERE t.deleted_at IS NULL
+ORDER BY t.timestamp DESC, t.created_at DESC, t.id DESC, s.id ASC;

@@ -1,16 +1,35 @@
 package com.tioledger.data.repository
 
+import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.LedgerError
 import com.tioledger.core.model.LedgerResult
+import com.tioledger.core.model.Money
 import com.tioledger.data.resolver.SystemAccountResolver
 import com.tioledger.database.TioLedgerDatabase
+import com.tioledger.domain.model.AccountType
+import com.tioledger.domain.model.LedgerEntryType
 import com.tioledger.domain.model.PostingTarget
+import com.tioledger.domain.model.TransactionHistoryRecord
+import com.tioledger.domain.model.TransactionHistorySplit
 import com.tioledger.domain.model.TransactionRecord
+import com.tioledger.domain.model.TransactionType
+import com.tioledger.domain.repository.TransactionHistoryRepository
 import com.tioledger.domain.repository.TransactionRepository
 
 class SQLDelightTransactionRepository(
     private val database: TioLedgerDatabase,
-) : TransactionRepository {
+) : TransactionRepository, TransactionHistoryRepository {
+    override fun findAll(): LedgerResult<List<TransactionHistoryRecord>> {
+        val result =
+            runDatabaseCatching {
+                database.transactionsQueries
+                    .selectTransactionHistoryRows(::mapTransactionHistoryRow)
+                    .executeAsList()
+                    .toTransactionHistoryRecords()
+            }
+        return result.toLedgerResult()
+    }
+
     override fun record(record: TransactionRecord): LedgerResult<TransactionRecord> {
         val result =
             runDatabaseCatching {
@@ -99,3 +118,80 @@ class SQLDelightTransactionRepository(
         }
     }
 }
+
+private fun mapTransactionHistoryRow(
+    transactionId: String,
+    timestamp: Long,
+    description: String?,
+    transactionType: String,
+    splitId: String,
+    amount: Long,
+    accountId: String,
+    accountName: String,
+    accountType: String,
+    currencyCode: String,
+    categoryId: String?,
+    categoryName: String?,
+    ledgerEntryType: String?,
+): TransactionHistoryRow =
+    TransactionHistoryRow(
+        transactionId = transactionId,
+        timestamp = timestamp,
+        description = description,
+        transactionType = TransactionType.valueOf(transactionType),
+        splitId = splitId,
+        amount = amount,
+        accountId = accountId,
+        accountName = accountName,
+        accountType = AccountType.valueOf(accountType),
+        currencyCode = currencyCode,
+        categoryId = categoryId,
+        categoryName = categoryName,
+        entryType = ledgerEntryType?.let(LedgerEntryType::valueOf),
+    )
+
+private data class TransactionHistoryRow(
+    val transactionId: String,
+    val timestamp: Long,
+    val description: String?,
+    val transactionType: TransactionType,
+    val splitId: String,
+    val amount: Long,
+    val accountId: String,
+    val accountName: String,
+    val accountType: AccountType,
+    val currencyCode: String,
+    val categoryId: String?,
+    val categoryName: String?,
+    val entryType: LedgerEntryType?,
+)
+
+private fun List<TransactionHistoryRow>.toTransactionHistoryRecords(): List<TransactionHistoryRecord> =
+    groupBy(TransactionHistoryRow::transactionId)
+        .values
+        .map { rows ->
+            val transaction = rows.first()
+            TransactionHistoryRecord(
+                id = transaction.transactionId,
+                timestamp = transaction.timestamp,
+                description = transaction.description,
+                type = transaction.transactionType,
+                splits =
+                    rows.map { row ->
+                        TransactionHistorySplit(
+                            id = row.splitId,
+                            accountId = row.accountId,
+                            accountName = row.accountName,
+                            accountType = row.accountType,
+                            amount = Money(row.amount, CurrencyCode(row.currencyCode)),
+                            categoryId = row.categoryId,
+                            categoryName = row.categoryName,
+                            entryType = row.entryType,
+                        )
+                    },
+            )
+        }
+        .sortedWith(
+            compareByDescending<TransactionHistoryRecord> { it.timestamp }
+                .thenByDescending { it.id },
+        )

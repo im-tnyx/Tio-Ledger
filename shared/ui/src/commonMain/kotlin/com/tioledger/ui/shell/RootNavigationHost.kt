@@ -20,6 +20,7 @@ import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 import com.tioledger.ui.transactions.TransactionEntryHost
+import com.tioledger.ui.transactions.TransactionsRoute
 
 @Composable
 fun RootNavigationHost(
@@ -31,6 +32,15 @@ fun RootNavigationHost(
             is RootRoute.Main -> {
                 when (route.destination) {
                     MainRoute.Accounts -> AccountsRoute()
+                    MainRoute.Transactions ->
+                        TransactionsRoute(
+                            onAddTransaction = {
+                                onNavigate(RootRoute.Main(MainRoute.TransactionEntry))
+                            },
+                            onNavigate = { destination ->
+                                onNavigate(RootRoute.Main(destination))
+                            },
+                        )
                     MainRoute.TransactionEntry ->
                         TransactionEntryHost(
                             onNavigateBack = {
