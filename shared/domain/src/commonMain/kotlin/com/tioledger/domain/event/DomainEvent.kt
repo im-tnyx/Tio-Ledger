@@ -48,6 +48,18 @@ sealed interface DomainEvent {
     ) : DomainEvent
 
     @Serializable
+    data class BudgetCreated(
+        val budgetId: String,
+        override val occurredAt: Long,
+    ) : DomainEvent
+
+    @Serializable
+    data class BudgetUpdated(
+        val budgetId: String,
+        override val occurredAt: Long,
+    ) : DomainEvent
+
+    @Serializable
     data class TransactionRecorded(
         val transactionId: String,
         val transactionType: TransactionType,
