@@ -46,7 +46,7 @@ class SQLDelightLoanRepository(
         return when (result) {
             is DataResult.Success -> LedgerResult.Success(result.value)
             is DataResult.Failure -> {
-                if (result.error.message.contains(LOAN_NOT_FOUND_PREFIX)) {
+                if (result.error.messageText().contains(LOAN_NOT_FOUND_PREFIX)) {
                     LedgerResult.Failure(LedgerError.LoanNotFound(loanId))
                 } else {
                     result.toLedgerResult()
@@ -145,11 +145,19 @@ class SQLDelightLoanRepository(
     }
 
     private fun DataResult.Failure.isDuplicateLoanFailure(): Boolean {
-        val message = error.message
+        val message = error.messageText()
         return message.contains(DUPLICATE_LOAN_PREFIX) ||
             (error is DataError.ConstraintViolation &&
                 message.contains("loans.id", ignoreCase = true))
     }
+
+    private fun DataError.messageText(): String =
+        when (this) {
+            is DataError.SqlDelightError -> message
+            is DataError.ConstraintViolation -> message
+            is DataError.DuplicateTransaction -> "DUPLICATE_TX:$transactionId"
+            is DataError.DatabaseFailure -> message
+        }
 
     private companion object {
         const val LOAN_NOT_FOUND_PREFIX = "LOAN_NOT_FOUND:"
