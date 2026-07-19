@@ -4,8 +4,9 @@
 
 - Ledger Engine: Frozen v1 as of 2026-06-30.
 - Approved architectural blockers for commonMain compatibility, type-safe posting strategies, and strategy registry separation are resolved.
-- Application Layer and Repository Contracts milestone is implemented as pure Kotlin Multiplatform shared code.
-- Next milestone: SQLDelight Repository Implementations.
+- Application Layer, repository contracts, SQLDelight repository implementations, application bootstrap, and shared UI foundation are implemented.
+- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, and Transactions List / History Screen v1 are implemented and locally validated.
+- Next planned milestone: Categories Screen v1.
 
 ## Phase 0: Documentation And Decisions
 
@@ -131,6 +132,13 @@ Objectives:
 - Budgets.
 - Loan creation and loan details.
 - SMS-assisted transaction review flow.
+
+Current progress:
+
+- Accounts Screen v1: complete.
+- Transaction Entry Integration v1: complete.
+- Transactions List / History Screen v1: complete and locally validated.
+- Categories Screen v1: next planned milestone.
 
 Deliverables:
 
