@@ -1,4 +1,4 @@
-package com.tioledger.ui.transactions
+﻿package com.tioledger.ui.transactions
 
 import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
@@ -204,7 +204,10 @@ class TransactionEntryViewModel(
         }
     }
 
-    private fun selectDate(timestamp: Long, label: String) {
+    private fun selectDate(
+        timestamp: Long,
+        label: String,
+    ) {
         if (timestamp < 0L || label.isBlank()) return
         _uiState.update {
             it.copy(
@@ -307,7 +310,10 @@ class TransactionEntryViewModel(
         _event.value = TransactionEntryEvent.TransactionSaved(record.transaction.id)
     }
 
-    private fun validate(state: TransactionEntryUiState, amount: Money?): String? {
+    private fun validate(
+        state: TransactionEntryUiState,
+        amount: Money?,
+    ): String? {
         if (state.isLoading) return "Transaction form is still loading."
         if (state.accountOptions.isEmpty()) return "At least one account is required before recording a transaction."
         if (state.selectedAccountId == null) return "Select an account."
@@ -325,7 +331,10 @@ class TransactionEntryViewModel(
         return null
     }
 
-    private fun parseMoney(rawAmount: String, currencyCode: String): Money? {
+    private fun parseMoney(
+        rawAmount: String,
+        currencyCode: String,
+    ): Money? {
         val normalized = rawAmount.trim().replace(",", "")
         if (normalized.isBlank()) return null
         if (normalized.count { it == '.' } > 1 || normalized.any { it != '.' && it !in '0'..'9' }) return null
@@ -335,8 +344,21 @@ class TransactionEntryViewModel(
         val fractionPart = parts.getOrNull(1).orEmpty()
         if (fractionPart.length > 2) return null
         val majorUnits = majorPart.toLongOrNull() ?: return null
-        val fractionUnits = when (fractionPart.length) { 0 -> 0L; 1 -> fractionPart.toLong() * 10L; else -> fractionPart.toLong() }
-        if (majorUnits > Long.MAX_VALUE / 100L || (majorUnits == Long.MAX_VALUE / 100L && fractionUnits > Long.MAX_VALUE % 100L)) return null
+        val fractionUnits =
+            when (fractionPart.length) {
+                0 -> 0L
+                1 -> fractionPart.toLong() * 10L
+                else -> fractionPart.toLong()
+            }
+        if (
+            majorUnits > Long.MAX_VALUE / 100L ||
+            (
+                majorUnits == Long.MAX_VALUE / 100L &&
+                    fractionUnits > Long.MAX_VALUE % 100L
+            )
+        ) {
+            return null
+        }
         val minorUnits = majorUnits * 100L + fractionUnits
         if (minorUnits <= 0L) return null
         return Money(minorUnits, CurrencyCode(currencyCode))
@@ -353,7 +375,12 @@ class TransactionEntryViewModel(
     }
 
     private fun categoriesFor(type: TransactionType): List<TransactionCategoryOption> {
-        val categoryType = when (type) { TransactionType.Expense -> CategoryType.EXPENSE; TransactionType.Income -> CategoryType.INCOME; TransactionType.Transfer -> null }
+        val categoryType =
+            when (type) {
+                TransactionType.Expense -> CategoryType.EXPENSE
+                TransactionType.Income -> CategoryType.INCOME
+                TransactionType.Transfer -> null
+            }
         return allCategories.asSequence()
             .filter { categoryType == null || it.type == categoryType }
             .map {
@@ -409,3 +436,4 @@ private fun ApplicationError.toPersistenceMessage(): String =
         is ApplicationError.Repository -> "Unable to save transaction."
         is ApplicationError.Ledger -> "Transaction could not be posted."
     }
+
