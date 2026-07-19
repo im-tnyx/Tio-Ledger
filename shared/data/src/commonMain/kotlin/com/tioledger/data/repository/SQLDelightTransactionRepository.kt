@@ -23,9 +23,20 @@ class SQLDelightTransactionRepository(
         val result =
             runDatabaseCatching {
                 database.transactionsQueries
-                    .selectTransactionHistoryRows { transactionId, timestamp, description, transactionType,
-                        splitId, amount, accountId, accountName, accountType, currencyCode, categoryId,
-                        categoryName, ledgerEntryType,
+                    .selectTransactionHistoryRows {
+                        transactionId,
+                        timestamp,
+                        description,
+                        transactionType,
+                        splitId,
+                        amount,
+                        accountId,
+                        accountName,
+                        accountType,
+                        currencyCode,
+                        categoryId,
+                        categoryName,
+                        ledgerEntryType,
                         ->
                         TransactionHistoryRow(
                             transactionId = transactionId,
