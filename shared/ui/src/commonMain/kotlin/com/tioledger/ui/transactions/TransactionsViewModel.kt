@@ -72,7 +72,7 @@ private fun TransactionSummary.toRow(): TransactionRowUiModel {
             add(context)
             description
                 ?.takeUnless { it == title }
-                ?.let(::add)
+                ?.let { add(it) }
         }
 
     return TransactionRowUiModel(
