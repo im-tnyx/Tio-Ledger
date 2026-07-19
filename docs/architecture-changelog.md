@@ -4,6 +4,14 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-07-19 - Budgets Screen v1 Activation
+
+- Activated `shared:budget-engine` with deterministic, timezone-aware recurring-period and budget-progress calculations while preserving integer-only money arithmetic.
+- Added the first Budget Domain/Application/Data/SQLDelight path without changing the frozen database schema.
+- Derived budget spend from immutable transaction-history records rather than introducing mutable or duplicated balance state.
+- Added `MainRoute.Budgets` and promoted Budgets into the fifth primary-navigation slot while retaining Reports as a registered non-primary main route.
+- Kept presentation isolated from repositories, SQLDelight, and engine APIs by routing all screen operations through Application use cases and Koin.
+
 ## 2026-07-01 - Accounts Screen v1 Activation
 
 - Formalized the Accounts reference set under `docs/references/accounts/` so the first production screen now has a dedicated approved screenshot folder.
