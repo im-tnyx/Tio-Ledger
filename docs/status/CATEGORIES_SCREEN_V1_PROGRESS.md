@@ -1,13 +1,13 @@
 # Categories Screen v1 Progress
 
-Status: In progress — implementation ready for local validation
+Status: Complete — ready for review
 Issue: #8
 Branch: `feat/categories-screen-v1`
-Draft PR: #9
+PR: #9
 
 ## Objective
 
-Replace the current category-management navigation gap with a production Categories screen backed by the existing Domain, Application, Data, SQLDelight, Bootstrap, and shared UI layers.
+Replace the category-management navigation gap with a production Categories screen backed by the existing Domain, Application, Data, SQLDelight, Bootstrap, and shared UI layers.
 
 ## Completed Audit
 
@@ -30,6 +30,17 @@ Replace the current category-management navigation gap with a production Categor
 - Added real bottom-navigation callbacks and replaced the Categories placeholder in `RootNavigationHost`.
 - Added Koin registration, light/dark/create previews, ViewModel tests, and navigation tests.
 
+## Validation Evidence
+
+Passed locally:
+
+- Shared Application, Data, Bootstrap, and UI metadata compilation.
+- `:shared:application:test :shared:data:test :shared:ui:test`.
+- `ktlintCheck` and `detekt`.
+- `:shared:database:verifyCommonMainTioLedgerDatabaseMigration` with no parallel workers.
+- `git diff --check` with no output.
+- `git status` confirmed the branch matched origin with a clean working tree before documentation finalization.
+
 ## Architecture Constraints Preserved
 
 - No repository or SQLDelight access from UI.
@@ -38,11 +49,6 @@ Replace the current category-management navigation gap with a production Categor
 - Transaction Entry category selection remains source-compatible.
 - Category creation validation and persistence orchestration remain outside Composables.
 
-## Validation Pending
+## Review State
 
-- Shared Application, Data, Bootstrap, and UI metadata compilation.
-- Focused Application, Data, and UI tests.
-- `ktlintCheck`.
-- `detekt`.
-- SQLDelight migration verification.
-- `git diff --check` and clean working tree.
+All implementation and local validation gates for issue #8 are complete. PR #9 is ready for review. Issue #8 should close only when the PR is merged.
