@@ -11,7 +11,9 @@ Current status:
 - Shared modules exist for core, domain, application, data, database, finance engine, loan engine, budget engine, analytics, notifications, and UI.
 - App modules exist for Android, iOS, and Wear OS shells.
 - Financial and ledger behavior must remain deterministic and test-backed whenever changed.
-- Ledger Engine is Frozen v1. Application Layer and Repository Contracts are implemented; the next milestone is SQLDelight Repository Implementations.
+- Ledger Engine v1, database schema, Application/Data layers, and shared UI foundation are frozen or implemented.
+- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, and Transactions List / History Screen v1 are implemented and locally validated.
+- The next planned milestone is Categories Screen v1.
 
 Canonical references:
 
