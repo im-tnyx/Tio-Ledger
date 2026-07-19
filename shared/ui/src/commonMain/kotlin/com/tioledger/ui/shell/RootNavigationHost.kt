@@ -19,18 +19,24 @@ import com.tioledger.ui.navigation.MainGraph
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
-import com.tioledger.ui.transactions.TransactionEntryRoute
+import com.tioledger.ui.transactions.TransactionEntryHost
 
 @Composable
 fun RootNavigationHost(
     currentRoute: RootRoute = TioNavigationGraphs.root.startRoute,
+    onNavigate: (RootRoute) -> Unit = {},
     content: @Composable (RootRoute) -> Unit = { route ->
         when (route) {
             RootRoute.Splash -> Splash()
             is RootRoute.Main -> {
                 when (route.destination) {
                     MainRoute.Accounts -> AccountsRoute()
-                    MainRoute.TransactionEntry -> TransactionEntryRoute()
+                    MainRoute.TransactionEntry ->
+                        TransactionEntryHost(
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.Transactions))
+                            },
+                        )
                     else -> MainPlaceholderDestination(route.destination)
                 }
             }

@@ -1,4 +1,4 @@
-﻿package com.tioledger.ui.transactions
+package com.tioledger.ui.transactions
 
 data class TransactionEntryUiState(
     val transactionType: TransactionType = TransactionType.Expense,
@@ -97,6 +97,11 @@ sealed interface TransactionEntryAction {
 
     data object DateClicked : TransactionEntryAction
 
+    data class DateSelected(
+        val timestamp: Long,
+        val label: String,
+    ) : TransactionEntryAction
+
     data class NoteChanged(val note: String) : TransactionEntryAction
 
     data object SaveClicked : TransactionEntryAction
@@ -108,4 +113,6 @@ sealed interface TransactionEntryAction {
 
 sealed interface TransactionEntryEvent {
     data class TransactionSaved(val transactionId: String) : TransactionEntryEvent
+
+    data class DateSelectionRequested(val currentTimestamp: Long) : TransactionEntryEvent
 }
