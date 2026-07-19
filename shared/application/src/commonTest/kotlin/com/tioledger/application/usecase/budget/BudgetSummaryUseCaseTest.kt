@@ -69,8 +69,9 @@ class BudgetSummaryUseCaseTest {
         val categoryRepository = FakeCategoryRepository(emptyList())
         val transactionRepository =
             object : TransactionHistoryRepository {
-                override fun findAll(): LedgerResult<List<TransactionHistoryRecord>> =
-                    LedgerResult.Failure(LedgerError.StorageUnavailable)
+                override fun findAll(): LedgerResult<List<TransactionHistoryRecord>> {
+                    return LedgerResult.Failure(LedgerError.StorageUnavailable)
+                }
             }
         val useCase =
             ListBudgetSummariesUseCase(
