@@ -1,6 +1,6 @@
 # Budgets Screen v1 Progress
 
-Status: In progress — production UI slice ready for local validation
+Status: In progress — production implementation locally validated; final quality gates pending
 Issue: #10
 Branch: `feat/budgets-screen-v1`
 Draft PR: #11
@@ -77,6 +77,18 @@ BUILD SUCCESSFUL in 34s
 - Kept Reports registered in the main graph while Budgets temporarily occupies its former primary-navigation slot.
 - Added light/dark/editor previews, ViewModel tests, and navigation tests.
 
+## Production UI Validation Passed
+
+```text
+./gradlew :shared:ui:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 27s
+12 actionable tasks: 3 executed, 9 up-to-date
+
+./gradlew :shared:ui:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 1m 8s
+227 actionable tasks: 33 executed, 194 up-to-date
+```
+
 ## Architecture Constraints
 
 - No repository, SQLDelight, or engine access from UI.
@@ -87,11 +99,11 @@ BUILD SUCCESSFUL in 34s
 
 ## Validation Pending
 
-- Shared UI and Bootstrap metadata compilation.
-- Focused UI tests.
+- Full affected-layer metadata compilation.
 - Full affected-module tests.
 - `ktlintCheck`.
 - `detekt`.
 - SQLDelight migration verification.
 - `git diff --check` and clean working tree.
 - Pixel/accessibility review of previews and production route.
+- Final roadmap, README, project-context, and architecture-changelog updates.
