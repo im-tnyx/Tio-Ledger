@@ -53,10 +53,30 @@ class CreateCategoryUseCase(private val categoryRepository: CategoryRepository) 
         validateOptionalId(command.parentId, "parentId")?.let { return ApplicationResult.Failure(it) }
         validateTimestamp(command.createdAt, "createdAt")?.let { return ApplicationResult.Failure(it) }
 
+        val normalizedName = command.name.trim()
+        when (val result = categoryRepository.findAll()) {
+            is LedgerResult.Success -> {
+                val duplicateExists =
+                    result.value.any { category ->
+                        category.deletedAt == null &&
+                            category.type == command.type &&
+                            category.name.trim().equals(normalizedName, ignoreCase = true)
+                    }
+                if (duplicateExists) {
+                    return ApplicationResult.Failure(
+                        ApplicationError.Validation("name", "category already exists for this type"),
+                    )
+                }
+            }
+            is LedgerResult.Failure -> {
+                return ApplicationResult.Failure(ApplicationError.Repository(result.error))
+            }
+        }
+
         val category =
             Category(
                 id = normalizedId(command.id),
-                name = command.name.trim(),
+                name = normalizedName,
                 type = command.type,
                 parentId = command.parentId?.let(::normalizedId),
                 isDefault = command.isDefault,

@@ -10,6 +10,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tioledger.ui.accounts.AccountsRoute
+import com.tioledger.ui.categories.CategoriesRoute
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
@@ -32,6 +33,12 @@ fun RootNavigationHost(
             is RootRoute.Main -> {
                 when (route.destination) {
                     MainRoute.Accounts -> AccountsRoute()
+                    MainRoute.Categories ->
+                        CategoriesRoute(
+                            onNavigate = { destination ->
+                                onNavigate(RootRoute.Main(destination))
+                            },
+                        )
                     MainRoute.Transactions ->
                         TransactionsRoute(
                             onAddTransaction = {
