@@ -90,7 +90,7 @@ private class FakeCategoryRepository(
     override fun findAll(): LedgerResult<List<Category>> = LedgerResult.Success(categories.toList())
 
     override fun findById(categoryId: String): LedgerResult<Category> =
-        categories.firstOrNull { it.id == categoryId }?.let(LedgerResult::Success)
+        categories.firstOrNull { it.id == categoryId }?.let { LedgerResult.Success(it) }
             ?: LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
 
     override fun create(category: Category): LedgerResult<Category> {
