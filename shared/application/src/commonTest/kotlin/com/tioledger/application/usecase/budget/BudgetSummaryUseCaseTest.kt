@@ -30,16 +30,7 @@ class BudgetSummaryUseCaseTest {
 
     @Test
     fun returnsCurrentPeriodSummaryWithCategorySpend() {
-        val budget =
-            Budget(
-                id = "budget-food",
-                name = "Food",
-                amount = Money(10_000L, usd),
-                categoryId = "food",
-                periodType = BudgetPeriodType.MONTHLY,
-                createdAt = 1L,
-                updatedAt = 1L,
-            )
+        val budget = testBudget()
         val category =
             Category(
                 id = "food",
@@ -101,7 +92,7 @@ class BudgetSummaryUseCaseTest {
 
     @Test
     fun rejectsInvalidTimeZone() {
-        val useCase = createUseCase(emptyList(), emptyList(), emptyList())
+        val useCase = createUseCase(listOf(testBudget()), emptyList(), emptyList())
 
         val result = useCase(anchorTimestamp = JULY_19_2026_UTC, timeZoneId = "Not/AZone")
 
@@ -121,6 +112,17 @@ class BudgetSummaryUseCaseTest {
             transactionHistoryRepository = FakeTransactionHistoryRepository(transactions),
             periodCalculator = BudgetPeriodCalculator(),
             progressCalculator = BudgetProgressCalculator(),
+        )
+
+    private fun testBudget(): Budget =
+        Budget(
+            id = "budget-food",
+            name = "Food",
+            amount = Money(10_000L, usd),
+            categoryId = "food",
+            periodType = BudgetPeriodType.MONTHLY,
+            createdAt = 1L,
+            updatedAt = 1L,
         )
 
     private fun expense(
@@ -154,10 +156,14 @@ class BudgetSummaryUseCaseTest {
     ) : BudgetRepository {
         override fun findAll(): LedgerResult<List<Budget>> = LedgerResult.Success(budgets)
 
-        override fun findById(budgetId: String): LedgerResult<Budget> =
-            budgets.firstOrNull { it.id == budgetId }
-                ?.let(LedgerResult::Success)
-                ?: LedgerResult.Failure(LedgerError.BudgetNotFound(budgetId))
+        override fun findById(budgetId: String): LedgerResult<Budget> {
+            val budget = budgets.firstOrNull { it.id == budgetId }
+            return if (budget != null) {
+                LedgerResult.Success(budget)
+            } else {
+                LedgerResult.Failure(LedgerError.BudgetNotFound(budgetId))
+            }
+        }
 
         override fun create(budget: Budget): LedgerResult<Budget> = LedgerResult.Success(budget)
 
@@ -169,10 +175,14 @@ class BudgetSummaryUseCaseTest {
     ) : CategoryRepository {
         override fun findAll(): LedgerResult<List<Category>> = LedgerResult.Success(categories)
 
-        override fun findById(categoryId: String): LedgerResult<Category> =
-            categories.firstOrNull { it.id == categoryId }
-                ?.let(LedgerResult::Success)
-                ?: LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
+        override fun findById(categoryId: String): LedgerResult<Category> {
+            val category = categories.firstOrNull { it.id == categoryId }
+            return if (category != null) {
+                LedgerResult.Success(category)
+            } else {
+                LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
+            }
+        }
 
         override fun create(category: Category): LedgerResult<Category> = LedgerResult.Success(category)
 
