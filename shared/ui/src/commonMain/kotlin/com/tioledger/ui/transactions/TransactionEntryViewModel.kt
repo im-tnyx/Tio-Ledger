@@ -1,4 +1,4 @@
-﻿package com.tioledger.ui.transactions
+package com.tioledger.ui.transactions
 
 import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
@@ -436,4 +436,3 @@ private fun ApplicationError.toPersistenceMessage(): String =
         is ApplicationError.Repository -> "Unable to save transaction."
         is ApplicationError.Ledger -> "Transaction could not be posted."
     }
-
