@@ -1,6 +1,6 @@
 # Budgets Screen v1 Progress
 
-Status: In progress — budget summary foundation ready for local validation
+Status: In progress — production UI slice ready for local validation
 Issue: #10
 Branch: `feat/budgets-screen-v1`
 Draft PR: #11
@@ -52,11 +52,30 @@ BUILD SUCCESSFUL in 40s
 - Added repository-failure, invalid-time-zone, period-boundary, category, currency, and status tests.
 - Registered budget calculators and summary use case in Bootstrap/Koin diagnostics.
 
-## Remaining Implementation Slices
+## Budget Summary Validation Passed
 
-- Add `BudgetsViewModel`, immutable UI state/actions, and production loading/empty/error/list/create/edit states.
-- Add `MainRoute.Budgets`, route wiring, navigation entry, previews, and UI tests.
-- Finalize roadmap/status documentation and validation evidence.
+```text
+./gradlew :shared:budget-engine:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 22s
+13 actionable tasks: 4 executed, 9 up-to-date
+
+./gradlew :shared:budget-engine:test :shared:application:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 34s
+135 actionable tasks: 32 executed, 4 from cache, 99 up-to-date
+```
+
+## Completed Production UI Slice
+
+- Added official Google Play fallback reference note, original Tio UI specification, navigation definition, deviations, and acceptance checklist.
+- Added immutable `BudgetsUiState`, row/editor/category models, and typed actions.
+- Added `BudgetsViewModel` backed only by Application use cases and shared `IdGenerator`.
+- Added loading, empty, repository-error, populated, create, edit, validation, persistence-error, and success states.
+- Added deterministic money text parsing without `Float`/`Double` money calculations.
+- Added accessible progress cards showing target, spent, remaining, date range, utilization, and textual status.
+- Added category-scope picker and weekly/monthly/yearly editor flow.
+- Added `MainRoute.Budgets`, primary bottom-navigation entry, root-route wiring, and Koin registration.
+- Kept Reports registered in the main graph while Budgets temporarily occupies its former primary-navigation slot.
+- Added light/dark/editor previews, ViewModel tests, and navigation tests.
 
 ## Architecture Constraints
 
@@ -68,10 +87,11 @@ BUILD SUCCESSFUL in 40s
 
 ## Validation Pending
 
-- Budget-engine, Application summary, and Bootstrap metadata compilation.
-- Focused budget-engine and Application tests.
-- UI compile/tests after the production screen slice lands.
+- Shared UI and Bootstrap metadata compilation.
+- Focused UI tests.
+- Full affected-module tests.
 - `ktlintCheck`.
 - `detekt`.
 - SQLDelight migration verification.
 - `git diff --check` and clean working tree.
+- Pixel/accessibility review of previews and production route.
