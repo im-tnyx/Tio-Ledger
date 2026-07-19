@@ -1,6 +1,6 @@
 # Loan Creation and Loan Details v1 Progress
 
-Status: Engine and Domain foundation implemented — local validation pending
+Status: Engine and Domain foundation implemented — static-analysis rerun pending
 Issue: #12
 Branch: `feat/loan-creation-details-v1`
 PR: #13 (draft)
@@ -68,6 +68,28 @@ The deterministic loan calculation layer and Domain contracts had to be implemen
 - Added `DomainEvent.LoanCreated`.
 - Added typed `LoanNotFound` and `DuplicateLoanId` repository errors.
 
+## Current Local Validation
+
+```text
+Metadata compilation
+BUILD SUCCESSFUL in 1m 18s
+13 actionable tasks: 4 executed, 9 up-to-date
+
+Loan-engine tests
+BUILD SUCCESSFUL in 54s
+104 actionable tasks: 34 executed, 3 from cache, 67 up-to-date
+
+ktlintCheck detekt
+FAILED: one ktlint expression-body formatting issue in LoanCalculator.kt
+Fix pushed; rerun pending.
+
+git diff --check
+(no output)
+
+git status
+clean and up to date before the formatting fix was pulled locally
+```
+
 ## Approved Initial V1 Scope
 
 ### Loan creation
@@ -105,7 +127,7 @@ These follow-up workflows require dedicated posting strategies and transactional
 
 ## Remaining Implementation Sequence
 
-1. Validate the loan-engine and Domain foundation locally.
+1. Complete the static-analysis rerun for the loan-engine and Domain foundation.
 2. Add SQLDelight CRUD/schedule queries, mappers, and atomic Data repository integration tests.
 3. Add Application create/list/details use cases with account/currency/status validation.
 4. Register engine/repository/use cases in Bootstrap/Koin diagnostics.
