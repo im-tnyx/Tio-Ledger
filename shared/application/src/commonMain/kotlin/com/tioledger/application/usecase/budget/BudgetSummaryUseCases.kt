@@ -20,7 +20,7 @@ data class BudgetSummary(
     val name: String,
     val target: Money,
     val categoryId: String?,
-    val categoryName: String?,
+    val categoryName: String,
     val periodType: BudgetPeriodType,
     val periodStartInclusive: Long,
     val periodEndExclusive: Long,
@@ -80,7 +80,11 @@ class ListBudgetSummariesUseCase(
             val summaries =
                 budgets.map { budget ->
                     budget.toSummary(
-                        categoryName = budget.categoryId?.let { categories[it]?.name },
+                        categoryName =
+                            when (val categoryId = budget.categoryId) {
+                                null -> "All expenses"
+                                else -> categories[categoryId]?.name ?: "Unavailable category"
+                            },
                         anchorTimestamp = anchorTimestamp,
                         timeZoneId = timeZoneId,
                         transactions = transactions,
@@ -104,7 +108,7 @@ class ListBudgetSummariesUseCase(
     }
 
     private fun Budget.toSummary(
-        categoryName: String?,
+        categoryName: String,
         anchorTimestamp: Long,
         timeZoneId: String,
         transactions: List<com.tioledger.domain.model.TransactionHistoryRecord>,
