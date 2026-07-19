@@ -11,6 +11,8 @@ sealed interface LedgerError {
 
     data class BudgetNotFound(val budgetId: String) : LedgerError
 
+    data class LoanNotFound(val loanId: String) : LedgerError
+
     data class AccountCurrencyMismatch(val accountId: String, val expectedCurrency: String, val actualCurrency: String) : LedgerError
 
     data class CurrencyMismatch(val currency1: String, val currency2: String) : LedgerError
@@ -28,6 +30,8 @@ sealed interface LedgerError {
     data class InvalidAdjustment(val reason: String) : LedgerError
 
     data class DuplicateAccountId(val accountId: String) : LedgerError
+
+    data class DuplicateLoanId(val loanId: String) : LedgerError
 
     data object StorageUnavailable : LedgerError
 
