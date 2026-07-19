@@ -7,6 +7,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":shared:core"))
             api(project(":shared:finance-engine"))
+            implementation(libs.kotlinx.datetime)
         }
 
         commonTest.dependencies {
