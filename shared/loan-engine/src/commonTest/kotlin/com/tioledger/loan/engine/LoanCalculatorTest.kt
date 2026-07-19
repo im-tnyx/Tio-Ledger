@@ -13,12 +13,13 @@ class LoanCalculatorTest {
     private val calculator: LoanCalculator = MonthlyReducingBalanceLoanCalculator()
 
     @Test
-    fun standardReducingBalanceLoanMatchesGoldenSchedule() {
+    fun representativeRateLoanMatchesGoldenSchedule() {
         val quote =
             successfulQuote(
                 calculator.calculate(
                     terms(
                         principal = 10_000_000L,
+                        // Regression fixture only; production rates are supplied through LoanTerms.
                         annualRateBasisPoints = 875,
                         tenureMonths = 60,
                         startDate = LocalDate(2026, 7, 19),
