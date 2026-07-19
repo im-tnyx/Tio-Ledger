@@ -1,0 +1,130 @@
+insertLoan:
+INSERT INTO loans (
+    id,
+    name,
+    principal,
+    interest_rate_basis_points,
+    interest_type,
+    emi_calculation_method,
+    compounding_frequency,
+    payment_frequency,
+    tenure_months,
+    start_date,
+    account_id,
+    disbursed_account_id,
+    processing_fee,
+    insurance_amount,
+    late_fee_policy,
+    grace_period_days,
+    moratorium_months,
+    status,
+    created_at,
+    updated_at,
+    entity_version,
+    sync_version,
+    device_id,
+    deleted_at
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+insertLoanInstallment:
+INSERT INTO emi_schedules (
+    id,
+    loan_id,
+    installment_number,
+    due_date,
+    opening_balance,
+    emi_amount,
+    principal_component,
+    interest_component,
+    closing_balance,
+    status,
+    created_at,
+    updated_at
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectAllLoans:
+SELECT
+    loans.id AS id,
+    loans.name AS name,
+    loans.principal AS principal,
+    loans.interest_rate_basis_points AS interest_rate_basis_points,
+    loans.interest_type AS interest_type,
+    loans.emi_calculation_method AS emi_calculation_method,
+    loans.compounding_frequency AS compounding_frequency,
+    loans.payment_frequency AS payment_frequency,
+    loans.tenure_months AS tenure_months,
+    loans.start_date AS start_date,
+    loans.account_id AS account_id,
+    loans.disbursed_account_id AS disbursed_account_id,
+    loans.processing_fee AS processing_fee,
+    loans.insurance_amount AS insurance_amount,
+    loans.late_fee_policy AS late_fee_policy,
+    loans.grace_period_days AS grace_period_days,
+    loans.moratorium_months AS moratorium_months,
+    loans.status AS status,
+    loans.created_at AS created_at,
+    loans.updated_at AS updated_at,
+    loans.entity_version AS entity_version,
+    loans.sync_version AS sync_version,
+    loans.device_id AS device_id,
+    loans.deleted_at AS deleted_at,
+    accounts.currency_code AS currency_code
+FROM loans
+JOIN accounts ON accounts.id = loans.account_id
+WHERE loans.deleted_at IS NULL
+ORDER BY loans.name COLLATE NOCASE ASC, loans.id ASC;
+
+selectLoanById:
+SELECT
+    loans.id AS id,
+    loans.name AS name,
+    loans.principal AS principal,
+    loans.interest_rate_basis_points AS interest_rate_basis_points,
+    loans.interest_type AS interest_type,
+    loans.emi_calculation_method AS emi_calculation_method,
+    loans.compounding_frequency AS compounding_frequency,
+    loans.payment_frequency AS payment_frequency,
+    loans.tenure_months AS tenure_months,
+    loans.start_date AS start_date,
+    loans.account_id AS account_id,
+    loans.disbursed_account_id AS disbursed_account_id,
+    loans.processing_fee AS processing_fee,
+    loans.insurance_amount AS insurance_amount,
+    loans.late_fee_policy AS late_fee_policy,
+    loans.grace_period_days AS grace_period_days,
+    loans.moratorium_months AS moratorium_months,
+    loans.status AS status,
+    loans.created_at AS created_at,
+    loans.updated_at AS updated_at,
+    loans.entity_version AS entity_version,
+    loans.sync_version AS sync_version,
+    loans.device_id AS device_id,
+    loans.deleted_at AS deleted_at,
+    accounts.currency_code AS currency_code
+FROM loans
+JOIN accounts ON accounts.id = loans.account_id
+WHERE loans.id = ?
+LIMIT 1;
+
+selectLoanInstallments:
+SELECT
+    emi_schedules.id AS id,
+    emi_schedules.loan_id AS loan_id,
+    emi_schedules.installment_number AS installment_number,
+    emi_schedules.due_date AS due_date,
+    emi_schedules.opening_balance AS opening_balance,
+    emi_schedules.emi_amount AS emi_amount,
+    emi_schedules.principal_component AS principal_component,
+    emi_schedules.interest_component AS interest_component,
+    emi_schedules.closing_balance AS closing_balance,
+    emi_schedules.status AS status,
+    emi_schedules.created_at AS created_at,
+    emi_schedules.updated_at AS updated_at,
+    accounts.currency_code AS currency_code
+FROM emi_schedules
+JOIN loans ON loans.id = emi_schedules.loan_id
+JOIN accounts ON accounts.id = loans.account_id
+WHERE emi_schedules.loan_id = ?
+ORDER BY emi_schedules.installment_number ASC, emi_schedules.id ASC;
