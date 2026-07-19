@@ -94,6 +94,8 @@ Your branch is up to date with 'origin/feat/budgets-screen-v1'.
 nothing to commit, working tree clean
 ```
 
+The commits after the post-review gates update documentation and recorded validation evidence only; no production or test source changed after the passing regression run.
+
 ## Reference And Accessibility Review
 
 - A Budgets reference note records the approved official-store fallback source, original Tio specification, navigation behavior, intentional deviations, and acceptance checklist.
