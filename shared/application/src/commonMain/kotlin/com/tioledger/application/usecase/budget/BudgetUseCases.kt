@@ -94,8 +94,16 @@ class CreateBudgetUseCase(
         return when (val result = categoryRepository.findById(normalizedId(categoryId))) {
             is LedgerResult.Success -> {
                 when {
-                    result.value.deletedAt != null -> ApplicationError.Validation("categoryId", "archived category cannot be budgeted")
-                    result.value.type != CategoryType.EXPENSE -> ApplicationError.Validation("categoryId", "budget category must be an expense category")
+                    result.value.deletedAt != null ->
+                        ApplicationError.Validation(
+                            field = "categoryId",
+                            reason = "archived category cannot be budgeted",
+                        )
+                    result.value.type != CategoryType.EXPENSE ->
+                        ApplicationError.Validation(
+                            field = "categoryId",
+                            reason = "budget category must be an expense category",
+                        )
                     else -> null
                 }
             }
@@ -187,8 +195,16 @@ class UpdateBudgetUseCase(
         return when (val result = categoryRepository.findById(normalizedId(categoryId))) {
             is LedgerResult.Success -> {
                 when {
-                    result.value.deletedAt != null -> ApplicationError.Validation("categoryId", "archived category cannot be budgeted")
-                    result.value.type != CategoryType.EXPENSE -> ApplicationError.Validation("categoryId", "budget category must be an expense category")
+                    result.value.deletedAt != null ->
+                        ApplicationError.Validation(
+                            field = "categoryId",
+                            reason = "archived category cannot be budgeted",
+                        )
+                    result.value.type != CategoryType.EXPENSE ->
+                        ApplicationError.Validation(
+                            field = "categoryId",
+                            reason = "budget category must be an expense category",
+                        )
                     else -> null
                 }
             }
