@@ -99,6 +99,8 @@ Your branch is up to date with 'origin/feat/budgets-screen-v1'.
 nothing to commit, working tree clean
 ```
 
+The commits after these gates update documentation and validation records only; production and test source remain at the passing post-review state.
+
 ## Architecture Constraints Preserved
 
 - No repository, SQLDelight, or engine access from UI.
