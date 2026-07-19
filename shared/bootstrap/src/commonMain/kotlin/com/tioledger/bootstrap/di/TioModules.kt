@@ -5,6 +5,7 @@ import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.budget.CreateBudgetUseCase
+import com.tioledger.application.usecase.budget.ListBudgetSummariesUseCase
 import com.tioledger.application.usecase.budget.ListBudgetsUseCase
 import com.tioledger.application.usecase.budget.UpdateBudgetUseCase
 import com.tioledger.application.usecase.category.ArchiveCategoryUseCase
@@ -20,6 +21,8 @@ import com.tioledger.application.usecase.transaction.RecordTransferUseCase
 import com.tioledger.bootstrap.database.DatabaseInitializer
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
 import com.tioledger.bootstrap.logging.StartupLogger
+import com.tioledger.budget.engine.BudgetPeriodCalculator
+import com.tioledger.budget.engine.BudgetProgressCalculator
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.core.util.UuidGenerator
 import com.tioledger.data.repository.SQLDelightAccountRepository
@@ -76,6 +79,7 @@ fun applicationModule(): Module =
         factory { ListBudgetsUseCase(get()) }
         factory { CreateBudgetUseCase(get(), get()) }
         factory { UpdateBudgetUseCase(get(), get()) }
+        factory { ListBudgetSummariesUseCase(get(), get(), get(), get(), get()) }
         factory { ListTransactionsUseCase(get()) }
         factory { RecordIncomeUseCase(get(), get(), get(), get()) }
         factory { RecordExpenseUseCase(get(), get(), get(), get()) }
@@ -90,6 +94,12 @@ fun financeEngineModule(): Module =
         single { PostingStrategyRegistry() }
         single { BalanceCalculator() }
         single { PostingEngine(idGenerator = get(), validator = get(), strategyRegistry = get()) }
+    }
+
+fun budgetEngineModule(): Module =
+    module {
+        single { BudgetPeriodCalculator() }
+        single { BudgetProgressCalculator() }
     }
 
 fun diagnosticsModule(): Module =
@@ -111,6 +121,7 @@ fun diagnosticsModule(): Module =
                         getOrNull<CreateCategoryUseCase>() != null &&
                         getOrNull<CreateBudgetUseCase>() != null &&
                         getOrNull<ListBudgetsUseCase>() != null &&
+                        getOrNull<ListBudgetSummariesUseCase>() != null &&
                         getOrNull<ListTransactionsUseCase>() != null &&
                         getOrNull<RecordIncomeUseCase>() != null,
             )
@@ -122,7 +133,8 @@ fun tioApplicationModules(): List<Module> =
         coreModule(),
         databaseModule(),
         dataModule(),
-        applicationModule(),
         financeEngineModule(),
+        budgetEngineModule(),
+        applicationModule(),
         diagnosticsModule(),
     )
