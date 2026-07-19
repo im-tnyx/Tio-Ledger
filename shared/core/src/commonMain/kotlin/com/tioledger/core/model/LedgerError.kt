@@ -9,6 +9,8 @@ sealed interface LedgerError {
 
     data class CategoryTypeMismatch(val categoryId: String, val expectedType: String, val actualType: String) : LedgerError
 
+    data class BudgetNotFound(val budgetId: String) : LedgerError
+
     data class AccountCurrencyMismatch(val accountId: String, val expectedCurrency: String, val actualCurrency: String) : LedgerError
 
     data class CurrencyMismatch(val currency1: String, val currency2: String) : LedgerError

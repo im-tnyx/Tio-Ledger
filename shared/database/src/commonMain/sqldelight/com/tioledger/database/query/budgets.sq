@@ -1,0 +1,16 @@
+insertBudget:
+INSERT INTO budgets (id, name, amount, currency_code, category_id, period_type, created_at, updated_at, entity_version, sync_version, device_id, deleted_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateBudget:
+UPDATE budgets
+SET name = ?, amount = ?, currency_code = ?, category_id = ?, period_type = ?, updated_at = ?, entity_version = ?, sync_version = ?, device_id = ?, deleted_at = ?
+WHERE id = ?;
+
+selectAllBudgets:
+SELECT * FROM budgets
+WHERE deleted_at IS NULL
+ORDER BY name COLLATE NOCASE ASC, id ASC;
+
+selectBudgetById:
+SELECT * FROM budgets WHERE id = ? LIMIT 1;

@@ -8,6 +8,7 @@ kotlin {
             api(project(":shared:core"))
             api(project(":shared:domain"))
             api(project(":shared:finance-engine"))
+            api(project(":shared:budget-engine"))
         }
 
         commonTest.dependencies {

@@ -4,6 +4,7 @@ import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
 import com.tioledger.data.resolver.SystemAccountResolver
 import com.tioledger.database.Accounts
+import com.tioledger.database.Budgets
 import com.tioledger.database.Categories
 import com.tioledger.database.Transactions
 import com.tioledger.database.query.SelectLedgerEntriesByAccountId
@@ -11,6 +12,8 @@ import com.tioledger.database.query.SelectLedgerEntriesByTransactionId
 import com.tioledger.database.query.SelectSplitsByTransactionId
 import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
+import com.tioledger.domain.model.Budget
+import com.tioledger.domain.model.BudgetPeriodType
 import com.tioledger.domain.model.Category
 import com.tioledger.domain.model.CategoryType
 import com.tioledger.domain.model.LedgerEntry
@@ -46,6 +49,22 @@ fun Categories.toDomain(): Category {
         type = CategoryType.valueOf(type),
         parentId = parent_id,
         isDefault = is_default == 1L,
+        createdAt = created_at,
+        updatedAt = updated_at,
+        entityVersion = entity_version.toInt(),
+        syncVersion = sync_version.toInt(),
+        deviceId = device_id,
+        deletedAt = deleted_at,
+    )
+}
+
+fun Budgets.toDomain(): Budget {
+    return Budget(
+        id = id,
+        name = name,
+        amount = Money(amount, CurrencyCode(currency_code)),
+        categoryId = category_id,
+        periodType = BudgetPeriodType.valueOf(period_type),
         createdAt = created_at,
         updatedAt = updated_at,
         entityVersion = entity_version.toInt(),

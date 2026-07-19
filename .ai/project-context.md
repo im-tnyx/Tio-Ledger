@@ -12,8 +12,8 @@ Current status:
 - App modules exist for Android, iOS, and Wear OS shells.
 - Financial and ledger behavior must remain deterministic and test-backed whenever changed.
 - Ledger Engine v1, database schema, Application/Data layers, and shared UI foundation are frozen or implemented.
-- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, and Categories Screen v1 are implemented and locally validated.
-- The next planned milestone is Budgets Screen v1.
+- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, and Budgets Screen v1 are implemented and locally validated.
+- The next planned milestone is Loan Creation and Loan Details v1.
 
 Canonical references:
 

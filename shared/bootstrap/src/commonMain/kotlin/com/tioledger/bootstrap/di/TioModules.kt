@@ -4,6 +4,10 @@ import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
+import com.tioledger.application.usecase.budget.CreateBudgetUseCase
+import com.tioledger.application.usecase.budget.ListBudgetSummariesUseCase
+import com.tioledger.application.usecase.budget.ListBudgetsUseCase
+import com.tioledger.application.usecase.budget.UpdateBudgetUseCase
 import com.tioledger.application.usecase.category.ArchiveCategoryUseCase
 import com.tioledger.application.usecase.category.CreateCategoryUseCase
 import com.tioledger.application.usecase.category.ListCategoriesUseCase
@@ -17,14 +21,18 @@ import com.tioledger.application.usecase.transaction.RecordTransferUseCase
 import com.tioledger.bootstrap.database.DatabaseInitializer
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
 import com.tioledger.bootstrap.logging.StartupLogger
+import com.tioledger.budget.engine.BudgetPeriodCalculator
+import com.tioledger.budget.engine.BudgetProgressCalculator
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.core.util.UuidGenerator
 import com.tioledger.data.repository.SQLDelightAccountRepository
+import com.tioledger.data.repository.SQLDelightBudgetRepository
 import com.tioledger.data.repository.SQLDelightCategoryRepository
 import com.tioledger.data.repository.SQLDelightLedgerRepository
 import com.tioledger.data.repository.SQLDelightTransactionRepository
 import com.tioledger.database.TioLedgerDatabase
 import com.tioledger.domain.repository.AccountRepository
+import com.tioledger.domain.repository.BudgetRepository
 import com.tioledger.domain.repository.CategoryRepository
 import com.tioledger.domain.repository.LedgerRepository
 import com.tioledger.domain.repository.TransactionHistoryRepository
@@ -51,6 +59,7 @@ fun dataModule(): Module =
     module {
         single<AccountRepository> { SQLDelightAccountRepository(get()) }
         single<CategoryRepository> { SQLDelightCategoryRepository(get()) }
+        single<BudgetRepository> { SQLDelightBudgetRepository(get()) }
         single<LedgerRepository> { SQLDelightLedgerRepository(get()) }
         single { SQLDelightTransactionRepository(get()) }
         single<TransactionRepository> { get<SQLDelightTransactionRepository>() }
@@ -67,6 +76,10 @@ fun applicationModule(): Module =
         factory { CreateCategoryUseCase(get()) }
         factory { UpdateCategoryUseCase(get()) }
         factory { ArchiveCategoryUseCase(get()) }
+        factory { ListBudgetsUseCase(get()) }
+        factory { CreateBudgetUseCase(get(), get()) }
+        factory { UpdateBudgetUseCase(get(), get()) }
+        factory { ListBudgetSummariesUseCase(get(), get(), get(), get(), get()) }
         factory { ListTransactionsUseCase(get()) }
         factory { RecordIncomeUseCase(get(), get(), get(), get()) }
         factory { RecordExpenseUseCase(get(), get(), get(), get()) }
@@ -83,6 +96,12 @@ fun financeEngineModule(): Module =
         single { PostingEngine(idGenerator = get(), validator = get(), strategyRegistry = get()) }
     }
 
+fun budgetEngineModule(): Module =
+    module {
+        single { BudgetPeriodCalculator() }
+        single { BudgetProgressCalculator() }
+    }
+
 fun diagnosticsModule(): Module =
     module {
         factory {
@@ -92,6 +111,7 @@ fun diagnosticsModule(): Module =
                 repositoriesRegistered =
                     getOrNull<AccountRepository>() != null &&
                         getOrNull<CategoryRepository>() != null &&
+                        getOrNull<BudgetRepository>() != null &&
                         getOrNull<LedgerRepository>() != null &&
                         getOrNull<TransactionRepository>() != null &&
                         getOrNull<TransactionHistoryRepository>() != null,
@@ -99,6 +119,9 @@ fun diagnosticsModule(): Module =
                     getOrNull<CreateAccountUseCase>() != null &&
                         getOrNull<ListAccountSummariesUseCase>() != null &&
                         getOrNull<CreateCategoryUseCase>() != null &&
+                        getOrNull<CreateBudgetUseCase>() != null &&
+                        getOrNull<ListBudgetsUseCase>() != null &&
+                        getOrNull<ListBudgetSummariesUseCase>() != null &&
                         getOrNull<ListTransactionsUseCase>() != null &&
                         getOrNull<RecordIncomeUseCase>() != null,
             )
@@ -110,7 +133,8 @@ fun tioApplicationModules(): List<Module> =
         coreModule(),
         databaseModule(),
         dataModule(),
-        applicationModule(),
         financeEngineModule(),
+        budgetEngineModule(),
+        applicationModule(),
         diagnosticsModule(),
     )
