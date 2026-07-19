@@ -8,6 +8,7 @@ import com.tioledger.application.usecase.category.ArchiveCategoryUseCase
 import com.tioledger.application.usecase.category.CreateCategoryUseCase
 import com.tioledger.application.usecase.category.ListCategoriesUseCase
 import com.tioledger.application.usecase.category.UpdateCategoryUseCase
+import com.tioledger.application.usecase.transaction.ListTransactionsUseCase
 import com.tioledger.application.usecase.transaction.RecordAdjustmentUseCase
 import com.tioledger.application.usecase.transaction.RecordExpenseUseCase
 import com.tioledger.application.usecase.transaction.RecordIncomeUseCase
@@ -26,6 +27,7 @@ import com.tioledger.database.TioLedgerDatabase
 import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.CategoryRepository
 import com.tioledger.domain.repository.LedgerRepository
+import com.tioledger.domain.repository.TransactionHistoryRepository
 import com.tioledger.domain.repository.TransactionRepository
 import com.tioledger.finance.engine.BalanceCalculator
 import com.tioledger.finance.engine.PostingEngine
@@ -50,7 +52,9 @@ fun dataModule(): Module =
         single<AccountRepository> { SQLDelightAccountRepository(get()) }
         single<CategoryRepository> { SQLDelightCategoryRepository(get()) }
         single<LedgerRepository> { SQLDelightLedgerRepository(get()) }
-        single<TransactionRepository> { SQLDelightTransactionRepository(get()) }
+        single { SQLDelightTransactionRepository(get()) }
+        single<TransactionRepository> { get<SQLDelightTransactionRepository>() }
+        single<TransactionHistoryRepository> { get<SQLDelightTransactionRepository>() }
     }
 
 fun applicationModule(): Module =
@@ -63,6 +67,7 @@ fun applicationModule(): Module =
         factory { CreateCategoryUseCase(get()) }
         factory { UpdateCategoryUseCase(get()) }
         factory { ArchiveCategoryUseCase(get()) }
+        factory { ListTransactionsUseCase(get()) }
         factory { RecordIncomeUseCase(get(), get(), get(), get()) }
         factory { RecordExpenseUseCase(get(), get(), get(), get()) }
         factory { RecordTransferUseCase(get(), get(), get()) }
@@ -88,11 +93,13 @@ fun diagnosticsModule(): Module =
                     getOrNull<AccountRepository>() != null &&
                         getOrNull<CategoryRepository>() != null &&
                         getOrNull<LedgerRepository>() != null &&
-                        getOrNull<TransactionRepository>() != null,
+                        getOrNull<TransactionRepository>() != null &&
+                        getOrNull<TransactionHistoryRepository>() != null,
                 useCasesRegistered =
                     getOrNull<CreateAccountUseCase>() != null &&
                         getOrNull<ListAccountSummariesUseCase>() != null &&
                         getOrNull<CreateCategoryUseCase>() != null &&
+                        getOrNull<ListTransactionsUseCase>() != null &&
                         getOrNull<RecordIncomeUseCase>() != null,
             )
         }
