@@ -24,20 +24,20 @@ class SQLDelightTransactionRepository(
             runDatabaseCatching {
                 database.transactionsQueries
                     .selectTransactionHistoryRows {
-                            transactionId,
-                            timestamp,
-                            description,
-                            transactionType,
-                            splitId,
-                            amount,
-                            accountId,
-                            accountName,
-                            accountType,
-                            currencyCode,
-                            categoryId,
-                            categoryName,
-                            ledgerEntryType,
-                            ->
+                        transactionId,
+                        timestamp,
+                        description,
+                        transactionType,
+                        splitId,
+                        amount,
+                        accountId,
+                        accountName,
+                        accountType,
+                        currencyCode,
+                        categoryId,
+                        categoryName,
+                        ledgerEntryType,
+                        ->
                         TransactionHistoryRow(
                             transactionId = transactionId,
                             timestamp = timestamp,
