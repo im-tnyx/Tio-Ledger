@@ -146,9 +146,10 @@ class SQLDelightLoanRepository(
 
     private fun DataResult.Failure.isDuplicateLoanFailure(): Boolean {
         val message = error.messageText()
+        val isConstraintViolation = error is DataError.ConstraintViolation
+        val referencesLoanPrimaryKey = message.contains("loans.id", ignoreCase = true)
         return message.contains(DUPLICATE_LOAN_PREFIX) ||
-            (error is DataError.ConstraintViolation &&
-                message.contains("loans.id", ignoreCase = true))
+            (isConstraintViolation && referencesLoanPrimaryKey)
     }
 
     private fun DataError.messageText(): String =
