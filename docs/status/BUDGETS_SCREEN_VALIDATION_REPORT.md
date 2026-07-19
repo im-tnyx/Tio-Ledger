@@ -8,7 +8,7 @@ PR: #11
 
 ## Scope
 
-Validated the Budgets v1 implementation across Domain, Application, budget-engine, Data, SQLDelight, Bootstrap/Koin, shared Compose UI, typed navigation, previews, and focused tests.
+Validated the Budgets v1 implementation across Domain, Application, budget-engine, Data, SQLDelight, Bootstrap/Koin, shared Compose UI, typed navigation, previews, focused tests, and final-review regression fixes.
 
 ## Functional Coverage
 
@@ -19,6 +19,8 @@ Validated the Budgets v1 implementation across Domain, Application, budget-engin
 - Derive spent amounts from immutable expense transaction history.
 - Present target, spent, remaining, utilization, period range, and textual progress status.
 - Render loading, empty, error, populated, create, edit, validation, persistence-error, and success UI states.
+- Distinguish unavailable category scope from the real all-expenses scope.
+- Compose the editor and category picker as mutually exclusive dialogs.
 - Resolve `MainRoute.Budgets` to the production screen through Koin-backed navigation wiring.
 
 ## Architecture Review
@@ -68,6 +70,18 @@ BUILD SUCCESSFUL in 18s
 10 actionable tasks: 1 executed, 9 up-to-date
 ```
 
+### Post-Review Regression Validation
+
+```text
+./gradlew :shared:application:compileKotlinMetadata :shared:application:test :shared:ui:compileKotlinMetadata :shared:ui:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 47s
+237 actionable tasks: 33 executed, 204 up-to-date
+
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 16s
+70 actionable tasks: 3 executed, 67 up-to-date
+```
+
 ### Patch And Repository Integrity
 
 ```text
@@ -86,6 +100,7 @@ nothing to commit, working tree clean
 - Progress is communicated through text and values in addition to the visual indicator.
 - Cards expose descriptive semantics for budget name, scope, target, spent, remaining, utilization, period, and status.
 - Loading, errors, empty states, editor controls, and retry actions use existing accessible shared components.
+- Missing or archived category scope is presented explicitly instead of being mislabeled as all expenses.
 
 ## Known V1 Constraint
 
@@ -93,4 +108,4 @@ Custom start/end budget periods are intentionally unsupported until a separate e
 
 ## Decision
 
-Budgets Screen v1 satisfies the applicable local Definition of Done checks and is ready for final pull-request review. Merge remains subject to explicit approval and repository CI availability.
+Budgets Screen v1 satisfies the applicable local Definition of Done checks, including final-review regression validation, and is ready for explicit merge approval. Repository CI availability remains an external infrastructure constraint.
