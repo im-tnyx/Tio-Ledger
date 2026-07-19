@@ -1,6 +1,6 @@
 # Budgets Screen v1 Progress
 
-Status: Complete — implemented and locally validated
+Status: Complete — implemented, reviewed, and locally validated
 Issue: #10
 Branch: `feat/budgets-screen-v1`
 PR: #11
@@ -53,6 +53,12 @@ Replace the budget-management navigation gap with a production Budgets screen ba
 - Kept Reports registered in the main graph while Budgets occupies the fifth primary-navigation slot for v1.
 - Added light, dark, and editor previews, ViewModel tests, and navigation tests.
 
+## Final Review Fixes
+
+- Distinguish a missing or archived category scope from the real all-expenses scope by displaying `Unavailable category`.
+- Prevent the editor and category picker from being composed as overlapping dialogs.
+- Added focused ViewModel regression coverage for unavailable category scope.
+
 ## Final Local Validation
 
 ```text
@@ -71,6 +77,18 @@ BUILD SUCCESSFUL in 37s
 ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace
 BUILD SUCCESSFUL in 18s
 10 actionable tasks: 1 executed, 9 up-to-date
+```
+
+## Post-Review Validation
+
+```text
+./gradlew :shared:application:compileKotlinMetadata :shared:application:test :shared:ui:compileKotlinMetadata :shared:ui:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 47s
+237 actionable tasks: 33 executed, 204 up-to-date
+
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 16s
+70 actionable tasks: 3 executed, 67 up-to-date
 
 git diff --check
 (no output)
@@ -92,4 +110,4 @@ nothing to commit, working tree clean
 
 ## Outcome
 
-Budgets Screen v1 is implementation-complete and locally validated. PR #11 is ready for final review and merge approval.
+Budgets Screen v1 is implementation-complete, final-review fixes are validated, and PR #11 is ready for explicit merge approval.
