@@ -46,6 +46,21 @@ class BudgetsViewModelTest {
     }
 
     @Test
+    fun distinguishesUnavailableCategoryScopeFromAllExpenses() {
+        val budgetRepository = FakeBudgetRepository(mutableListOf(foodBudget()))
+        val categoryRepository = FakeCategoryRepository(emptyList())
+
+        val viewModel = createViewModel(budgetRepository, categoryRepository)
+
+        assertEquals("Unavailable category", viewModel.uiState.value.budgets.single().categoryLabel)
+        assertEquals(listOf("All expenses"), viewModel.uiState.value.categoryOptions.map { it.name })
+
+        viewModel.onAction(BudgetsAction.EditClicked("budget-food"))
+
+        assertEquals("food", viewModel.uiState.value.editor?.categoryId)
+    }
+
+    @Test
     fun createsBudgetAndRefreshesSummary() {
         val budgetRepository = FakeBudgetRepository()
         val categoryRepository = FakeCategoryRepository(listOf(foodCategory()))
