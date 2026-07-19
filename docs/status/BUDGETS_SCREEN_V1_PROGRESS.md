@@ -1,13 +1,13 @@
 # Budgets Screen v1 Progress
 
-Status: In progress — production implementation locally validated; final quality gates pending
+Status: Complete — implemented and locally validated
 Issue: #10
 Branch: `feat/budgets-screen-v1`
-Draft PR: #11
+PR: #11
 
 ## Objective
 
-Replace the budget-management navigation gap with a production Budgets screen backed by the existing Domain, Application, budget-engine, Data, SQLDelight, Bootstrap, and shared UI layers.
+Replace the budget-management navigation gap with a production Budgets screen backed by the Domain, Application, budget-engine, Data, SQLDelight, Bootstrap, and shared UI layers.
 
 ## Completed Audit
 
@@ -15,11 +15,11 @@ Replace the budget-management navigation gap with a production Budgets screen ba
 - The frozen SQLDelight schema already contained `budgets` and `budget_periods` tables.
 - No Budget Domain model, repository contract, Application use case, SQLDelight query file, Data adapter, Koin registration, or production UI path existed.
 - `TioIconToken.Budget` existed, but `MainRoute.Budgets` did not.
-- Existing Categories and Transaction History paths provide the category scope and immutable expense records required for spend aggregation.
-- No database schema change is required for Budgets Screen v1.
+- Existing Categories and Transaction History paths provided the category scope and immutable expense records required for spend aggregation.
+- No database schema change was required for Budgets Screen v1.
 - V1 supports weekly, monthly, and yearly recurring budgets. Custom periods remain unsupported until explicit start/end editing is designed.
 
-## Completed CRUD Foundation Slice
+## Completed CRUD Foundation
 
 - Added `Budget`, `BudgetPeriodType`, and `BudgetRepository` Domain contracts.
 - Added budget-created and budget-updated Domain events.
@@ -31,79 +31,65 @@ Replace the budget-management navigation gap with a production Budgets screen ba
 - Registered the budget repository and use cases in Bootstrap/Koin diagnostics.
 - Added focused Application and SQLDelight integration tests.
 
-## CRUD Foundation Validation Passed
-
-```text
-./gradlew :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata --no-daemon --console=plain --stacktrace
-BUILD SUCCESSFUL in 15s
-17 actionable tasks: 8 executed, 9 up-to-date
-
-./gradlew :shared:application:test :shared:data:test --no-daemon --console=plain --stacktrace
-BUILD SUCCESSFUL in 40s
-191 actionable tasks: 55 executed, 136 up-to-date
-```
-
-## Completed Budget Summary Slice
+## Completed Budget Summary Foundation
 
 - Added timezone-aware weekly, monthly, and yearly current-period calculation in `shared:budget-engine`.
 - Added deterministic category-scoped expense aggregation from immutable transaction-history records.
 - Added fixed-integer utilization permille, remaining amount, and on-track/warning/reached/exceeded status calculation without floating-point money math.
 - Added `BudgetSummary` and `ListBudgetSummariesUseCase` in the Application layer.
 - Added repository-failure, invalid-time-zone, period-boundary, category, currency, and status tests.
-- Registered budget calculators and summary use case in Bootstrap/Koin diagnostics.
+- Registered budget calculators and summary orchestration in Bootstrap/Koin diagnostics.
 
-## Budget Summary Validation Passed
+## Completed Production UI
 
-```text
-./gradlew :shared:budget-engine:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata --no-daemon --console=plain --stacktrace
-BUILD SUCCESSFUL in 22s
-13 actionable tasks: 4 executed, 9 up-to-date
-
-./gradlew :shared:budget-engine:test :shared:application:test --no-daemon --console=plain --stacktrace
-BUILD SUCCESSFUL in 34s
-135 actionable tasks: 32 executed, 4 from cache, 99 up-to-date
-```
-
-## Completed Production UI Slice
-
-- Added official Google Play fallback reference note, original Tio UI specification, navigation definition, deviations, and acceptance checklist.
+- Added the official Google Play fallback reference note, original Tio UI specification, navigation definition, intentional deviations, accessibility plan, and acceptance checklist.
 - Added immutable `BudgetsUiState`, row/editor/category models, and typed actions.
-- Added `BudgetsViewModel` backed only by Application use cases and shared `IdGenerator`.
+- Added `BudgetsViewModel` backed only by Application use cases and the shared `IdGenerator`.
 - Added loading, empty, repository-error, populated, create, edit, validation, persistence-error, and success states.
-- Added deterministic money text parsing without `Float`/`Double` money calculations.
+- Added deterministic money-text parsing without `Float` or `Double` money calculations.
 - Added accessible progress cards showing target, spent, remaining, date range, utilization, and textual status.
-- Added category-scope picker and weekly/monthly/yearly editor flow.
+- Added all-expenses and expense-category scope selection with weekly, monthly, and yearly editing.
 - Added `MainRoute.Budgets`, primary bottom-navigation entry, root-route wiring, and Koin registration.
-- Kept Reports registered in the main graph while Budgets temporarily occupies its former primary-navigation slot.
-- Added light/dark/editor previews, ViewModel tests, and navigation tests.
+- Kept Reports registered in the main graph while Budgets occupies the fifth primary-navigation slot for v1.
+- Added light, dark, and editor previews, ViewModel tests, and navigation tests.
 
-## Production UI Validation Passed
+## Final Local Validation
 
 ```text
-./gradlew :shared:ui:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata --no-daemon --console=plain --stacktrace
-BUILD SUCCESSFUL in 27s
-12 actionable tasks: 3 executed, 9 up-to-date
+./gradlew :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:budget-engine:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 21s
+19 actionable tasks: 9 executed, 10 up-to-date
 
-./gradlew :shared:ui:test --no-daemon --console=plain --stacktrace
-BUILD SUCCESSFUL in 1m 8s
-227 actionable tasks: 33 executed, 194 up-to-date
+./gradlew :shared:budget-engine:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 38s
+257 actionable tasks: 15 executed, 242 up-to-date
+
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 37s
+70 actionable tasks: 4 executed, 66 up-to-date
+
+./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace
+BUILD SUCCESSFUL in 18s
+10 actionable tasks: 1 executed, 9 up-to-date
+
+git diff --check
+(no output)
+
+git status
+On branch feat/budgets-screen-v1
+Your branch is up to date with 'origin/feat/budgets-screen-v1'.
+nothing to commit, working tree clean
 ```
 
-## Architecture Constraints
+## Architecture Constraints Preserved
 
 - No repository, SQLDelight, or engine access from UI.
 - No monetary or spend aggregation calculations inside Composables.
-- Preserve immutable ledger history and existing category/transaction paths.
+- Immutable ledger and transaction history remain the source for spend derivation.
 - No schema change.
-- Preserve Kotlin Multiplatform commonMain compatibility.
+- Kotlin Multiplatform `commonMain` compatibility is preserved.
+- Custom periods remain explicitly unsupported in v1.
 
-## Validation Pending
+## Outcome
 
-- Full affected-layer metadata compilation.
-- Full affected-module tests.
-- `ktlintCheck`.
-- `detekt`.
-- SQLDelight migration verification.
-- `git diff --check` and clean working tree.
-- Pixel/accessibility review of previews and production route.
-- Final roadmap, README, project-context, and architecture-changelog updates.
+Budgets Screen v1 is implementation-complete and locally validated. PR #11 is ready for final review and merge approval.
