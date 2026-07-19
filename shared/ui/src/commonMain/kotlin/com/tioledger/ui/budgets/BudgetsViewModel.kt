@@ -373,7 +373,12 @@ private fun BudgetSummary.toUiModel(timeZoneId: String): BudgetRowUiModel =
         id = id,
         name = name,
         categoryId = categoryId,
-        categoryLabel = categoryName ?: "All expenses",
+        categoryLabel =
+            when {
+                categoryId == null -> "All expenses"
+                categoryName != null -> categoryName
+                else -> "Unavailable category"
+            },
         periodType = periodType,
         periodLabel = periodType.toDisplayName(),
         periodDateRange = formatDateRange(periodStartInclusive, periodEndExclusive, timeZoneId),
