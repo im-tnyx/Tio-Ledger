@@ -1,6 +1,6 @@
 # Loan Creation and Loan Details v1 Progress
 
-Status: Audit complete — engine/domain foundation next
+Status: Engine and Domain foundation implemented — local validation pending
 Issue: #12
 Branch: `feat/loan-creation-details-v1`
 PR: #13 (draft)
@@ -32,11 +32,11 @@ Replace the Loans placeholder/navigation gap with production loan creation and l
 - `MainRoute.Loans` and the Loan icon token already exist and are registered in the main graph.
 - The accepted loan-engine design and precision ADR require deterministic EMI/schedule calculations, integer minor-unit persistence, explicit rounding, and no floating-point money arithmetic.
 
-### Missing executable paths
+### Missing executable paths found by audit
 
-- `shared:loan-engine` is configured but contains no production calculator API or tests.
-- No deterministic fixed-scale interest-rate helper currently exists in Core or Finance Engine.
-- No Loan Domain entity, schedule model, repository contract, domain events, or typed loan errors exist.
+- `shared:loan-engine` was configured but contained no production calculator API or tests.
+- No deterministic fixed-scale interest-rate helper existed in Core or Finance Engine.
+- No Loan Domain entity, schedule model, repository contract, domain events, or typed loan errors existed.
 - No SQLDelight loan query file, row mapper, Data repository, or atomic loan-plus-schedule persistence path exists.
 - `shared:application` does not depend on `shared:loan-engine` and contains no loan use cases.
 - Bootstrap/Koin does not depend on or register the loan engine, loan repository, or loan use cases.
@@ -48,9 +48,24 @@ Replace the Loans placeholder/navigation gap with production loan creation and l
 
 No schema change is required for the baseline v1 workflow. Currency is derived from the linked loan account and must match the disbursed account. Existing schema fields are sufficient for a monthly reducing-balance loan and persisted amortization schedule.
 
-### Verified architecture blocker
+## Completed Loan-Engine Foundation
 
-The loan calculation layer must be implemented before Application/Data/UI work. The repository cannot safely persist or display EMI schedules until a deterministic commonMain calculation and rounding policy exists.
+- Added a narrow, stateless `LoanCalculator` API for monthly reducing-balance loans.
+- Added typed loan terms, quote, installment, payment-frequency, result, and calculation-error models.
+- Implemented schedule-first EMI discovery using deterministic integer arithmetic rather than `Double` or platform decimal APIs.
+- Implemented annual basis-point to monthly-interest conversion with explicit half-up minor-unit rounding.
+- Added overflow-safe addition, subtraction, multiplication, and multiply/divide calculation boundaries.
+- Added final-payment adjustment so the generated schedule closes the balance exactly.
+- Added calendar-month due dates that preserve the contractual day where possible and clamp to month end when required.
+- Added golden tests for a standard 8.75% five-year loan, zero interest, month-end dates, final-payment adjustment, half-up rounding, validation errors, overflow, and schedule invariants.
+
+## Completed Domain Foundation
+
+- Added strongly typed Loan, LoanDetails, and persisted LoanInstallment models.
+- Added fixed/floating/reducing/flat interest types and schema-aligned compounding, payment, status, and installment status enums.
+- Added a narrow `LoanRepository` contract for deterministic list, details retrieval, and atomic loan-plus-schedule creation.
+- Added `DomainEvent.LoanCreated`.
+- Added typed `LoanNotFound` and `DuplicateLoanId` repository errors.
 
 ## Approved Initial V1 Scope
 
@@ -89,14 +104,14 @@ These follow-up workflows require dedicated posting strategies and transactional
 
 ## Implementation Sequence
 
-1. Add deterministic monthly reducing-balance loan-engine API, schedule-first EMI calculation, date rules, typed errors, and golden tests.
-2. Add Loan Domain models, repository contract, events, and typed repository errors.
-3. Add SQLDelight CRUD/schedule queries, mappers, and atomic Data repository integration tests.
-4. Add Application create/list/details use cases with account/currency/status validation.
-5. Register engine/repository/use cases in Bootstrap/Koin diagnostics.
-6. Resolve the approved Loan UI reference note before production Compose work.
-7. Add loan list/create/details UI, typed navigation, previews, and tests.
-8. Run final metadata, tests, static analysis, migration, and repository-integrity gates.
+1. [x] Add deterministic monthly reducing-balance loan-engine API, schedule-first EMI calculation, date rules, typed errors, and golden tests.
+2. [x] Add Loan Domain models, repository contract, events, and typed repository errors.
+3. [ ] Add SQLDelight CRUD/schedule queries, mappers, and atomic Data repository integration tests.
+4. [ ] Add Application create/list/details use cases with account/currency/status validation.
+5. [ ] Register engine/repository/use cases in Bootstrap/Koin diagnostics.
+6. [ ] Resolve the approved Loan UI reference note before production Compose work.
+7. [ ] Add loan list/create/details UI, typed navigation, previews, and tests.
+8. [ ] Run final metadata, tests, static analysis, migration, and repository-integrity gates.
 
 ## Architecture Constraints
 
@@ -108,14 +123,23 @@ These follow-up workflows require dedicated posting strategies and transactional
 - Schema changes require a verified blocker and explicit review.
 - Kotlin Multiplatform `commonMain` compatibility must be preserved.
 
-## Planned Validation Gates
+## Current Validation Gate
 
 ```text
-Metadata compilation
-Focused loan-engine/application/data/UI tests
-ktlintCheck
-detekt
+./gradlew :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:loan-engine:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+./gradlew :shared:loan-engine:test --no-daemon --console=plain --stacktrace
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+git diff --check
+git status
+```
+
+## Remaining Validation Gates
+
+```text
+Focused application/data/UI tests
 SQLDelight migration verification
+Final metadata compilation
+Final ktlintCheck and detekt
 git diff --check
 clean working tree
 ```
