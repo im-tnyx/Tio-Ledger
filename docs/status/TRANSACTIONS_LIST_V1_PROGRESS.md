@@ -1,9 +1,9 @@
 # Transactions List v1 Progress
 
-Status: In progress
+Status: Complete — ready for review
 Issue: #6
 Branch: `feat/transactions-list-v1`
-Draft PR: #7
+PR: #7
 
 ## Objective
 
@@ -28,34 +28,35 @@ Replace the `MainRoute.Transactions` placeholder with a production transaction-h
 - Added the add-transaction FAB and real bottom-navigation callbacks.
 - Replaced the `MainRoute.Transactions` placeholder with `TransactionsRoute`.
 - Added light/dark previews plus focused ViewModel and navigation tests.
+- Wired successful Transaction Entry completion back to `MainRoute.Transactions`; route initialization reloads persisted history.
 
 ## Validation Evidence
 
-Completed locally for the read-path slice:
+Passed locally:
 
-- Shared Domain, Application, Database, Data, and Bootstrap metadata compilation: passed.
-- `:shared:application:test :shared:data:test`: passed.
-- `ktlintCheck`: passed after replacing the generated-query mapper lambda with a named function reference.
-- `detekt`: passed.
+- Shared Domain, Application, Database, Data, and Bootstrap metadata compilation.
+- `:shared:application:test :shared:data:test`.
+- `:shared:ui:compileKotlinMetadata :shared:ui:test`.
+- `ktlintCheck`.
+- `detekt`.
+- `:shared:database:verifyCommonMainTioLedgerDatabaseMigration` with no parallel workers.
+- `git diff --check` with no output.
+- `git status` confirmed the branch matched origin with a clean working tree before documentation finalization.
 
-Pending after the UI slice:
+## Documentation Updates
 
-- `:shared:ui:compileKotlinMetadata`
-- `:shared:ui:test`
-- Full targeted metadata compilation and critical shared tests
-- SQLDelight migration verification
-- Final `ktlintCheck`, `detekt`, and `git diff --check`
+- Refreshed root README development status.
+- Advanced the implementation roadmap to Categories Screen v1.
+- Refreshed `.ai/project-context.md` for future implementation sessions.
 
-## Remaining Work
-
-- Resolve any UI compilation, formatting, or test issues found by local validation.
-- Confirm persisted transactions refresh after returning from Transaction Entry.
-- Refresh stale README and roadmap milestone text.
-- Record final validation evidence and mark PR ready only after all gates pass.
-
-## Architecture Constraints
+## Architecture Constraints Preserved
 
 - No direct repository or SQLDelight access from UI.
 - No financial calculations or ledger posting in UI/ViewModel.
 - No database schema change.
-- Preserve immutable ledger history and atomic transaction persistence.
+- Existing transaction write contract remains source-compatible.
+- Immutable ledger history and atomic transaction persistence are preserved.
+
+## Review State
+
+All implementation and local validation gates for issue #6 are complete. PR #7 is ready for review. Issue #6 should close only when the PR is merged.
