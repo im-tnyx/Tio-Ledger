@@ -23,37 +23,7 @@ class SQLDelightTransactionRepository(
         val result =
             runDatabaseCatching {
                 database.transactionsQueries
-                    .selectTransactionHistoryRows {
-                        transactionId,
-                        timestamp,
-                        description,
-                        transactionType,
-                        splitId,
-                        amount,
-                        accountId,
-                        accountName,
-                        accountType,
-                        currencyCode,
-                        categoryId,
-                        categoryName,
-                        ledgerEntryType,
-                        ->
-                        TransactionHistoryRow(
-                            transactionId = transactionId,
-                            timestamp = timestamp,
-                            description = description,
-                            transactionType = TransactionType.valueOf(transactionType),
-                            splitId = splitId,
-                            amount = amount,
-                            accountId = accountId,
-                            accountName = accountName,
-                            accountType = AccountType.valueOf(accountType),
-                            currencyCode = currencyCode,
-                            categoryId = categoryId,
-                            categoryName = categoryName,
-                            entryType = ledgerEntryType?.let(LedgerEntryType::valueOf),
-                        )
-                    }
+                    .selectTransactionHistoryRows(::mapTransactionHistoryRow)
                     .executeAsList()
                     .toTransactionHistoryRecords()
             }
@@ -148,6 +118,37 @@ class SQLDelightTransactionRepository(
         }
     }
 }
+
+private fun mapTransactionHistoryRow(
+    transactionId: String,
+    timestamp: Long,
+    description: String?,
+    transactionType: String,
+    splitId: String,
+    amount: Long,
+    accountId: String,
+    accountName: String,
+    accountType: String,
+    currencyCode: String,
+    categoryId: String?,
+    categoryName: String?,
+    ledgerEntryType: String?,
+): TransactionHistoryRow =
+    TransactionHistoryRow(
+        transactionId = transactionId,
+        timestamp = timestamp,
+        description = description,
+        transactionType = TransactionType.valueOf(transactionType),
+        splitId = splitId,
+        amount = amount,
+        accountId = accountId,
+        accountName = accountName,
+        accountType = AccountType.valueOf(accountType),
+        currencyCode = currencyCode,
+        categoryId = categoryId,
+        categoryName = categoryName,
+        entryType = ledgerEntryType?.let(LedgerEntryType::valueOf),
+    )
 
 private data class TransactionHistoryRow(
     val transactionId: String,
