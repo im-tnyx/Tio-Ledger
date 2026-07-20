@@ -1,6 +1,6 @@
 # Loan Creation and Loan Details v1 Progress
 
-Status: Engine, Domain, Data/SQLDelight, Application, and Bootstrap/Koin validated; UI specification approved — production UI implementation next
+Status: Engine through Bootstrap/Koin validated; UI specification and production list/create/details implementation complete — local UI gate pending
 Issue: #12
 Branch: `feat/loan-creation-details-v1`
 PR: #13 (draft)
@@ -75,6 +75,22 @@ Replace the Loans placeholder/navigation gap with production loan creation and l
 - Approved fallback: issue #12 acceptance criteria plus existing production Accounts/Budgets/Categories and Tio design-system patterns.
 - Full workflow, hierarchy, navigation, deviations, accessibility, acceptance checklist, and pixel-review plan are documented in `docs/references/notes/loan.md`.
 - No proprietary source, XML, resource, asset, string, color, dimension, animation, or implementation detail is copied.
+
+## Implemented Shared UI
+
+- Added `LoansViewModel` for synchronous list/account loading, creation editor state, account pickers, save feedback, and persisted-list refresh.
+- Added `LoanDetailsViewModel` for typed detail loading, account-name resolution through Application, retry, and persisted presentation mapping.
+- Added immutable list, editor, account-option, details, and installment UI models.
+- Added integer-only principal parsing and percentage-to-basis-point conversion with at most two decimal places.
+- Added deterministic UTC date formatting for contractual and installment dates.
+- Added active `LOAN_LINKED` and matching-currency non-loan asset filtering for account pickers; Application remains the final validator.
+- Added production Loans loading, empty, error, populated, success, create-dialog, and account-picker states.
+- Added a dedicated Loan Details screen with contractual terms, summary values, linked account labels, and stacked amortization cards.
+- Added typed `MainRoute.LoanDetails(loanId)` and root-host list/details/back wiring.
+- Added UI Koin registrations for both loan ViewModels.
+- Added light/dark list, empty, editor, and details previews.
+- Added ViewModel tests for list/account eligibility, integer parsing, creation/refresh, validation, currency filtering, details mapping, errors, and retry.
+- Added typed navigation path/registration tests.
 
 ## Local Validation Evidence
 
@@ -152,11 +168,20 @@ branch up to date; nothing to commit; working tree clean
 
 ## Remaining Implementation Sequence
 
-1. Add loan list/create/details UI state, ViewModel, and presentation mapping.
-2. Add production Compose list/create/details screens and previews.
-3. Wire typed Loan Details navigation and UI Koin registration.
-4. Add ViewModel, navigation, and presentation tests.
-5. Run final metadata, focused tests, full static analysis, migration, build/check, patch-integrity, and clean-tree gates.
+1. Run focused UI metadata/test/static-analysis and patch-integrity gates.
+2. Fix any compile, test, ktlint, or detekt regressions found by the local UI gate.
+3. Perform final cross-layer review and update acceptance/validation documentation.
+4. Run full build/check, migration, and clean-tree gates before review readiness.
+
+## Current UI Validation Gate
+
+```text
+./gradlew :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+./gradlew :shared:ui:test --no-daemon --console=plain --stacktrace
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+git diff --check
+git status
+```
 
 ## Architecture Constraints
 
