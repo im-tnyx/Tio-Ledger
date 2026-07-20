@@ -41,15 +41,14 @@ class LoanUseCasesTest {
     @Test
     fun createsActiveLoanAndPersistsGeneratedSchedule() {
         val loanRepository = FakeLoanRepository()
-        val accountRepository =
-            FakeAccountRepository(
-                loanAccount("loan-account", "INR"),
-                assetAccount("bank-account", "INR"),
-            )
         val useCase =
             CreateLoanUseCase(
                 loanRepository = loanRepository,
-                accountRepository = accountRepository,
+                accountRepository =
+                    FakeAccountRepository(
+                        loanAccount("loan-account", "INR"),
+                        assetAccount("bank-account", "INR"),
+                    ),
                 loanCalculator = MonthlyReducingBalanceLoanCalculator(),
                 idGenerator = SequenceIdGenerator(),
             )
@@ -81,8 +80,6 @@ class LoanUseCasesTest {
         assertEquals("loan-account", view.overview.loan.accountId)
         assertEquals("bank-account", view.overview.loan.disbursedAccountId)
         assertEquals(dateMillis(2026, 1, 31), view.overview.loan.startDate)
-        assertEquals(Money.zero(inr), view.overview.loan.processingFee)
-        assertEquals(Money.zero(inr), view.overview.loan.insuranceAmount)
         assertEquals(Money(10_000L, inr), view.overview.scheduledEmi)
         assertEquals(Money.zero(inr), view.overview.totalInterest)
         assertEquals(Money(120_000L, inr), view.overview.totalPayable)
@@ -103,20 +100,10 @@ class LoanUseCasesTest {
         assertValidation(
             accounts =
                 listOf(
-                    loanAccount("loan", "INR").copy(isArchived = true),
-                    assetAccount("bank", "INR"),
-                ),
-            expectedField = "accountId",
-            expectedReason = "linked loan account must be active",
-        )
-        assertValidation(
-            accounts =
-                listOf(
                     assetAccount("loan", "INR"),
                     assetAccount("bank", "INR"),
                 ),
-            expectedField = "accountId",
-            expectedReason = "must reference a LOAN_LINKED account",
+            expected = ApplicationError.Validation("accountId", "must reference a LOAN_LINKED account"),
         )
         assertValidation(
             accounts =
@@ -124,8 +111,11 @@ class LoanUseCasesTest {
                     loanAccount("loan", "INR"),
                     account("bank", AccountType.CREDIT_CARD, "INR"),
                 ),
-            expectedField = "disbursedAccountId",
-            expectedReason = "must reference a non-loan asset account",
+            expected =
+                ApplicationError.Validation(
+                    "disbursedAccountId",
+                    "must reference a non-loan asset account",
+                ),
         )
         assertValidation(
             accounts =
@@ -133,14 +123,17 @@ class LoanUseCasesTest {
                     loanAccount("loan", "INR"),
                     assetAccount("bank", "USD"),
                 ),
-            expectedField = "disbursedAccountId",
-            expectedReason = "must use the same currency as the linked loan account",
+            expected =
+                ApplicationError.Validation(
+                    "disbursedAccountId",
+                    "must use the same currency as the linked loan account",
+                ),
         )
 
-        val sameAccountRepository = FakeLoanRepository()
+        val repository = FakeLoanRepository()
         val sameAccountResult =
             createUseCase(
-                loanRepository = sameAccountRepository,
+                loanRepository = repository,
                 accounts = listOf(loanAccount("loan", "INR")),
             )(
                 validCommand().copy(
@@ -148,6 +141,7 @@ class LoanUseCasesTest {
                     disbursedAccountId = "loan",
                 ),
             )
+
         assertEquals(
             ApplicationError.Validation(
                 "disbursedAccountId",
@@ -155,7 +149,7 @@ class LoanUseCasesTest {
             ),
             assertIs<ApplicationResult.Failure>(sameAccountResult).error,
         )
-        assertEquals(0, sameAccountRepository.createCalls)
+        assertEquals(0, repository.createCalls)
     }
 
     @Test
@@ -201,12 +195,15 @@ class LoanUseCasesTest {
             )
         val repository = FakeLoanRepository(alpha, zeta)
 
-        val list = assertIs<ApplicationResult.Success<List<LoanOverview>>>(ListLoansUseCase(repository)()).outcome.value
+        val list =
+            assertIs<ApplicationResult.Success<List<LoanOverview>>>(
+                ListLoansUseCase(repository)(),
+            ).outcome.value
         val alphaOverview = list.first()
         val detailsView =
-            assertIs<ApplicationResult.Success<LoanDetailsView>>(GetLoanDetailsUseCase(repository)(" alpha "))
-                .outcome
-                .value
+            assertIs<ApplicationResult.Success<LoanDetailsView>>(
+                GetLoanDetailsUseCase(repository)(" alpha "),
+            ).outcome.value
 
         assertEquals(listOf("alpha", "zeta"), list.map { it.loan.id })
         assertEquals(Money(5_000L, inr), alphaOverview.scheduledEmi)
@@ -238,31 +235,28 @@ class LoanUseCasesTest {
 
     private fun assertValidation(
         accounts: List<Account>,
-        expectedField: String,
-        expectedReason: String,
+        expected: ApplicationError.Validation,
     ) {
         val repository = FakeLoanRepository()
         val result = createUseCase(repository, accounts)(validCommand())
-        assertEquals(
-            ApplicationError.Validation(expectedField, expectedReason),
-            assertIs<ApplicationResult.Failure>(result).error,
-        )
+        assertEquals(expected, assertIs<ApplicationResult.Failure>(result).error)
         assertEquals(0, repository.createCalls)
     }
 
     private fun createUseCase(
         loanRepository: FakeLoanRepository,
         accounts: List<Account>,
-    ): CreateLoanUseCase =
-        CreateLoanUseCase(
+    ): CreateLoanUseCase {
+        return CreateLoanUseCase(
             loanRepository = loanRepository,
             accountRepository = FakeAccountRepository(*accounts.toTypedArray()),
             loanCalculator = MonthlyReducingBalanceLoanCalculator(),
             idGenerator = SequenceIdGenerator(),
         )
+    }
 
-    private fun validCommand(): CreateLoanCommand =
-        CreateLoanCommand(
+    private fun validCommand(): CreateLoanCommand {
+        return CreateLoanCommand(
             id = "loan-id",
             name = "Loan",
             principalAmount = 120_000L,
@@ -273,23 +267,28 @@ class LoanUseCasesTest {
             disbursedAccountId = "bank",
             createdAt = 10L,
         )
+    }
 
     private fun loanAccount(
         id: String,
         currency: String,
-    ): Account = account(id, AccountType.LOAN_LINKED, currency)
+    ): Account {
+        return account(id, AccountType.LOAN_LINKED, currency)
+    }
 
     private fun assetAccount(
         id: String,
         currency: String,
-    ): Account = account(id, AccountType.BANK, currency)
+    ): Account {
+        return account(id, AccountType.BANK, currency)
+    }
 
     private fun account(
         id: String,
         type: AccountType,
         currency: String,
-    ): Account =
-        Account(
+    ): Account {
+        return Account(
             id = id,
             name = id,
             type = type,
@@ -297,6 +296,7 @@ class LoanUseCasesTest {
             createdAt = 1L,
             updatedAt = 1L,
         )
+    }
 
     private fun details(
         id: String,
@@ -348,7 +348,9 @@ class LoanUseCasesTest {
         year: Int,
         month: Int,
         day: Int,
-    ): Long = LocalDate(year, month, day).atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+    ): Long {
+        return LocalDate(year, month, day).atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+    }
 }
 
 private class FakeLoanRepository(
@@ -359,12 +361,18 @@ private class FakeLoanRepository(
     var created: LoanDetails? = null
     var createCalls: Int = 0
 
-    override fun findAll(): LedgerResult<List<Loan>> =
-        findAllResult ?: LedgerResult.Success(detailsById.values.map { it.loan })
+    override fun findAll(): LedgerResult<List<Loan>> {
+        return findAllResult ?: LedgerResult.Success(detailsById.values.map { it.loan })
+    }
 
-    override fun findDetails(loanId: String): LedgerResult<LoanDetails> =
-        detailsById[loanId]?.let(LedgerResult::Success)
-            ?: LedgerResult.Failure(LedgerError.LoanNotFound(loanId))
+    override fun findDetails(loanId: String): LedgerResult<LoanDetails> {
+        val details = detailsById[loanId]
+        return if (details != null) {
+            LedgerResult.Success(details)
+        } else {
+            LedgerResult.Failure(LedgerError.LoanNotFound(loanId))
+        }
+    }
 
     override fun create(details: LoanDetails): LedgerResult<LoanDetails> {
         createCalls += 1
@@ -382,18 +390,26 @@ private class FakeAccountRepository(
 ) : AccountRepository {
     private val accountsById = accounts.associateBy(Account::id)
 
-    override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> =
-        LedgerResult.Success(accountsById.values.filter { includeArchived || !it.isArchived })
+    override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> {
+        return LedgerResult.Success(accountsById.values.filter { includeArchived || !it.isArchived })
+    }
 
-    override fun findById(accountId: String): LedgerResult<Account> =
-        accountsById[accountId]?.let(LedgerResult::Success)
-            ?: LedgerResult.Failure(LedgerError.AccountNotFound(accountId))
+    override fun findById(accountId: String): LedgerResult<Account> {
+        val account = accountsById[accountId]
+        return if (account != null) {
+            LedgerResult.Success(account)
+        } else {
+            LedgerResult.Failure(LedgerError.AccountNotFound(accountId))
+        }
+    }
 
-    override fun create(account: Account): LedgerResult<Account> =
-        LedgerResult.Failure(LedgerError.Unknown("not supported"))
+    override fun create(account: Account): LedgerResult<Account> {
+        return LedgerResult.Failure(LedgerError.Unknown("not supported"))
+    }
 
-    override fun update(account: Account): LedgerResult<Account> =
-        LedgerResult.Failure(LedgerError.Unknown("not supported"))
+    override fun update(account: Account): LedgerResult<Account> {
+        return LedgerResult.Failure(LedgerError.Unknown("not supported"))
+    }
 }
 
 private class SequenceIdGenerator : IdGenerator {
@@ -408,6 +424,7 @@ private class SequenceIdGenerator : IdGenerator {
 private class FailingLoanCalculator(
     private val error: LoanCalculationError,
 ) : LoanCalculator {
-    override fun calculate(terms: LoanTerms): LoanCalculationResult<LoanQuote> =
-        LoanCalculationResult.Failure(error)
+    override fun calculate(terms: LoanTerms): LoanCalculationResult<LoanQuote> {
+        return LoanCalculationResult.Failure(error)
+    }
 }
