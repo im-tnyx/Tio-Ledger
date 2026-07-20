@@ -1,6 +1,5 @@
 package com.tioledger.application.usecase.loan
 
-import com.tioledger.application.internal.mapRepositoryResult
 import com.tioledger.application.internal.normalizedId
 import com.tioledger.application.internal.validateId
 import com.tioledger.application.internal.validateName
@@ -24,18 +23,18 @@ import com.tioledger.domain.model.LoanEmiCalculationMethod
 import com.tioledger.domain.model.LoanInstallment
 import com.tioledger.domain.model.LoanInstallmentStatus
 import com.tioledger.domain.model.LoanInterestType
+import com.tioledger.domain.model.LoanPaymentFrequency as DomainLoanPaymentFrequency
 import com.tioledger.domain.model.LoanStatus
 import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.LoanRepository
 import com.tioledger.loan.engine.LoanCalculationError
 import com.tioledger.loan.engine.LoanCalculationResult
 import com.tioledger.loan.engine.LoanCalculator
+import com.tioledger.loan.engine.LoanPaymentFrequency as EngineLoanPaymentFrequency
 import com.tioledger.loan.engine.LoanTerms
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
-import com.tioledger.domain.model.LoanPaymentFrequency as DomainLoanPaymentFrequency
-import com.tioledger.loan.engine.LoanPaymentFrequency as EngineLoanPaymentFrequency
 
 /**
  * Application-ready loan summary derived only from persisted loan terms and installment rows.
@@ -140,13 +139,21 @@ class CreateLoanUseCase(
         }
 
         val loanAccount =
-            loadAccount(loanAccountId)?.let { return ApplicationResult.Failure(it) }
-                ?: accountRepository.successfulAccount(loanAccountId)
+            when (val result = accountRepository.findById(loanAccountId)) {
+                is LedgerResult.Success -> result.value
+                is LedgerResult.Failure -> {
+                    return ApplicationResult.Failure(ApplicationError.Repository(result.error))
+                }
+            }
         validateLoanAccount(loanAccount)?.let { return ApplicationResult.Failure(it) }
 
         val disbursedAccount =
-            loadAccount(disbursedAccountId)?.let { return ApplicationResult.Failure(it) }
-                ?: accountRepository.successfulAccount(disbursedAccountId)
+            when (val result = accountRepository.findById(disbursedAccountId)) {
+                is LedgerResult.Success -> result.value
+                is LedgerResult.Failure -> {
+                    return ApplicationResult.Failure(ApplicationError.Repository(result.error))
+                }
+            }
         validateDisbursedAccount(disbursedAccount)?.let { return ApplicationResult.Failure(it) }
 
         val currency = CurrencyCode(loanAccount.currencyCode)
@@ -159,16 +166,19 @@ class CreateLoanUseCase(
             )
         }
 
-        val terms =
-            LoanTerms(
-                principal = Money(command.principalAmount, currency),
-                annualInterestRateBasisPoints = command.annualInterestRateBasisPoints,
-                tenureMonths = command.tenureMonths,
-                startDate = command.startDate,
-                paymentFrequency = EngineLoanPaymentFrequency.MONTHLY,
-            )
         val quote =
-            when (val result = loanCalculator.calculate(terms)) {
+            when (
+                val result =
+                    loanCalculator.calculate(
+                        LoanTerms(
+                            principal = Money(command.principalAmount, currency),
+                            annualInterestRateBasisPoints = command.annualInterestRateBasisPoints,
+                            tenureMonths = command.tenureMonths,
+                            startDate = command.startDate,
+                            paymentFrequency = EngineLoanPaymentFrequency.MONTHLY,
+                        ),
+                    )
+            ) {
                 is LoanCalculationResult.Success -> result.value
                 is LoanCalculationResult.Failure -> {
                     return ApplicationResult.Failure(result.error.toApplicationError())
@@ -176,7 +186,6 @@ class CreateLoanUseCase(
             }
 
         val loanId = normalizedId(command.id)
-        val startDateTimestamp = command.startDate.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
         val loan =
             Loan(
                 id = loanId,
@@ -188,7 +197,7 @@ class CreateLoanUseCase(
                 compoundingFrequency = LoanCompoundingFrequency.MONTHLY,
                 paymentFrequency = DomainLoanPaymentFrequency.MONTHLY,
                 tenureMonths = command.tenureMonths,
-                startDate = startDateTimestamp,
+                startDate = command.startDate.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds(),
                 accountId = loanAccount.id,
                 disbursedAccountId = disbursedAccount.id,
                 processingFee = Money.zero(currency),
@@ -217,32 +226,28 @@ class CreateLoanUseCase(
             }
         val details = LoanDetails(loan = loan, schedule = schedule)
 
-        return loanRepository.create(details).mapRepositoryResult(
-            events = { created ->
-                listOf(
-                    DomainEvent.LoanCreated(
-                        loanId = created.loan.id,
-                        occurredAt = command.createdAt,
-                    ),
-                )
-            },
-            transform = { persisted ->
-                when (val result = persisted.toView()) {
-                    is ApplicationResult.Success -> result.outcome.value
-                    is ApplicationResult.Failure -> error("Persisted loan schedule could not be summarized: ${result.error}")
+        return when (val result = loanRepository.create(details)) {
+            is LedgerResult.Success -> {
+                when (val view = result.value.toView()) {
+                    is ApplicationResult.Success ->
+                        ApplicationResult.Success(
+                            UseCaseOutcome(
+                                value = view.outcome.value,
+                                events =
+                                    listOf(
+                                        DomainEvent.LoanCreated(
+                                            loanId = result.value.loan.id,
+                                            occurredAt = command.createdAt,
+                                        ),
+                                    ),
+                            ),
+                        )
+                    is ApplicationResult.Failure -> view
                 }
-            },
-        )
-    }
-
-    private fun loadAccount(accountId: String): ApplicationError? =
-        when (val result = accountRepository.findById(accountId)) {
-            is LedgerResult.Success -> null
-            is LedgerResult.Failure -> ApplicationError.Repository(result.error)
+            }
+            is LedgerResult.Failure -> ApplicationResult.Failure(ApplicationError.Repository(result.error))
         }
-
-    private fun AccountRepository.successfulAccount(accountId: String): Account =
-        (findById(accountId) as LedgerResult.Success<Account>).value
+    }
 
     private fun validateLoanAccount(account: Account): ApplicationError.Validation? =
         when {
@@ -300,8 +305,31 @@ private fun LoanCalculationError.toApplicationError(): ApplicationError =
     }
 
 private fun LoanDetails.toView(): ApplicationResult<LoanDetailsView> {
+    val currency = loan.principal.currency
+    val mismatchedMoney =
+        schedule
+            .asSequence()
+            .flatMap { installment ->
+                sequenceOf(
+                    installment.openingBalance,
+                    installment.payment,
+                    installment.principalComponent,
+                    installment.interestComponent,
+                    installment.closingBalance,
+                )
+            }.firstOrNull { it.currency != currency }
+    if (mismatchedMoney != null) {
+        return ApplicationResult.Failure(
+            ApplicationError.Ledger(
+                LedgerError.CurrencyMismatch(
+                    currency1 = currency.normalized,
+                    currency2 = mismatchedMoney.currency.normalized,
+                ),
+            ),
+        )
+    }
+
     return try {
-        val currency = loan.principal.currency
         val zero = Money.zero(currency)
         val remainingSchedule = schedule.filter { it.status != LoanInstallmentStatus.PAID }
         val overview =
