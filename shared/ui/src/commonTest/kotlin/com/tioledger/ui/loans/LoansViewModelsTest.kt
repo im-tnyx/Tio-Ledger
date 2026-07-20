@@ -11,6 +11,7 @@ import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
+import com.tioledger.domain.model.LedgerEntry
 import com.tioledger.domain.model.Loan
 import com.tioledger.domain.model.LoanCompoundingFrequency
 import com.tioledger.domain.model.LoanDetails
@@ -292,11 +293,10 @@ private class FakeLoanRepository(
     var created: LoanDetails? = null
     var createCalls: Int = 0
 
-    override fun findAll(): LedgerResult<List<Loan>> =
-        LedgerResult.Success(values.values.map { it.loan })
+    override fun findAll(): LedgerResult<List<Loan>> = LedgerResult.Success(values.values.map { it.loan })
 
-    override fun findById(loanId: String): LedgerResult<LoanDetails> =
-        values[loanId]?.let(LedgerResult::Success)
+    override fun findDetails(loanId: String): LedgerResult<LoanDetails> =
+        values[loanId]?.let { LedgerResult.Success(it) }
             ?: LedgerResult.Failure(LedgerError.LoanNotFound(loanId))
 
     override fun create(details: LoanDetails): LedgerResult<LoanDetails> {
@@ -319,22 +319,22 @@ private class FakeAccountRepository(
         LedgerResult.Success(values.values.filter { includeArchived || !it.isArchived })
 
     override fun findById(accountId: String): LedgerResult<Account> =
-        values[accountId]?.let(LedgerResult::Success)
+        values[accountId]?.let { LedgerResult.Success(it) }
             ?: LedgerResult.Failure(LedgerError.AccountNotFound(accountId))
 
-    override fun create(account: Account): LedgerResult<Account> =
-        LedgerResult.Failure(LedgerError.Unknown("not supported"))
+    override fun create(account: Account): LedgerResult<Account> = LedgerResult.Failure(LedgerError.Unknown("not supported"))
 
-    override fun update(account: Account): LedgerResult<Account> =
-        LedgerResult.Failure(LedgerError.Unknown("not supported"))
+    override fun update(account: Account): LedgerResult<Account> = LedgerResult.Failure(LedgerError.Unknown("not supported"))
 }
 
 private data object EmptyLedgerRepository : LedgerRepository {
-    override fun findEntriesByAccount(accountId: String) =
-        LedgerResult.Success(emptyList<com.tioledger.domain.model.LedgerEntry>())
+    override fun findEntriesByAccount(accountId: String): LedgerResult<List<LedgerEntry>> {
+        return LedgerResult.Success(emptyList())
+    }
 
-    override fun findEntriesByTransaction(transactionId: String) =
-        LedgerResult.Success(emptyList<com.tioledger.domain.model.LedgerEntry>())
+    override fun findEntriesByTransaction(transactionId: String): LedgerResult<List<LedgerEntry>> {
+        return LedgerResult.Success(emptyList())
+    }
 }
 
 private class SequenceIdGenerator : IdGenerator {
