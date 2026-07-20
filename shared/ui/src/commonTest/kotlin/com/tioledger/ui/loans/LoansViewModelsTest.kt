@@ -1,6 +1,5 @@
 package com.tioledger.ui.loans
 
-import com.tioledger.application.model.ApplicationResult
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.loan.CreateLoanUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
@@ -27,12 +26,13 @@ import com.tioledger.domain.repository.LoanRepository
 import com.tioledger.finance.engine.BalanceCalculator
 import com.tioledger.loan.engine.MonthlyReducingBalanceLoanCalculator
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class LoansViewModelsTest {
     @Test
@@ -280,8 +280,8 @@ class LoansViewModelsTest {
         month: Int,
         day: Int,
     ): Long =
-        kotlinx.datetime.LocalDate(year, month, day)
-            .atStartOfDayIn(kotlinx.datetime.TimeZone.UTC)
+        LocalDate(year, month, day)
+            .atStartOfDayIn(TimeZone.UTC)
             .toEpochMilliseconds()
 }
 
