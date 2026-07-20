@@ -1,6 +1,6 @@
 # Loan Creation and Loan Details v1 Progress
 
-Status: Engine/Domain validated; Data/SQLDelight and Application foundations implemented — Application gate pending
+Status: Engine/Domain validated; Data/SQLDelight, Application, and Bootstrap/Koin foundations implemented — combined local gate pending
 Issue: #12
 Branch: `feat/loan-creation-details-v1`
 PR: #13 (draft)
@@ -62,7 +62,7 @@ Replace the Loans placeholder/navigation gap with production loan creation and l
 
 ## Implemented Application Foundation
 
-- Connected `shared:application` to `shared:loan-engine`.
+- Connected `shared:application` to `shared:loan-engine` and `kotlinx-datetime`.
 - Added `CreateLoanUseCase`, `ListLoansUseCase`, and `GetLoanDetailsUseCase`.
 - Added immutable `LoanOverview` and `LoanDetailsView` read models derived from persisted schedule rows.
 - Added normalized ID/name validation, positive principal, non-negative basis-point rate, positive tenure, and timestamp validation.
@@ -73,6 +73,17 @@ Replace the Loans placeholder/navigation gap with production loan creation and l
 - Mapped engine calculation failures to typed Application validation or ledger failures.
 - Emitted `DomainEvent.LoanCreated` only after successful atomic persistence.
 - Added focused tests for successful creation, generated schedules, account eligibility, currency mismatch, calculator failure, persisted summaries, deterministic ordering, and repository failures.
+- Standardized the repository read contract on `LoanRepository.findById` across Domain, Data, Application, and tests.
+
+## Implemented Bootstrap And Koin Foundation
+
+- Added the `shared:loan-engine` dependency to Bootstrap.
+- Registered `LoanCalculator` with `MonthlyReducingBalanceLoanCalculator` as the implementation.
+- Registered `LoanRepository` with `SQLDelightLoanRepository` as the implementation.
+- Registered `CreateLoanUseCase`, `ListLoansUseCase`, and `GetLoanDetailsUseCase`.
+- Added the loan engine module to `tioApplicationModules` before Application use-case resolution.
+- Extended startup diagnostics to require the loan repository and all three loan use cases.
+- Extended Android bootstrap tests to resolve the calculator, repository, and use cases through Koin.
 
 ## Validated Engine And Domain Gate
 
@@ -110,6 +121,16 @@ git status
 clean and up to date
 ```
 
+## Application Gate Fixes Pending Rerun
+
+The first Application test/static-analysis run found three integration defects rather than financial logic failures:
+
+- `shared:application` used `kotlinx-datetime` APIs without a direct dependency for Android/full test compilation.
+- Loan repository consumers used `findDetails` while the canonical Domain contract exposes `findById`.
+- Loan source/test files had import-order and expression-body ktlint violations.
+
+All three defects are fixed on the feature branch. A combined Application and Bootstrap rerun is pending.
+
 ## Approved Initial V1 Scope
 
 ### Loan creation
@@ -137,18 +158,17 @@ clean and up to date
 
 ## Remaining Implementation Sequence
 
-1. Validate the Application loan slice locally.
-2. Register the engine, repository, and use cases in Bootstrap/Koin diagnostics.
-3. Resolve the approved Loan UI reference/specification.
-4. Add production loan list/create/details UI, typed navigation, previews, and tests.
-5. Run final metadata, tests, static analysis, migration, and repository-integrity gates.
+1. Validate the combined Application and Bootstrap/Koin slice locally.
+2. Resolve the approved Loan UI reference/specification.
+3. Add production loan list/create/details UI, typed navigation, previews, and tests.
+4. Run final metadata, tests, static analysis, migration, and repository-integrity gates.
 
 ## Current Validation Gate
 
 ```text
-./gradlew :shared:application:compileKotlinMetadata --no-daemon --console=plain --stacktrace
-./gradlew :shared:application:test --no-daemon --console=plain --stacktrace
+./gradlew :shared:application:test :shared:bootstrap:test --no-daemon --console=plain --stacktrace
 ./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace
 git diff --check
 git status
 ```
