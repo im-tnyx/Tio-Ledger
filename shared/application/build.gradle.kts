@@ -10,6 +10,7 @@ kotlin {
             api(project(":shared:finance-engine"))
             api(project(":shared:budget-engine"))
             api(project(":shared:loan-engine"))
+            api(libs.kotlinx.datetime)
         }
 
         commonTest.dependencies {
