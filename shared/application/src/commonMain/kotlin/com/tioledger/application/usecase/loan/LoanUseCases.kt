@@ -23,18 +23,18 @@ import com.tioledger.domain.model.LoanEmiCalculationMethod
 import com.tioledger.domain.model.LoanInstallment
 import com.tioledger.domain.model.LoanInstallmentStatus
 import com.tioledger.domain.model.LoanInterestType
-import com.tioledger.domain.model.LoanPaymentFrequency as DomainLoanPaymentFrequency
 import com.tioledger.domain.model.LoanStatus
 import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.LoanRepository
 import com.tioledger.loan.engine.LoanCalculationError
 import com.tioledger.loan.engine.LoanCalculationResult
 import com.tioledger.loan.engine.LoanCalculator
-import com.tioledger.loan.engine.LoanPaymentFrequency as EngineLoanPaymentFrequency
 import com.tioledger.loan.engine.LoanTerms
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import com.tioledger.domain.model.LoanPaymentFrequency as DomainLoanPaymentFrequency
+import com.tioledger.loan.engine.LoanPaymentFrequency as EngineLoanPaymentFrequency
 
 /**
  * Application-ready loan summary derived only from persisted loan terms and installment rows.
