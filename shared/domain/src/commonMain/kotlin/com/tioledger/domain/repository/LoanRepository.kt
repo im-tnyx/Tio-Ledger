@@ -7,7 +7,7 @@ import com.tioledger.domain.model.LoanDetails
 interface LoanRepository {
     fun findAll(): LedgerResult<List<Loan>>
 
-    fun findById(loanId: String): LedgerResult<LoanDetails>
+    fun findDetails(loanId: String): LedgerResult<LoanDetails>
 
     fun create(details: LoanDetails): LedgerResult<LoanDetails>
 }
