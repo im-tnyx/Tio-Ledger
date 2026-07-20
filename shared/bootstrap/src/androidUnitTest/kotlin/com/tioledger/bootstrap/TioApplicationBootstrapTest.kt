@@ -2,13 +2,18 @@ package com.tioledger.bootstrap
 
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.loan.CreateLoanUseCase
+import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
+import com.tioledger.application.usecase.loan.ListLoansUseCase
 import com.tioledger.application.usecase.transaction.RecordIncomeUseCase
 import com.tioledger.bootstrap.database.DatabaseInitializer
 import com.tioledger.bootstrap.di.tioApplicationModules
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
 import com.tioledger.database.TioLedgerDatabase
 import com.tioledger.domain.repository.AccountRepository
+import com.tioledger.domain.repository.LoanRepository
 import com.tioledger.domain.repository.TransactionRepository
+import com.tioledger.loan.engine.LoanCalculator
 import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -37,9 +42,14 @@ class TioApplicationBootstrapTest {
 
         assertNotNull(app.koin.get<TioLedgerDatabase>())
         assertNotNull(app.koin.get<AccountRepository>())
+        assertNotNull(app.koin.get<LoanRepository>())
         assertNotNull(app.koin.get<TransactionRepository>())
+        assertNotNull(app.koin.get<LoanCalculator>())
         assertNotNull(app.koin.get<CreateAccountUseCase>())
         assertNotNull(app.koin.get<ListAccountSummariesUseCase>())
+        assertNotNull(app.koin.get<CreateLoanUseCase>())
+        assertNotNull(app.koin.get<ListLoansUseCase>())
+        assertNotNull(app.koin.get<GetLoanDetailsUseCase>())
         assertNotNull(app.koin.get<RecordIncomeUseCase>())
 
         val diagnostics = app.koin.get<StartupDiagnostics>()
