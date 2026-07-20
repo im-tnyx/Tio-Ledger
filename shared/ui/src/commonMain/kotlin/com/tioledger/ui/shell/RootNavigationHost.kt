@@ -17,6 +17,8 @@ import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioNavigationItem
 import com.tioledger.ui.design.TioSpacing
+import com.tioledger.ui.loans.LoanDetailsRoute
+import com.tioledger.ui.loans.LoansRoute
 import com.tioledger.ui.navigation.MainGraph
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
@@ -32,18 +34,31 @@ fun RootNavigationHost(
         when (route) {
             RootRoute.Splash -> Splash()
             is RootRoute.Main -> {
-                when (route.destination) {
+                when (val destination = route.destination) {
                     MainRoute.Accounts -> AccountsRoute()
                     MainRoute.Budgets ->
                         BudgetsRoute(
-                            onNavigate = { destination ->
-                                onNavigate(RootRoute.Main(destination))
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
                             },
                         )
                     MainRoute.Categories ->
                         CategoriesRoute(
-                            onNavigate = { destination ->
-                                onNavigate(RootRoute.Main(destination))
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
+                    MainRoute.Loans ->
+                        LoansRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
+                    is MainRoute.LoanDetails ->
+                        LoanDetailsRoute(
+                            loanId = destination.loanId,
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.Loans))
                             },
                         )
                     MainRoute.Transactions ->
@@ -51,8 +66,8 @@ fun RootNavigationHost(
                             onAddTransaction = {
                                 onNavigate(RootRoute.Main(MainRoute.TransactionEntry))
                             },
-                            onNavigate = { destination ->
-                                onNavigate(RootRoute.Main(destination))
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
                             },
                         )
                     MainRoute.TransactionEntry ->
@@ -61,7 +76,7 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(MainRoute.Transactions))
                             },
                         )
-                    else -> MainPlaceholderDestination(route.destination)
+                    else -> MainPlaceholderDestination(destination)
                 }
             }
         }
