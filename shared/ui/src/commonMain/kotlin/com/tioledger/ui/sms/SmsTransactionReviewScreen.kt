@@ -229,7 +229,8 @@ private fun SmsInputContent(
                 Spacer(modifier = Modifier.height(TioSpacing.sm))
                 Text(
                     text =
-                        "Paste one bank, card, UPI, wallet, or ATM message. Parsing stays deterministic and nothing is saved until you confirm.",
+                        "Paste one bank, card, UPI, wallet, or ATM message. " +
+                            "Parsing stays deterministic and nothing is saved until you confirm.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
