@@ -3,6 +3,10 @@
 package com.tioledger.ui.shell
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
@@ -13,8 +17,13 @@ fun TioAppShell(
     darkTheme: Boolean,
     currentRoute: RootRoute = TioNavigationGraphs.root.mainEntry,
 ) {
-    val route = if (diagnostics.koinStarted) currentRoute else TioNavigationGraphs.root.startRoute
+    var activeRoute by remember(currentRoute) { mutableStateOf(currentRoute) }
+    val route = if (diagnostics.koinStarted) activeRoute else TioNavigationGraphs.root.startRoute
+
     TioRootScaffold(darkTheme = darkTheme) {
-        RootNavigationHost(currentRoute = route)
+        RootNavigationHost(
+            currentRoute = route,
+            onNavigate = { destination -> activeRoute = destination },
+        )
     }
 }
