@@ -294,7 +294,7 @@ class SmsTransactionReviewUseCasesTest {
     private fun <T> ApplicationResult<T>.successValue(): T =
         when (this) {
             is ApplicationResult.Success -> outcome.value
-            is ApplicationResult.Failure -> error("Expected success but was $error")
+            is ApplicationResult.Failure -> kotlin.error("Expected success but was ${this.error}")
         }
 
     private fun enabledFlags(): StaticFeatureFlagProvider =
