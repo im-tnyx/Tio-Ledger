@@ -70,6 +70,14 @@ sealed interface MainRoute : AppRoute {
         override val icon: TioIconToken = TioIconToken.Loan
     }
 
+    data class LoanDetails(
+        val loanId: String,
+    ) : MainRoute {
+        override val path: String = "loans/$loanId"
+        override val title: String = "Loan details"
+        override val icon: TioIconToken = TioIconToken.Loan
+    }
+
     data object Settings : MainRoute {
         override val path: String = "settings"
         override val title: String = "Settings"

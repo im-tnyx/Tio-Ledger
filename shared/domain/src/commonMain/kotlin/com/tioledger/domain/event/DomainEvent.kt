@@ -60,6 +60,12 @@ sealed interface DomainEvent {
     ) : DomainEvent
 
     @Serializable
+    data class LoanCreated(
+        val loanId: String,
+        override val occurredAt: Long,
+    ) : DomainEvent
+
+    @Serializable
     data class TransactionRecorded(
         val transactionId: String,
         val transactionType: TransactionType,
