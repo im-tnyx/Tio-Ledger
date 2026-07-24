@@ -292,7 +292,10 @@ class SmsTransactionReviewUseCasesTest {
     }
 
     private fun <T> ApplicationResult<T>.successValue(): T =
-        assertIs<ApplicationResult.Success<T>>(this).outcome.value
+        when (this) {
+            is ApplicationResult.Success -> outcome.value
+            is ApplicationResult.Failure -> error("Expected success but was $error")
+        }
 
     private fun enabledFlags(): StaticFeatureFlagProvider =
         StaticFeatureFlagProvider(setOf(FeatureFlag.SMS_ASSISTED_TRANSACTION_REVIEW))
