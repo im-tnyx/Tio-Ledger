@@ -1,4 +1,4 @@
-﻿plugins {
+plugins {
     id("tio.kotlin.multiplatform.library")
 }
 
@@ -17,6 +17,9 @@ kotlin {
         commonTest.dependencies {
             implementation(project(":shared:application"))
             implementation(libs.kotlin.test)
+        }
+
+        androidUnitTest.dependencies {
             implementation(libs.sqldelight.sqlite.driver)
         }
     }
