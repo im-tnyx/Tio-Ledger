@@ -1,6 +1,6 @@
 # SMS-Assisted Transaction Review Flow v1 Progress
 
-Status: Planning foundation and first typed contracts implemented — parser rules and fixture tests pending
+Status: Typed foundation validated; deterministic parser and fixture suite implemented — parser validation pending
 Issue: #15
 Branch: `feat/sms-transaction-review-v1`
 PR: #16 (draft)
@@ -32,7 +32,7 @@ Implement a deterministic, privacy-preserving SMS-assisted transaction review wo
 - [x] Android production SMS permission/receiver rollout and iOS import alternatives are separate platform slices.
 - [x] Frozen persistence does not require a schema change for v1 because unconfirmed suggestions and raw messages are not stored.
 
-## Implemented Foundation
+## Implemented Typed Foundation
 
 - Added `FeatureFlag.SMS_ASSISTED_TRANSACTION_REVIEW`.
 - Added immutable `FeatureFlagProvider` contract and conservative `StaticFeatureFlagProvider` that disables all experimental features by default.
@@ -41,7 +41,43 @@ Implement a deterministic, privacy-preserving SMS-assisted transaction review wo
 - Parse results intentionally contain no raw message text.
 - Parser input requires an explicit received timestamp and time-zone ID for deterministic date handling.
 
-## Initial Architecture Direction
+## Implemented Deterministic Parser
+
+- Added `DeterministicSmsTransactionParser` as pure shared Kotlin code.
+- Negative classification runs before financial extraction for OTP/security, failed/declined, balance-only, and promotional messages.
+- Money parsing supports INR, USD, EUR, and GBP markers using integer minor units only.
+- Explicit numeric dates and times are converted with the caller-provided time-zone ID; invalid or absent timestamps fall back to the received timestamp while remaining marked as missing.
+- Direction detection distinguishes income, expense, and explicit transfer candidates.
+- Payment-rail detection covers bank, card, UPI, wallet, and ATM messages.
+- Account hints and merchant/counterparty labels are extracted without copying raw message text into results.
+- Confidence is explainable and missing fields remain explicit.
+
+## Parser Fixture Coverage
+
+Positive fixtures:
+
+- Bank debit alert.
+- Bank credit alert.
+- Credit-card spend alert.
+- UPI payment alert.
+- UPI receipt alert.
+- Wallet debit alert.
+- ATM withdrawal alert.
+- Explicit transfer candidate.
+- Default-currency amount fallback.
+- Partial/low-confidence detection.
+
+Negative and privacy fixtures:
+
+- OTP/security code.
+- Promotional message.
+- Failed/declined transaction.
+- Balance-only alert.
+- Empty and unrelated messages.
+- Invalid time-zone fallback.
+- Raw-message non-retention.
+
+## Architecture Direction
 
 ```text
 platform-provided message text
@@ -56,6 +92,7 @@ platform-provided message text
 ### Domain
 
 - Transaction suggestion, confidence, payment rail, parse evidence, missing-field, and rejection models.
+- Deterministic parser implementation.
 - No Android/iOS APIs and no persistence implementation.
 
 ### Application
@@ -78,47 +115,40 @@ platform-provided message text
 - Android permission, inbox/receiver ingestion, and store-policy work remain out of scope.
 - iOS paste/share/import adapters remain out of scope.
 
-## Parser Result Contract
+## Validation Evidence
 
-The typed contract distinguishes:
+Validated typed-foundation head: `7669a6d6aaffa4d640d8a4eb04a1b8869bc8a387`
 
-- transaction suggestion
-- ignored/non-transaction message
-- unsupported/insufficient message
-- confidence level
-- detected values
-- missing required values
-- deterministic evidence explaining each detection
+```text
+./gradlew :shared:core:test :shared:domain:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 28s
+66 actionable tasks: 23 executed, 43 up-to-date
 
-## Positive Fixture Families
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 18s
+76 actionable tasks: 7 executed, 69 up-to-date
 
-- Bank debit alert.
-- Bank credit alert.
-- Credit-card spend alert.
-- UPI payment alert.
-- UPI receipt alert.
-- Wallet debit/credit alert.
-- ATM withdrawal alert.
+git diff --check
+(no output)
 
-## Negative Fixture Families
+git status
+nothing to commit, working tree clean
+```
 
-- OTP/security code.
-- Promotional message.
-- Failed/declined transaction.
-- Balance-only alert.
-- Ambiguous amount or direction.
+The parser implementation and fixture suite were added after this validated head and still require their focused gate.
 
 ## Implementation Sequence
 
 1. [x] Finalize the fallback UI/reference specification.
 2. [x] Introduce the narrow typed feature-flag API.
 3. [x] Add Domain parser/review contracts.
-4. [ ] Add deterministic parser and fixture tests.
-5. [ ] Add Application review preparation and confirmed-save orchestration.
-6. [ ] Add Bootstrap/Koin registration and diagnostics.
-7. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
-8. [ ] Run focused and full repository validation.
-9. [ ] Mark the PR ready and merge only after explicit approval.
+4. [x] Add deterministic parser and fixture tests.
+5. [ ] Validate and fix the parser gate.
+6. [ ] Add Application review preparation and confirmed-save orchestration.
+7. [ ] Add Bootstrap/Koin registration and diagnostics.
+8. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
+9. [ ] Run focused and full repository validation.
+10. [ ] Mark the PR ready and merge only after explicit approval.
 
 ## Explicitly Out Of Scope
 
