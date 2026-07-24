@@ -349,8 +349,7 @@ private fun findExactAccountMatch(
     return matches.singleOrNull()?.id
 }
 
-private fun String.normalizedMatchToken(): String =
-    lowercase().filter { it.isLetterOrDigit() }
+private fun String.normalizedMatchToken(): String = lowercase().filter { it.isLetterOrDigit() }
 
 private fun Account.toReviewOption(): SmsReviewAccountOption =
     SmsReviewAccountOption(
@@ -367,5 +366,4 @@ private fun Category.toReviewOption(): SmsReviewCategoryOption =
         type = type,
     )
 
-private fun <T> success(value: T): ApplicationResult.Success<T> =
-    ApplicationResult.Success(UseCaseOutcome(value))
+private fun <T> success(value: T): ApplicationResult.Success<T> = ApplicationResult.Success(UseCaseOutcome(value))
