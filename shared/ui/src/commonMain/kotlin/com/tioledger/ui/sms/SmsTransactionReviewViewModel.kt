@@ -382,13 +382,21 @@ class SmsTransactionReviewViewModel internal constructor(
     }
 
     private fun handlePreparationFailure(error: ApplicationError) {
-        val disabled = error is ApplicationError.Validation && error.field == "featureFlag"
+        val disabledReason =
+            (error as? ApplicationError.Validation)
+                ?.takeIf { it.field == "featureFlag" }
+                ?.reason
         _uiState.update { current ->
             current.copy(
-                stage = if (disabled) SmsReviewStage.DISABLED else SmsReviewStage.INPUT,
-                messageInput = if (disabled) "" else current.messageInput,
-                statusMessage = if (disabled) error.reason else null,
-                validationErrorMessage = if (disabled) null else error.toPreparationMessage(),
+                stage = if (disabledReason != null) SmsReviewStage.DISABLED else SmsReviewStage.INPUT,
+                messageInput = if (disabledReason != null) "" else current.messageInput,
+                statusMessage = disabledReason,
+                validationErrorMessage =
+                    if (disabledReason == null) {
+                        error.toPreparationMessage()
+                    } else {
+                        null
+                    },
             )
         }
     }
@@ -599,17 +607,17 @@ class SmsTransactionReviewViewModel internal constructor(
 }
 
 private fun SmsTransactionReviewUiState.normalizedSelections(): SmsTransactionReviewUiState {
-    val validAccountIds = visibleAccountOptions.mapTo(mutableSetOf(), SmsReviewAccountUiModel::id)
-    val validCategoryIds = visibleCategoryOptions.mapTo(mutableSetOf(), SmsReviewCategoryUiModel::id)
+    val validAccountIds = visibleAccountOptions.map { it.id }.toSet()
+    val validCategoryIds = visibleCategoryOptions.map { it.id }.toSet()
     return copy(
-        selectedAccountId = selectedAccountId.takeIf(validAccountIds::contains),
+        selectedAccountId = selectedAccountId.takeIf { it != null && it in validAccountIds },
         selectedDestinationAccountId =
             selectedDestinationAccountId
-                .takeIf(validAccountIds::contains)
+                .takeIf { it != null && it in validAccountIds }
                 .takeIf { direction == SmsTransactionDirection.TRANSFER_CANDIDATE },
         selectedCategoryId =
             selectedCategoryId
-                .takeIf(validCategoryIds::contains)
+                .takeIf { it != null && it in validCategoryIds }
                 .takeIf { direction != SmsTransactionDirection.TRANSFER_CANDIDATE },
     )
 }
