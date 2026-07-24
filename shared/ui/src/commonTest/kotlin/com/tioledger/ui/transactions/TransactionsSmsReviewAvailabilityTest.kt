@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 
 class TransactionsSmsReviewAvailabilityTest {
     @Test
-    fun SMSReviewEntryIsHiddenByDefault() {
+    fun smsReviewEntryIsHiddenByDefault() {
         val viewModel =
             TransactionsViewModel(
                 listTransactionsUseCase = ListTransactionsUseCase(EmptyTransactionHistoryRepository),
@@ -22,7 +22,7 @@ class TransactionsSmsReviewAvailabilityTest {
     }
 
     @Test
-    fun SMSReviewEntryIsVisibleOnlyWhenFeatureIsEnabled() {
+    fun smsReviewEntryIsVisibleOnlyWhenFeatureIsEnabled() {
         val viewModel =
             TransactionsViewModel(
                 listTransactionsUseCase = ListTransactionsUseCase(EmptyTransactionHistoryRepository),
