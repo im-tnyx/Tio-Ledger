@@ -37,10 +37,11 @@ class SmsTransactionReviewUseCasesTest {
         val useCase =
             PrepareSmsTransactionReviewUseCase(
                 featureFlagProvider = StaticFeatureFlagProvider(),
-                parser = SmsTransactionParser {
-                    parserInvoked = true
-                    SmsParseResult.Ignored(SmsIgnoredReason.PROMOTIONAL)
-                },
+                parser =
+                    SmsTransactionParser {
+                        parserInvoked = true
+                        SmsParseResult.Ignored(SmsIgnoredReason.PROMOTIONAL)
+                    },
                 accountRepository = FakeAccountRepository(),
                 categoryRepository = FakeCategoryRepository(),
             )
@@ -58,9 +59,10 @@ class SmsTransactionReviewUseCasesTest {
         val useCase =
             PrepareSmsTransactionReviewUseCase(
                 featureFlagProvider = enabledFlags(),
-                parser = SmsTransactionParser {
-                    SmsParseResult.Ignored(SmsIgnoredReason.OTP_OR_SECURITY_CODE)
-                },
+                parser =
+                    SmsTransactionParser {
+                        SmsParseResult.Ignored(SmsIgnoredReason.OTP_OR_SECURITY_CODE)
+                    },
                 accountRepository = accountRepository,
                 categoryRepository = categoryRepository,
             )
@@ -291,11 +293,10 @@ class SmsTransactionReviewUseCasesTest {
         assertEquals("featureFlag", validation.field)
     }
 
-    private fun <T> ApplicationResult<T>.successValue(): T =
-        when (this) {
-            is ApplicationResult.Success -> outcome.value
-            is ApplicationResult.Failure -> kotlin.error("Expected success but was ${this.error}")
-        }
+    private fun <T> ApplicationResult<T>.successValue(): T = when (this) {
+        is ApplicationResult.Success -> outcome.value
+        is ApplicationResult.Failure -> kotlin.error("Expected success but was ${this.error}")
+    }
 
     private fun enabledFlags(): StaticFeatureFlagProvider =
         StaticFeatureFlagProvider(setOf(FeatureFlag.SMS_ASSISTED_TRANSACTION_REVIEW))
@@ -339,8 +340,7 @@ private class FakeAccountRepository(
         return findAllResult
     }
 
-    override fun findById(accountId: String): LedgerResult<Account> =
-        LedgerResult.Failure(LedgerError.AccountNotFound(accountId))
+    override fun findById(accountId: String): LedgerResult<Account> = LedgerResult.Failure(LedgerError.AccountNotFound(accountId))
 
     override fun create(account: Account): LedgerResult<Account> = LedgerResult.Success(account)
 
@@ -357,8 +357,7 @@ private class FakeCategoryRepository(
         return findAllResult
     }
 
-    override fun findById(categoryId: String): LedgerResult<Category> =
-        LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
+    override fun findById(categoryId: String): LedgerResult<Category> = LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
 
     override fun create(category: Category): LedgerResult<Category> = LedgerResult.Success(category)
 
