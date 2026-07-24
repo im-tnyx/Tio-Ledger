@@ -1,9 +1,9 @@
 # SMS-Assisted Transaction Review Flow v1 Progress
 
-Status: Milestone started — issue, branch, architecture audit, and reference specification setup in progress
+Status: Planning foundation and first typed contracts implemented — parser rules and fixture tests pending
 Issue: #15
 Branch: `feat/sms-transaction-review-v1`
-PR: pending
+PR: #16 (draft)
 
 ## Objective
 
@@ -22,6 +22,7 @@ Implement a deterministic, privacy-preserving SMS-assisted transaction review wo
 
 - [x] Canonical issue #15 created.
 - [x] Feature branch `feat/sms-transaction-review-v1` created from merged `main`.
+- [x] Draft PR #16 opened.
 - [x] ADR-0011 confirms human-confirmed SMS-assisted capture.
 - [x] ADR-0016 requires the SMS parser to remain behind a feature flag.
 - [x] Architecture keeps platform SMS ingestion in `apps/*` and shared parsing/review state in shared Kotlin code.
@@ -30,6 +31,15 @@ Implement a deterministic, privacy-preserving SMS-assisted transaction review wo
 - [x] Existing Transaction Entry provides reusable account/category loading, amount parsing, validation, picker, date-selection, and persistence-error patterns.
 - [x] Android production SMS permission/receiver rollout and iOS import alternatives are separate platform slices.
 - [x] Frozen persistence does not require a schema change for v1 because unconfirmed suggestions and raw messages are not stored.
+
+## Implemented Foundation
+
+- Added `FeatureFlag.SMS_ASSISTED_TRANSACTION_REVIEW`.
+- Added immutable `FeatureFlagProvider` contract and conservative `StaticFeatureFlagProvider` that disables all experimental features by default.
+- Added tests for disabled-by-default and explicit enablement behavior.
+- Added Domain contracts for direction, payment rail, confidence, missing fields, detected evidence, suggestions, ignored reasons, unsupported reasons, parse requests, parse results, and `SmsTransactionParser`.
+- Parse results intentionally contain no raw message text.
+- Parser input requires an explicit received timestamp and time-zone ID for deterministic date handling.
 
 ## Initial Architecture Direction
 
@@ -68,9 +78,9 @@ platform-provided message text
 - Android permission, inbox/receiver ingestion, and store-policy work remain out of scope.
 - iOS paste/share/import adapters remain out of scope.
 
-## Proposed Parser Result Contract
+## Parser Result Contract
 
-The exact names remain subject to compile-oriented implementation review, but the result must distinguish:
+The typed contract distinguishes:
 
 - transaction suggestion
 - ignored/non-transaction message
@@ -98,17 +108,17 @@ The exact names remain subject to compile-oriented implementation review, but th
 - Balance-only alert.
 - Ambiguous amount or direction.
 
-## Initial Implementation Sequence
+## Implementation Sequence
 
-1. Finalize the fallback UI/reference specification.
-2. Verify or introduce the narrow typed feature-flag API.
-3. Add Domain parser/review contracts.
-4. Add deterministic parser and fixture tests.
-5. Add Application review preparation and confirmed-save orchestration.
-6. Add Bootstrap/Koin registration and diagnostics.
-7. Add shared review UI, navigation, previews, and ViewModel tests.
-8. Run focused and full repository validation.
-9. Mark the PR ready and merge only after explicit approval.
+1. [x] Finalize the fallback UI/reference specification.
+2. [x] Introduce the narrow typed feature-flag API.
+3. [x] Add Domain parser/review contracts.
+4. [ ] Add deterministic parser and fixture tests.
+5. [ ] Add Application review preparation and confirmed-save orchestration.
+6. [ ] Add Bootstrap/Koin registration and diagnostics.
+7. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
+8. [ ] Run focused and full repository validation.
+9. [ ] Mark the PR ready and merge only after explicit approval.
 
 ## Explicitly Out Of Scope
 
