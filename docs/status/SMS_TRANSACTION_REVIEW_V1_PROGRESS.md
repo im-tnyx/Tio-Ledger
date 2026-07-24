@@ -1,6 +1,6 @@
 # SMS-Assisted Transaction Review Flow v1 Progress
 
-Status: Typed foundation, deterministic parser, and Application orchestration validated — Bootstrap/Koin wiring pending
+Status: Typed foundation, deterministic parser, and Application orchestration validated — Bootstrap/Koin wiring implemented, validation pending
 Issue: #15
 Branch: `feat/sms-transaction-review-v1`
 PR: #16 (draft)
@@ -91,6 +91,16 @@ Negative and privacy fixtures:
 - Confirmed income, expense, and transfer candidates delegate to existing ledger-backed transaction recording use cases.
 - Transfer confirmation requires a distinct destination account.
 - Added focused tests for disabled flags, ignored-message short circuit, eligible options, exact/ambiguous account matching, repository failures, explicit confirmation, routing, and transfer validation.
+
+## Implemented Bootstrap/Koin Wiring
+
+- Registered `FeatureFlagProvider` with a conservative disabled-by-default `StaticFeatureFlagProvider` singleton.
+- Registered `SmsTransactionParser` with the deterministic shared implementation.
+- Registered prepare-review and explicit-confirmation use cases as Application factories.
+- Added the SMS review module to the production bootstrap module list.
+- Extended startup diagnostics to resolve both SMS review use cases and their dependencies.
+- Extended Android bootstrap graph tests to resolve the feature provider, parser, prepare use case, and confirmation use case.
+- Added a bootstrap assertion that the production feature flag remains disabled by default.
 
 ## Architecture Direction
 
@@ -191,6 +201,17 @@ On branch feat/sms-transaction-review-v1
 Your branch is up to date with 'origin/feat/sms-transaction-review-v1'.
 ```
 
+Bootstrap code head before documentation update: `6a5f711734cbd0d26c224be1c853c1c03e75481e`
+
+Pending Bootstrap/Koin gate:
+
+```text
+./gradlew :shared:bootstrap:compileKotlinMetadata :shared:bootstrap:test --no-daemon --console=plain --stacktrace
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+git diff --check
+git status
+```
+
 ## Implementation Sequence
 
 1. [x] Finalize the fallback UI/reference specification.
@@ -200,10 +221,11 @@ Your branch is up to date with 'origin/feat/sms-transaction-review-v1'.
 5. [x] Validate and fix the parser gate.
 6. [x] Add Application review preparation and confirmed-save orchestration.
 7. [x] Validate and fix the Application gate.
-8. [ ] Add Bootstrap/Koin registration and diagnostics.
-9. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
-10. [ ] Run focused and full repository validation.
-11. [ ] Mark the PR ready and merge only after explicit approval.
+8. [x] Add Bootstrap/Koin registration and diagnostics.
+9. [ ] Validate and fix the Bootstrap/Koin gate.
+10. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
+11. [ ] Run focused and full repository validation.
+12. [ ] Mark the PR ready and merge only after explicit approval.
 
 ## Explicitly Out Of Scope
 
