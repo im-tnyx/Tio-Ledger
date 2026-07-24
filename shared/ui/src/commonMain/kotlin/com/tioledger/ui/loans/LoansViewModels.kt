@@ -199,15 +199,16 @@ class LoansViewModel(
         val editor = current.editor ?: return
         if (current.isSaving) return
 
-        val parsed = editor.parse() ?: run {
-            _uiState.update {
-                it.copy(
-                    validationErrorMessage = editor.validationMessage(),
-                    persistenceErrorMessage = null,
-                )
+        val parsed =
+            editor.parse() ?: run {
+                _uiState.update {
+                    it.copy(
+                        validationErrorMessage = editor.validationMessage(),
+                        persistenceErrorMessage = null,
+                    )
+                }
+                return
             }
-            return
-        }
 
         _uiState.update {
             it.copy(
@@ -645,11 +646,9 @@ private fun Int.toRateLabel(): String {
     return if (fraction == 0) "$whole%" else "$whole.${fraction.toString().padStart(2, '0')}%"
 }
 
-private fun Long.toUtcDateLabel(): String =
-    Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date.toString()
+private fun Long.toUtcDateLabel(): String = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date.toString()
 
-private fun String.toDisplayLabel(): String =
-    lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+private fun String.toDisplayLabel(): String = lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
 
 private fun ApplicationError.toLoadMessage(): String =
     when (this) {
