@@ -1,6 +1,6 @@
 # SMS-Assisted Transaction Review Flow v1 Progress
 
-Status: Typed foundation and deterministic parser validated — Application orchestration implemented, validation pending
+Status: Typed foundation, deterministic parser, and Application orchestration validated — Bootstrap/Koin wiring pending
 Issue: #15
 Branch: `feat/sms-transaction-review-v1`
 PR: #16 (draft)
@@ -168,15 +168,27 @@ git status
 nothing to commit, working tree clean
 ```
 
-Application code head before documentation updates: `872216f65c20402e9377ed0c87a67f86e8514f0b`
-
-Pending Application gate:
+Application compile/test head: `218730dde0212c6b41c04db32c1618a21eee3203`
 
 ```text
 ./gradlew :shared:application:compileKotlinMetadata :shared:application:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 1m 12s
+146 actionable tasks: 33 executed, 113 up-to-date
+```
+
+Application static-analysis head: `4b68f6f434da2d97a01e5b7627a71586ac7f5493`
+
+```text
 ./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 17s
+78 actionable tasks: 3 executed, 75 up-to-date
+
 git diff --check
+(no output)
+
 git status
+On branch feat/sms-transaction-review-v1
+Your branch is up to date with 'origin/feat/sms-transaction-review-v1'.
 ```
 
 ## Implementation Sequence
@@ -187,7 +199,7 @@ git status
 4. [x] Add deterministic parser and fixture tests.
 5. [x] Validate and fix the parser gate.
 6. [x] Add Application review preparation and confirmed-save orchestration.
-7. [ ] Validate and fix the Application gate.
+7. [x] Validate and fix the Application gate.
 8. [ ] Add Bootstrap/Koin registration and diagnostics.
 9. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
 10. [ ] Run focused and full repository validation.
