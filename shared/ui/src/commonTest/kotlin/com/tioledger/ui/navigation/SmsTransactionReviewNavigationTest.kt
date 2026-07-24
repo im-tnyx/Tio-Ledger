@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 
 class SmsTransactionReviewNavigationTest {
     @Test
-    fun SMSReviewUsesTypedRouteWithoutMessageContent() {
+    fun smsReviewUsesTypedRouteWithoutMessageContent() {
         val route = MainRoute.SmsTransactionReview
 
         assertEquals("transactions/sms-review", route.path)
