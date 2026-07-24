@@ -44,33 +44,35 @@ class DeterministicSmsTransactionParser : SmsTransactionParser {
             )
         }
 
-        val evidence = buildList {
-            amountDetection?.let {
-                add(SmsParseEvidence(SmsDetectedField.AMOUNT, it.amountMinorUnits.toString()))
-                add(SmsParseEvidence(SmsDetectedField.CURRENCY, it.currencyCode))
+        val evidence =
+            buildList {
+                amountDetection?.let {
+                    add(SmsParseEvidence(SmsDetectedField.AMOUNT, it.amountMinorUnits.toString()))
+                    add(SmsParseEvidence(SmsDetectedField.CURRENCY, it.currencyCode))
+                }
+                direction?.let { add(SmsParseEvidence(SmsDetectedField.DIRECTION, it.name)) }
+                occurredAtDetection.explicitTimestamp?.let {
+                    add(SmsParseEvidence(SmsDetectedField.TRANSACTION_TIME, it.toString()))
+                }
+                accountHint?.let { add(SmsParseEvidence(SmsDetectedField.ACCOUNT_HINT, it)) }
+                merchantOrCounterparty?.let {
+                    add(SmsParseEvidence(SmsDetectedField.MERCHANT_OR_COUNTERPARTY, it))
+                }
+                paymentRail?.let { add(SmsParseEvidence(SmsDetectedField.PAYMENT_RAIL, it.name)) }
             }
-            direction?.let { add(SmsParseEvidence(SmsDetectedField.DIRECTION, it.name)) }
-            occurredAtDetection.explicitTimestamp?.let {
-                add(SmsParseEvidence(SmsDetectedField.TRANSACTION_TIME, it.toString()))
-            }
-            accountHint?.let { add(SmsParseEvidence(SmsDetectedField.ACCOUNT_HINT, it)) }
-            merchantOrCounterparty?.let {
-                add(SmsParseEvidence(SmsDetectedField.MERCHANT_OR_COUNTERPARTY, it))
-            }
-            paymentRail?.let { add(SmsParseEvidence(SmsDetectedField.PAYMENT_RAIL, it.name)) }
-        }
 
-        val missingFields = buildList {
-            if (amountDetection == null) add(SmsMissingField.AMOUNT)
-            if (amountDetection?.currencyCode == null) add(SmsMissingField.CURRENCY)
-            if (direction == null) add(SmsMissingField.DIRECTION)
-            if (accountHint == null) add(SmsMissingField.ACCOUNT)
-            add(SmsMissingField.CATEGORY)
-            if (direction == SmsTransactionDirection.TRANSFER_CANDIDATE) {
-                add(SmsMissingField.DESTINATION_ACCOUNT)
+        val missingFields =
+            buildList {
+                if (amountDetection == null) add(SmsMissingField.AMOUNT)
+                if (amountDetection?.currencyCode == null) add(SmsMissingField.CURRENCY)
+                if (direction == null) add(SmsMissingField.DIRECTION)
+                if (accountHint == null) add(SmsMissingField.ACCOUNT)
+                add(SmsMissingField.CATEGORY)
+                if (direction == SmsTransactionDirection.TRANSFER_CANDIDATE) {
+                    add(SmsMissingField.DESTINATION_ACCOUNT)
+                }
+                if (occurredAtDetection.explicitTimestamp == null) add(SmsMissingField.TRANSACTION_TIME)
             }
-            if (occurredAtDetection.explicitTimestamp == null) add(SmsMissingField.TRANSACTION_TIME)
-        }
 
         return SmsParseResult.Suggestion(
             SmsTransactionSuggestion(
@@ -274,18 +276,36 @@ class DeterministicSmsTransactionParser : SmsTransactionParser {
 
     private companion object {
         val CURRENCY_BEFORE_AMOUNT =
-            Regex("(?i)(₹|rs\\.?|inr|usd|\\$|eur|€|gbp|£)\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)")
+            Regex(
+                "(?i)(₹|rs\\.?|inr|usd|\\$|eur|€|gbp|£)\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)",
+            )
         val AMOUNT_BEFORE_CURRENCY =
-            Regex("(?i)([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*(inr|usd|eur|gbp)")
-        val UNMARKED_AMOUNT = Regex("(?<![A-Za-z0-9])([0-9][0-9,]*(?:\\.[0-9]{1,2})?)(?![A-Za-z0-9])")
+            Regex(
+                "(?i)([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*(inr|usd|eur|gbp)",
+            )
+        val UNMARKED_AMOUNT =
+            Regex(
+                "(?<![A-Za-z0-9])([0-9][0-9,]*(?:\\.[0-9]{1,2})?)(?![A-Za-z0-9])",
+            )
         val DATE_TIME =
-            Regex("(?<!\\d)(\\d{1,2})[-/](\\d{1,2})[-/](\\d{2,4})(?:\\s+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?)?(?!\\d)")
+            Regex(
+                "(?<!\\d)(\\d{1,2})[-/](\\d{1,2})[-/](\\d{2,4})(?:\\s+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?)?(?!\\d)",
+            )
         val ACCOUNT_HINT =
-            Regex("(?i)(?:a/c|acct|account|card|wallet)(?:\\s*(?:no\\.?|ending)?)?\\s*[:*-]*\\s*(?:x+|\\*+)?([A-Za-z0-9-]{3,20})")
+            Regex(
+                "(?i)(?:a/c|acct|account|card|wallet)(?:\\s*(?:no\\.?|ending)?)?\\s*[:*-]*\\s*(?:x+|\\*+)?" +
+                    "([A-Za-z0-9-]{3,20})",
+            )
         val TO_OR_AT_PARTY =
-            Regex("(?i)\\b(?:to|at)\\s+([A-Za-z0-9][A-Za-z0-9 &._'-]{1,59}?)(?=\\s+(?:on|ref|upi|avl|available|balance|via|using)\\b|[.;]|$)")
+            Regex(
+                "(?i)\\b(?:to|at)\\s+([A-Za-z0-9][A-Za-z0-9 &._'-]{1,59}?)" +
+                    "(?=\\s+(?:on|ref|upi|avl|available|balance|via|using)\\b|[.;]|$)",
+            )
         val FROM_PARTY =
-            Regex("(?i)\\bfrom\\s+([A-Za-z0-9][A-Za-z0-9 &._'-]{1,59}?)(?=\\s+(?:on|ref|upi|avl|available|balance|via|using)\\b|[.;]|$)")
+            Regex(
+                "(?i)\\bfrom\\s+([A-Za-z0-9][A-Za-z0-9 &._'-]{1,59}?)" +
+                    "(?=\\s+(?:on|ref|upi|avl|available|balance|via|using)\\b|[.;]|$)",
+            )
 
         val OTP_MARKERS =
             listOf(" otp ", "one time password", "verification code", "security code", "do not share")
