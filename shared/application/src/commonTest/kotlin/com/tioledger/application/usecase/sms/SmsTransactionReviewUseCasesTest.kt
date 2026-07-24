@@ -293,13 +293,13 @@ class SmsTransactionReviewUseCasesTest {
         assertEquals("featureFlag", validation.field)
     }
 
-    private fun <T> ApplicationResult<T>.successValue(): T = when (this) {
-        is ApplicationResult.Success -> outcome.value
-        is ApplicationResult.Failure -> kotlin.error("Expected success but was ${this.error}")
-    }
+    private fun <T> ApplicationResult<T>.successValue(): T =
+        when (this) {
+            is ApplicationResult.Success -> outcome.value
+            is ApplicationResult.Failure -> kotlin.error("Expected success but was ${this.error}")
+        }
 
-    private fun enabledFlags(): StaticFeatureFlagProvider =
-        StaticFeatureFlagProvider(setOf(FeatureFlag.SMS_ASSISTED_TRANSACTION_REVIEW))
+    private fun enabledFlags(): StaticFeatureFlagProvider = StaticFeatureFlagProvider(setOf(FeatureFlag.SMS_ASSISTED_TRANSACTION_REVIEW))
 }
 
 private class CapturingRecorders {
