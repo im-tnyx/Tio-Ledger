@@ -1,6 +1,6 @@
 # SMS-Assisted Transaction Review Flow v1 Progress
 
-Status: Typed foundation validated; deterministic parser and fixture suite implemented — parser validation pending
+Status: Typed foundation and deterministic parser validated — Application review orchestration pending
 Issue: #15
 Branch: `feat/sms-transaction-review-v1`
 PR: #16 (draft)
@@ -135,7 +135,23 @@ git status
 nothing to commit, working tree clean
 ```
 
-The parser implementation and fixture suite were added after this validated head and still require their focused gate.
+Validated parser head: `b5c60af2935ea2bc706f79046839e09f2e16fb7e`
+
+```text
+./gradlew :shared:domain:compileKotlinMetadata :shared:domain:test --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 39s
+62 actionable tasks: 17 executed, 45 up-to-date
+
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 21s
+78 actionable tasks: 3 executed, 75 up-to-date
+
+git diff --check
+(no output)
+
+git status
+nothing to commit, working tree clean
+```
 
 ## Implementation Sequence
 
@@ -143,7 +159,7 @@ The parser implementation and fixture suite were added after this validated head
 2. [x] Introduce the narrow typed feature-flag API.
 3. [x] Add Domain parser/review contracts.
 4. [x] Add deterministic parser and fixture tests.
-5. [ ] Validate and fix the parser gate.
+5. [x] Validate and fix the parser gate.
 6. [ ] Add Application review preparation and confirmed-save orchestration.
 7. [ ] Add Bootstrap/Koin registration and diagnostics.
 8. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
