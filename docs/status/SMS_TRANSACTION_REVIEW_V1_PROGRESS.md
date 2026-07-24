@@ -1,6 +1,6 @@
 # SMS-Assisted Transaction Review Flow v1 Progress
 
-Status: Typed foundation, deterministic parser, Application orchestration, and Bootstrap/Koin wiring validated — shared UI pending
+Status: Foundation, parser, Application, and Bootstrap/Koin validated — shared UI implemented, focused validation pending
 Issue: #15
 Branch: `feat/sms-transaction-review-v1`
 PR: #16 (draft)
@@ -101,6 +101,20 @@ Negative and privacy fixtures:
 - Extended startup diagnostics to resolve both SMS review use cases and their dependencies.
 - Extended Android bootstrap graph tests to resolve the feature provider, parser, prepare use case, and confirmation use case.
 - Added a bootstrap assertion that the production feature flag remains disabled by default.
+
+## Implemented Shared UI
+
+- Added a feature-gated `Review SMS` action on the Transactions screen; it remains hidden with the production default flags.
+- Added typed `MainRoute.SmsTransactionReview` navigation without raw message text in route arguments or paths.
+- Added root-host Transactions → SMS review and Save/Reject/back → Transactions wiring.
+- Added `SmsTransactionReviewViewModel` and immutable state for input, parsing, disabled, ignored, unsupported, editable review, saving, saved, and rejected stages.
+- Raw input text is cleared after a review, ignored, unsupported, or feature-disabled result and is never passed to the confirmation command.
+- Added editable direction, amount, currency, source account, destination account, category, date, and note fields.
+- Added confidence, missing-field, detected-rail, concise evidence, validation-error, and persistence-error presentation.
+- Save delegates only edited structured fields to `ConfirmSmsTransactionUseCase` with explicit confirmation; Reject emits a dismissal event without invoking confirmation.
+- Added account/category pickers, date selection, light input preview, and dark low-confidence review preview.
+- Added UI Koin registration and feature-flag-aware `TransactionsViewModel` registration.
+- Added tests for raw-text clearing, ignored/reject non-persistence, edited confirmed-save routing, disabled state, feature-gated discovery, and typed navigation privacy.
 
 ## Architecture Direction
 
@@ -220,7 +234,18 @@ On branch feat/sms-transaction-review-v1
 Your branch is up to date with 'origin/feat/sms-transaction-review-v1'.
 ```
 
-The supplied `git status` output did not include the final clean-working-tree line, so no clean-tree claim is recorded for this gate.
+The supplied Bootstrap `git status` output did not include the final clean-working-tree line, so no clean-tree claim is recorded for that gate.
+
+Shared UI code head before this documentation update: `b4f7f6aa25313f29b2b7b6d0c601d9c0d8439373`
+
+Pending focused UI gate:
+
+```text
+./gradlew :shared:ui:compileKotlinMetadata :shared:ui:test --no-daemon --console=plain --stacktrace
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+git diff --check
+git status
+```
 
 ## Implementation Sequence
 
@@ -233,9 +258,10 @@ The supplied `git status` output did not include the final clean-working-tree li
 7. [x] Validate and fix the Application gate.
 8. [x] Add Bootstrap/Koin registration and diagnostics.
 9. [x] Validate and fix the Bootstrap/Koin gate.
-10. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
-11. [ ] Run focused and full repository validation.
-12. [ ] Mark the PR ready and merge only after explicit approval.
+10. [x] Add shared review UI, navigation, previews, and ViewModel tests.
+11. [ ] Validate and fix the focused UI gate.
+12. [ ] Run full repository validation.
+13. [ ] Mark the PR ready and merge only after explicit approval.
 
 ## Explicitly Out Of Scope
 
