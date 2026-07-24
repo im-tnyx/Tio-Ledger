@@ -168,9 +168,16 @@ git status
 nothing to commit, working tree clean
 ```
 
-Application code head before this documentation update: `872216f65c20402e9377ed0c87a67f86e8514f0b`
+Application code head before documentation updates: `872216f65c20402e9377ed0c87a67f86e8514f0b`
 
-Application compile/tests and static analysis are pending.
+Pending Application gate:
+
+```text
+./gradlew :shared:application:compileKotlinMetadata :shared:application:test --no-daemon --console=plain --stacktrace
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+git diff --check
+git status
+```
 
 ## Implementation Sequence
 
