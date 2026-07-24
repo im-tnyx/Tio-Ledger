@@ -147,7 +147,9 @@ class SmsTransactionReviewViewModelTest {
 
 private fun viewModel(
     preparation: SmsReviewPreparation,
-    confirm: (ConfirmSmsTransactionCommand) -> ApplicationResult<TransactionRecord> = { success(transactionRecord()) },
+    confirm: (ConfirmSmsTransactionCommand) -> ApplicationResult<TransactionRecord> = {
+        success(transactionRecord())
+    },
 ): SmsTransactionReviewViewModel =
     SmsTransactionReviewViewModel(
         prepareReview = { success(preparation) },
@@ -209,8 +211,7 @@ private fun transactionRecord(): TransactionRecord =
         ledgerEntries = emptyList(),
     )
 
-private fun <T> success(value: T): ApplicationResult.Success<T> =
-    ApplicationResult.Success(UseCaseOutcome(value))
+private fun <T> success(value: T): ApplicationResult.Success<T> = ApplicationResult.Success(UseCaseOutcome(value))
 
 private const val RAW_MESSAGE = "INR 1,250.50 debited from account 1234 at Grocery Mart"
 private const val NOW = 1_721_800_000_000L
