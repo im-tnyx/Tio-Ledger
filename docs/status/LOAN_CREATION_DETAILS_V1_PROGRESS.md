@@ -1,9 +1,10 @@
 # Loan Creation and Loan Details v1 Progress
 
-Status: Feature implementation complete; focused Engine, Data, Application, Bootstrap/Koin, and UI gates validated — final shell/full-repository gate pending
+Status: Feature implementation and final cross-layer/full-repository validation complete — PR readiness approval pending
 Issue: #12
 Branch: `feat/loan-creation-details-v1`
 PR: #13 (draft)
+Validated code head: `c3d504c828a667e3e69f8c304598105782f7e55c`
 
 ## Objective
 
@@ -36,6 +37,7 @@ Replace the Loans placeholder with production loan creation, list, and details w
 - Added atomic loan-plus-complete-schedule persistence.
 - Added ownership, deterministic ordering, reconstruction, duplicate/missing, and rollback integration tests.
 - Canonical repository details read contract is `LoanRepository.findDetails`.
+- Scoped SQLDelight JVM `sqlite-driver` to `androidUnitTest`; iOS tests continue to use `NativeSqliteDriver`. This prevents JVM-only test artifacts from leaking into iOS dependency resolution.
 
 ## Implemented Application
 
@@ -76,11 +78,13 @@ Replace the Loans placeholder with production loan creation, list, and details w
 
 ## Final Cross-Layer Review
 
-- Confirmed the branch is ahead of `main` and behind by zero commits.
-- Confirmed the changed-file set is limited to the Loan milestone and one narrow shell navigation defect fix.
+- Confirmed the branch was ahead of `main` and behind by zero commits during final review.
+- Confirmed the changed-file set is limited to the Loan milestone, one narrow shell navigation defect fix, and one multiplatform test-dependency scoping fix.
 - Found that `TioAppShell` previously passed no navigation callback, leaving production root navigation at the default no-op behavior.
 - Added internal active-route state in `TioAppShell` so Loans list-to-details, details-back, and existing root navigation callbacks operate in the Android host.
-- The shell fix requires the final focused/full rerun before review readiness.
+- Found that JVM-only SQLDelight `sqlite-driver` was declared in `commonTest`, which broke iOS dependency resolution during full `build`/`check`.
+- Moved that dependency to `androidUnitTest`; no production logic or schema changed.
+- No remaining code blocker was found after the final full-repository rerun.
 
 ## Local Validation Evidence
 
@@ -100,43 +104,38 @@ BUILD SUCCESSFUL in 20s
 74 actionable tasks: 4 executed, 70 up-to-date
 ```
 
-### Data formatting regression gate
-
-```text
-ktlintCheck detekt
-BUILD SUCCESSFUL in 47s
-74 actionable tasks: 3 executed, 71 up-to-date
-```
-
 ### Combined Application and Bootstrap gate
 
 ```text
 ./gradlew :shared:application:test :shared:bootstrap:test
 BUILD SUCCESSFUL in 1m 11s
 220 actionable tasks: 31 executed, 3 from cache, 186 up-to-date
-
-./gradlew ktlintCheck detekt
-BUILD SUCCESSFUL in 21s
-74 actionable tasks: 4 executed, 70 up-to-date
-
-./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration
-BUILD SUCCESSFUL in 16s
-10 actionable tasks: 1 executed, 9 up-to-date
 ```
 
 ### Focused UI gate
 
 ```text
-./gradlew :shared:ui:compileKotlinMetadata
-BUILD SUCCESSFUL
+./gradlew :shared:ui:compileKotlinMetadata :shared:ui:test
+BUILD SUCCESSFUL in 16s
+231 actionable tasks: 11 executed, 220 up-to-date
+```
 
-./gradlew :shared:ui:test
-BUILD SUCCESSFUL in 1m 11s
-231 actionable tasks: 17 executed, 214 up-to-date
+### Final full-repository gate
 
-./gradlew ktlintCheck detekt
-BUILD SUCCESSFUL in 22s
-74 actionable tasks: 4 executed, 70 up-to-date
+Validated code head: `c3d504c828a667e3e69f8c304598105782f7e55c`
+
+```text
+./gradlew build --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 1m 14s
+1549 actionable tasks: 139 executed, 6 from cache, 1404 up-to-date
+
+./gradlew check --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 23s
+966 actionable tasks: 28 executed, 938 up-to-date
+
+./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
+BUILD SUCCESSFUL in 14s
+74 actionable tasks: 1 executed, 73 up-to-date
 
 git diff --check
 (no output)
@@ -144,6 +143,16 @@ git diff --check
 git status
 branch up to date; nothing to commit; working tree clean
 ```
+
+### Migration verification
+
+```text
+./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration
+BUILD SUCCESSFUL in 13s
+10 actionable tasks: 1 executed, 9 up-to-date
+```
+
+No SQLDelight schema or migration content changed after this verification.
 
 ## Approved V1 Scope
 
@@ -171,17 +180,11 @@ branch up to date; nothing to commit; working tree clean
 - Floating/flat interest, non-monthly frequencies, moratorium, financed fees, and custom due days.
 - Editing contractual terms, closure, and payoff actions.
 
-## Final Validation Gate
+## Remaining Sequence
 
-```text
-./gradlew :shared:ui:compileKotlinMetadata :shared:ui:test --no-daemon --console=plain --stacktrace
-./gradlew build --no-daemon --console=plain --stacktrace
-./gradlew check --no-daemon --console=plain --stacktrace
-./gradlew ktlintCheck detekt --no-daemon --console=plain --stacktrace
-./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace
-git diff --check
-git status
-```
+1. Receive explicit approval to mark PR #13 ready for review.
+2. Perform the final PR metadata/status check.
+3. Merge only after explicit approval.
 
 ## Architecture Constraints
 
