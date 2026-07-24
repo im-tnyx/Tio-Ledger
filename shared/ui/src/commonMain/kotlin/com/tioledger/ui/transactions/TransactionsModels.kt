@@ -6,6 +6,7 @@ data class TransactionsUiState(
     val isLoading: Boolean = true,
     val transactions: List<TransactionRowUiModel> = emptyList(),
     val errorMessage: String? = null,
+    val smsReviewAvailable: Boolean = false,
 ) {
     val isEmpty: Boolean
         get() = !isLoading && errorMessage == null && transactions.isEmpty()
