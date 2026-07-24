@@ -1,6 +1,6 @@
 # SMS-Assisted Transaction Review Flow v1 Progress
 
-Status: Typed foundation and deterministic parser validated — Application review orchestration pending
+Status: Typed foundation and deterministic parser validated — Application orchestration implemented, validation pending
 Issue: #15
 Branch: `feat/sms-transaction-review-v1`
 PR: #16 (draft)
@@ -76,6 +76,21 @@ Negative and privacy fixtures:
 - Empty and unrelated messages.
 - Invalid time-zone fallback.
 - Raw-message non-retention.
+
+## Implemented Application Orchestration
+
+- Added `PrepareSmsTransactionReviewUseCase` with feature-flag enforcement before parser invocation.
+- Added typed preparation outcomes for editable review, ignored messages, and unsupported messages.
+- Ignored and unsupported messages do not load account/category reference data.
+- Review preparation loads active accounts and non-deleted categories only.
+- Account options are restricted to the detected currency when available.
+- Account hints select an account only when exactly one normalized suffix match exists; ambiguous hints remain unresolved.
+- Category options are filtered by income/expense direction, but no category is silently selected.
+- Added `ConfirmSmsTransactionUseCase`; it accepts edited structured fields and never accepts raw SMS text.
+- Confirmation requires an explicit `userConfirmed` signal, positive amount, valid currency, account, timestamp, and direction-specific fields.
+- Confirmed income, expense, and transfer candidates delegate to existing ledger-backed transaction recording use cases.
+- Transfer confirmation requires a distinct destination account.
+- Added focused tests for disabled flags, ignored-message short circuit, eligible options, exact/ambiguous account matching, repository failures, explicit confirmation, routing, and transfer validation.
 
 ## Architecture Direction
 
@@ -153,6 +168,10 @@ git status
 nothing to commit, working tree clean
 ```
 
+Application code head before this documentation update: `872216f65c20402e9377ed0c87a67f86e8514f0b`
+
+Application compile/tests and static analysis are pending.
+
 ## Implementation Sequence
 
 1. [x] Finalize the fallback UI/reference specification.
@@ -160,11 +179,12 @@ nothing to commit, working tree clean
 3. [x] Add Domain parser/review contracts.
 4. [x] Add deterministic parser and fixture tests.
 5. [x] Validate and fix the parser gate.
-6. [ ] Add Application review preparation and confirmed-save orchestration.
-7. [ ] Add Bootstrap/Koin registration and diagnostics.
-8. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
-9. [ ] Run focused and full repository validation.
-10. [ ] Mark the PR ready and merge only after explicit approval.
+6. [x] Add Application review preparation and confirmed-save orchestration.
+7. [ ] Validate and fix the Application gate.
+8. [ ] Add Bootstrap/Koin registration and diagnostics.
+9. [ ] Add shared review UI, navigation, previews, and ViewModel tests.
+10. [ ] Run focused and full repository validation.
+11. [ ] Mark the PR ready and merge only after explicit approval.
 
 ## Explicitly Out Of Scope
 
