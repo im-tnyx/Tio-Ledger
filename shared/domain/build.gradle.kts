@@ -6,6 +6,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":shared:core"))
+            api(libs.kotlinx.datetime)
         }
 
         commonTest.dependencies {

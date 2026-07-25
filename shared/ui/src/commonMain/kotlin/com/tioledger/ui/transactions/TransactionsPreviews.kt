@@ -15,6 +15,7 @@ private fun TransactionsLightPreview() {
             state = previewTransactionsState(),
             onAction = {},
             onAddTransaction = {},
+            onReviewSms = {},
             onNavigate = {},
         )
     }
@@ -28,6 +29,7 @@ private fun TransactionsDarkPreview() {
             state = previewTransactionsState(),
             onAction = {},
             onAddTransaction = {},
+            onReviewSms = {},
             onNavigate = {},
         )
     }
@@ -36,6 +38,7 @@ private fun TransactionsDarkPreview() {
 private fun previewTransactionsState(): TransactionsUiState =
     TransactionsUiState(
         isLoading = false,
+        smsReviewAvailable = true,
         transactions =
             listOf(
                 TransactionRowUiModel(

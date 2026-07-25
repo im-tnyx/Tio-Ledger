@@ -39,6 +39,7 @@ import org.koin.compose.koinInject
 fun TransactionsRoute(
     viewModel: TransactionsViewModel = koinInject(),
     onAddTransaction: () -> Unit = {},
+    onReviewSms: () -> Unit = {},
     onNavigate: (MainRoute) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -46,6 +47,7 @@ fun TransactionsRoute(
         state = state,
         onAction = viewModel::onAction,
         onAddTransaction = onAddTransaction,
+        onReviewSms = onReviewSms,
         onNavigate = onNavigate,
     )
 }
@@ -55,6 +57,7 @@ fun TransactionsScreen(
     state: TransactionsUiState,
     onAction: (TransactionsAction) -> Unit,
     onAddTransaction: () -> Unit,
+    onReviewSms: () -> Unit,
     onNavigate: (MainRoute) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -70,7 +73,21 @@ fun TransactionsScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TioAppBar(title = "Transactions") },
+        topBar = {
+            TioAppBar(
+                title = "Transactions",
+                actions = {
+                    if (state.smsReviewAvailable) {
+                        TextButton(
+                            onClick = onReviewSms,
+                            modifier = Modifier.semantics { contentDescription = "Review transaction SMS" },
+                        ) {
+                            Text("Review SMS")
+                        }
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             TioFloatingActionButton(
                 onClick = onAddTransaction,

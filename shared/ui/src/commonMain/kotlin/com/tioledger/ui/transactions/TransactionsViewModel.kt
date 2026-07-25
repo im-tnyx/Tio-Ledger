@@ -4,6 +4,9 @@ import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
 import com.tioledger.application.usecase.transaction.ListTransactionsUseCase
 import com.tioledger.application.usecase.transaction.TransactionSummary
+import com.tioledger.core.feature.FeatureFlag
+import com.tioledger.core.feature.FeatureFlagProvider
+import com.tioledger.core.feature.StaticFeatureFlagProvider
 import com.tioledger.core.model.Money
 import com.tioledger.domain.model.TransactionType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +19,12 @@ import kotlin.math.abs
 
 class TransactionsViewModel(
     private val listTransactionsUseCase: ListTransactionsUseCase,
+    featureFlagProvider: FeatureFlagProvider = StaticFeatureFlagProvider(),
 ) {
-    private val _uiState = MutableStateFlow(TransactionsUiState())
+    private val smsReviewAvailable =
+        featureFlagProvider.isEnabled(FeatureFlag.SMS_ASSISTED_TRANSACTION_REVIEW)
+
+    private val _uiState = MutableStateFlow(TransactionsUiState(smsReviewAvailable = smsReviewAvailable))
     val uiState: StateFlow<TransactionsUiState> = _uiState.asStateFlow()
 
     init {
@@ -38,6 +45,7 @@ class TransactionsViewModel(
                     TransactionsUiState(
                         isLoading = false,
                         transactions = result.outcome.value.map(TransactionSummary::toRow),
+                        smsReviewAvailable = smsReviewAvailable,
                     )
             }
             is ApplicationResult.Failure -> {
@@ -45,6 +53,7 @@ class TransactionsViewModel(
                     TransactionsUiState(
                         isLoading = false,
                         errorMessage = result.error.toMessage(),
+                        smsReviewAvailable = smsReviewAvailable,
                     )
             }
         }

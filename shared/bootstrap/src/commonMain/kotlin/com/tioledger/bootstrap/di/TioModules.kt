@@ -15,6 +15,8 @@ import com.tioledger.application.usecase.category.UpdateCategoryUseCase
 import com.tioledger.application.usecase.loan.CreateLoanUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
 import com.tioledger.application.usecase.loan.ListLoansUseCase
+import com.tioledger.application.usecase.sms.ConfirmSmsTransactionUseCase
+import com.tioledger.application.usecase.sms.PrepareSmsTransactionReviewUseCase
 import com.tioledger.application.usecase.transaction.ListTransactionsUseCase
 import com.tioledger.application.usecase.transaction.RecordAdjustmentUseCase
 import com.tioledger.application.usecase.transaction.RecordExpenseUseCase
@@ -26,6 +28,8 @@ import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
 import com.tioledger.bootstrap.logging.StartupLogger
 import com.tioledger.budget.engine.BudgetPeriodCalculator
 import com.tioledger.budget.engine.BudgetProgressCalculator
+import com.tioledger.core.feature.FeatureFlagProvider
+import com.tioledger.core.feature.StaticFeatureFlagProvider
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.core.util.UuidGenerator
 import com.tioledger.data.repository.SQLDelightAccountRepository
@@ -35,6 +39,7 @@ import com.tioledger.data.repository.SQLDelightLedgerRepository
 import com.tioledger.data.repository.SQLDelightLoanRepository
 import com.tioledger.data.repository.SQLDelightTransactionRepository
 import com.tioledger.database.TioLedgerDatabase
+import com.tioledger.domain.model.SmsTransactionParser
 import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.BudgetRepository
 import com.tioledger.domain.repository.CategoryRepository
@@ -42,6 +47,7 @@ import com.tioledger.domain.repository.LedgerRepository
 import com.tioledger.domain.repository.LoanRepository
 import com.tioledger.domain.repository.TransactionHistoryRepository
 import com.tioledger.domain.repository.TransactionRepository
+import com.tioledger.domain.service.DeterministicSmsTransactionParser
 import com.tioledger.finance.engine.BalanceCalculator
 import com.tioledger.finance.engine.PostingEngine
 import com.tioledger.finance.engine.PostingStrategyRegistry
@@ -54,6 +60,7 @@ import org.koin.dsl.module
 fun coreModule(): Module =
     module {
         single<IdGenerator> { UuidGenerator() }
+        single<FeatureFlagProvider> { StaticFeatureFlagProvider() }
         single<StartupLogger> { StartupLogger { message -> println(message) } }
     }
 
@@ -97,6 +104,8 @@ fun applicationModule(): Module =
         factory { RecordTransferUseCase(get(), get(), get()) }
         factory { RecordAdjustmentUseCase(get(), get(), get()) }
         factory { RecordOpeningBalanceUseCase(get(), get(), get()) }
+        factory { PrepareSmsTransactionReviewUseCase(get(), get(), get(), get()) }
+        factory { ConfirmSmsTransactionUseCase(get(), get(), get(), get()) }
     }
 
 fun financeEngineModule(): Module =
@@ -116,6 +125,11 @@ fun budgetEngineModule(): Module =
 fun loanEngineModule(): Module =
     module {
         single<LoanCalculator> { MonthlyReducingBalanceLoanCalculator() }
+    }
+
+fun smsReviewModule(): Module =
+    module {
+        single<SmsTransactionParser> { DeterministicSmsTransactionParser() }
     }
 
 fun diagnosticsModule(): Module =
@@ -143,7 +157,9 @@ fun diagnosticsModule(): Module =
                         getOrNull<ListLoansUseCase>() != null &&
                         getOrNull<GetLoanDetailsUseCase>() != null &&
                         getOrNull<ListTransactionsUseCase>() != null &&
-                        getOrNull<RecordIncomeUseCase>() != null,
+                        getOrNull<RecordIncomeUseCase>() != null &&
+                        getOrNull<PrepareSmsTransactionReviewUseCase>() != null &&
+                        getOrNull<ConfirmSmsTransactionUseCase>() != null,
             )
         }
     }
@@ -156,6 +172,7 @@ fun tioApplicationModules(): List<Module> =
         financeEngineModule(),
         budgetEngineModule(),
         loanEngineModule(),
+        smsReviewModule(),
         applicationModule(),
         diagnosticsModule(),
     )

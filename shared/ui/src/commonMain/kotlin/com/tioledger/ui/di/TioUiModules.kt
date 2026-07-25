@@ -5,6 +5,7 @@ import com.tioledger.ui.budgets.BudgetsViewModel
 import com.tioledger.ui.categories.CategoriesViewModel
 import com.tioledger.ui.loans.LoanDetailsViewModel
 import com.tioledger.ui.loans.LoansViewModel
+import com.tioledger.ui.sms.SmsTransactionReviewViewModel
 import com.tioledger.ui.transactions.TransactionEntryViewModel
 import com.tioledger.ui.transactions.TransactionsViewModel
 import org.koin.core.module.Module
@@ -18,5 +19,11 @@ fun tioUiModule(): Module =
         factory { LoansViewModel(get(), get(), get(), get()) }
         factory { LoanDetailsViewModel(get(), get()) }
         factory { TransactionEntryViewModel(get(), get(), get(), get(), get()) }
-        factory { TransactionsViewModel(get()) }
+        factory {
+            SmsTransactionReviewViewModel(
+                prepareUseCase = get(),
+                confirmUseCase = get(),
+            )
+        }
+        factory { TransactionsViewModel(get(), get()) }
     }
