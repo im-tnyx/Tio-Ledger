@@ -100,7 +100,8 @@ class DeterministicSmsTransactionParser : SmsTransactionParser {
     private fun classifyIgnored(message: String): SmsIgnoredReason? {
         val lower = message.lowercase()
         return when {
-            OTP_MARKERS.any(lower::contains) -> SmsIgnoredReason.OTP_OR_SECURITY_CODE
+            OTP_PATTERN.containsMatchIn(lower) || OTP_MARKERS.any(lower::contains) ->
+                SmsIgnoredReason.OTP_OR_SECURITY_CODE
             FAILURE_MARKERS.any(lower::contains) -> SmsIgnoredReason.FAILED_OR_DECLINED_TRANSACTION
             isBalanceOnly(lower) -> SmsIgnoredReason.BALANCE_ONLY
             isPromotional(lower) -> SmsIgnoredReason.PROMOTIONAL
@@ -137,7 +138,7 @@ class DeterministicSmsTransactionParser : SmsTransactionParser {
         }
 
         if (!defaultCurrencyCode.isNullOrBlank()) {
-            UNMARKED_AMOUNT.find(message)?.let { match ->
+            CONTEXTUAL_UNMARKED_AMOUNT.find(message)?.let { match ->
                 val amount = parseMinorUnits(match.groupValues[1]) ?: return@let
                 return AmountDetection(amount, defaultCurrencyCode.trim().uppercase())
             }
@@ -283,9 +284,10 @@ class DeterministicSmsTransactionParser : SmsTransactionParser {
             Regex(
                 "(?i)([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*(inr|usd|eur|gbp)",
             )
-        val UNMARKED_AMOUNT =
+        val CONTEXTUAL_UNMARKED_AMOUNT =
             Regex(
-                "(?<![A-Za-z0-9])([0-9][0-9,]*(?:\\.[0-9]{1,2})?)(?![A-Za-z0-9])",
+                "(?i)(?:amount\\s+|debited\\s+|credited\\s+|paid\\s+|spent\\s+|sent\\s+|received\\s+|" +
+                    "withdrawn\\s+|transferred\\s+)([0-9][0-9,]*(?:\\.[0-9]{1,2})?)",
             )
         val DATE_TIME =
             Regex(
@@ -307,8 +309,9 @@ class DeterministicSmsTransactionParser : SmsTransactionParser {
                     "(?=\\s+(?:on|ref|upi|avl|available|balance|via|using)\\b|[.;]|$)",
             )
 
+        val OTP_PATTERN = Regex("(?i)\\botp\\b")
         val OTP_MARKERS =
-            listOf(" otp ", "one time password", "verification code", "security code", "do not share")
+            listOf("one time password", "verification code", "security code", "do not share")
         val FAILURE_MARKERS =
             listOf("transaction failed", "payment failed", "declined", "unsuccessful", "could not be processed")
         val BALANCE_MARKERS =
