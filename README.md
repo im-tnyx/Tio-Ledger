@@ -80,9 +80,9 @@ See [docs/architecture.md](docs/architecture.md) for the canonical architecture.
 
 ## Development Status
 
-Current status: UI Foundation v1, Application Bootstrap v1, frozen Database Schema, frozen Ledger Engine v1, Application/Data layers, Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, and Budgets Screen v1 are implemented and locally validated.
+Current status: UI Foundation v1, Application Bootstrap v1, frozen Database Schema, frozen Ledger Engine v1, Application/Data layers, Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, and SMS-Assisted Transaction Review Flow v1 are implemented and locally validated. Phase 6 Finance Features is complete.
 
-The next planned product milestone is Loan Creation and Loan Details v1. Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
+The next planned product milestone is Phase 7 Spending Analytics / Reports Screen v1. Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
 
 ## Roadmap
 
@@ -91,10 +91,10 @@ The implementation roadmap is maintained in [docs/implementation-roadmap.md](doc
 Current engineering sequence:
 
 1. Preserve frozen financial, persistence, and architecture invariants.
-2. Complete core finance workflows in Phase 6.
-3. Implement Loan Creation and Loan Details v1 from approved references.
-4. Continue with SMS-assisted transaction review.
-5. Add analytics, notifications, and release hardening after core workflows are complete.
+2. Keep completed Phase 6 finance workflows stable unless a verified defect is discovered.
+3. Implement Phase 7 Spending Analytics / Reports Screen v1 from approved references and existing read contracts.
+4. Add cash-flow and loan payoff analytics after the first reports slice is validated.
+5. Continue with notifications and release hardening after analytics foundations are complete.
 
 ## Contributing
 
