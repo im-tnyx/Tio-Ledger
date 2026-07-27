@@ -37,6 +37,8 @@ The product should remain functionally familiar to Money Manager. The goal is to
 - [UI Foundation Validation Report](status/UI_FOUNDATION_VALIDATION_REPORT.md)
 - [Component Catalog Report](status/COMPONENT_CATALOG_REPORT.md)
 - [Reference Documentation Validation Report](status/REFERENCE_DOCUMENTATION_VALIDATION_REPORT.md)
+- [Loan Creation and Details v1 Progress Report](status/LOAN_CREATION_DETAILS_V1_PROGRESS.md)
+- [SMS Transaction Review v1 Validation Report](status/SMS_TRANSACTION_REVIEW_V1_VALIDATION_REPORT.md)
 
 ## Target Repository Shape
 
@@ -81,7 +83,7 @@ docs/
 ## Immediate Priorities
 
 1. Keep frozen layers stable: Database Schema, Ledger Engine, Application Layer, and Data Layer.
-2. Use Application Bootstrap v1 as the app startup, DI, navigation, and design-system foundation.
-3. Use UI Foundation v1 for reusable design tokens, stateless components, templates, and navigation placeholders.
-4. Keep Dashboard Screen v1 and Transaction Entry Screen v1 frozen unless a verified defect is discovered.
-5. Start Transaction Entry Integration v1 using the finalized entry screen UI and existing architecture boundaries.
+2. Preserve completed Phase 6 finance workflows unless a verified defect requires a focused fix.
+3. Start Phase 7 with Spending Analytics / Reports Screen v1 using existing immutable read contracts and integer-only calculations.
+4. Keep analytics aggregation outside Compose and expose immutable UI-ready state through Application use cases and ViewModels.
+5. Add approved Reports references and acceptance notes before production UI implementation.
