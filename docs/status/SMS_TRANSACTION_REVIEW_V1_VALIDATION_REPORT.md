@@ -1,9 +1,11 @@
 # SMS-Assisted Transaction Review Flow v1 Validation Report
 
-Status: Final local validation passed
+Status: Merged into `main`
 Issue: #15
-Branch: `feat/sms-transaction-review-v1`
+Historical branch: `feat/sms-transaction-review-v1`
 PR: #16
+Merge commit: `ba6eb233c5b385c33b0c57b68a20165965f1b6e8`
+Merged at: 2026-07-25 08:29 UTC
 
 ## Validated Scope
 
@@ -69,7 +71,7 @@ BUILD SUCCESSFUL in 25s
 986 actionable tasks: 28 executed, 958 up-to-date
 ```
 
-## Repository Integrity
+## Historical Repository Integrity
 
 ```text
 git diff --check
@@ -85,4 +87,4 @@ A temporary untracked `.obsidian/` directory appeared during the earlier focused
 
 ## Result
 
-All requested focused, targeted, and full local quality gates passed, including validation after the final parser safety review fixes. PR #16 can be marked ready for review after explicit approval. It must remain unmerged until explicit merge approval is provided.
+All requested focused, targeted, and full local quality gates passed, including validation after the final parser safety review fixes. PR #16 was subsequently approved and merged into `main`. SMS-Assisted Transaction Review Flow v1 is complete, remains disabled by default behind its feature flag, and preserves explicit user confirmation before any financial mutation.
