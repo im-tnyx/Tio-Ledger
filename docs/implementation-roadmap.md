@@ -5,8 +5,9 @@
 - Ledger Engine: Frozen v1 as of 2026-06-30.
 - Approved architectural blockers for commonMain compatibility, type-safe posting strategies, and strategy registry separation are resolved.
 - Application Layer, repository contracts, SQLDelight repository implementations, application bootstrap, and shared UI foundation are implemented.
-- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, and Loan Creation and Loan Details v1 are implemented and locally validated.
-- Current planned milestone: SMS-Assisted Transaction Review Flow v1.
+- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, and SMS-Assisted Transaction Review Flow v1 are implemented and locally validated.
+- Phase 6 Finance Features is complete.
+- Current planned milestone: Phase 7 Spending Analytics / Reports Screen v1.
 
 ## Phase 0: Documentation And Decisions
 
@@ -124,6 +125,8 @@ Deliverables:
 
 ## Phase 6: Finance Features
 
+Status: Complete.
+
 Objectives:
 
 - Accounts.
@@ -133,15 +136,15 @@ Objectives:
 - Loan creation and loan details.
 - SMS-assisted transaction review flow.
 
-Current progress:
+Completed milestones:
 
 - Accounts Screen v1: complete.
 - Transaction Entry Integration v1: complete.
 - Transactions List / History Screen v1: complete and locally validated.
 - Categories Screen v1: complete and locally validated.
 - Budgets Screen v1: complete and locally validated.
-- Loan Creation and Loan Details v1: complete and locally validated.
-- SMS-Assisted Transaction Review Flow v1: in progress under issue #15.
+- Loan Creation and Loan Details v1: complete and locally validated through PR #13.
+- SMS-Assisted Transaction Review Flow v1: complete and locally validated through issue #15 and PR #16.
 
 Deliverables:
 
@@ -154,12 +157,21 @@ Deliverables:
 
 ## Phase 7: Analytics And Notifications
 
+Current planned milestone: Spending Analytics / Reports Screen v1.
+
 Objectives:
 
 - Spending analytics.
 - Cash-flow analytics.
 - Loan payoff analytics.
 - EMI and budget reminders.
+
+Current sequence:
+
+1. Spending Analytics / Reports Screen v1.
+2. Cash-flow analytics.
+3. Loan payoff analytics.
+4. EMI and budget reminders.
 
 Deliverables:
 
