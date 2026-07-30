@@ -5,7 +5,7 @@ Active Task: `.ai/tasks/docs/local-20260730-ai-context-upgrade.md`
 Branch: `codex/ai-context-upgrade`
 Platform Scope: `repository-ai-context`
 Last Updated: `2026-07-30`
-Next Action: `Open a draft PR only when explicitly requested.`
+Next Action: `Review PR #21 checks; mark ready or merge only when explicitly requested.`
 
 ## Usage
 

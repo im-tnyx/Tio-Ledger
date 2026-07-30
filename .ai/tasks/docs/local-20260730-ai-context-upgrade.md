@@ -7,6 +7,7 @@ Branch: `codex/ai-context-upgrade`
 Scope: `AGENTS.md`, `.ai/`, and directly affected canonical status docs
 Created: `2026-07-30`
 Last Updated: `2026-07-30`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/21`
 
 ## Required Context
 
@@ -51,6 +52,7 @@ Last Updated: `2026-07-30`
 - Active pointer, required-context paths, legacy-file retirement, and archive
   tracking checks: PASS.
 - Live milestone text and conflicting `BigDecimal` mandate scans: PASS.
+- Draft PR #21 created against `main`: PASS.
 - Gradle checks not run because runtime source and build configuration did not
   change.
 
@@ -82,4 +84,5 @@ Last Updated: `2026-07-30`
 
 ## Next Action
 
-Open a draft PR only after explicit user authorization.
+Review PR #21 checks. Mark it ready or merge only after explicit user
+authorization.
