@@ -8,6 +8,7 @@ kotlin {
             api(project(":shared:core"))
             api(project(":shared:database"))
             implementation(project(":shared:application"))
+            implementation(project(":shared:analytics"))
             implementation(project(":shared:data"))
             implementation(project(":shared:domain"))
             implementation(project(":shared:finance-engine"))

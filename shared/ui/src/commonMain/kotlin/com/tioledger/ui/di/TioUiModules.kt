@@ -5,6 +5,7 @@ import com.tioledger.ui.budgets.BudgetsViewModel
 import com.tioledger.ui.categories.CategoriesViewModel
 import com.tioledger.ui.loans.LoanDetailsViewModel
 import com.tioledger.ui.loans.LoansViewModel
+import com.tioledger.ui.reports.ReportsViewModel
 import com.tioledger.ui.sms.SmsTransactionReviewViewModel
 import com.tioledger.ui.transactions.TransactionEntryViewModel
 import com.tioledger.ui.transactions.TransactionsViewModel
@@ -18,6 +19,7 @@ fun tioUiModule(): Module =
         factory { CategoriesViewModel(get(), get(), get()) }
         factory { LoansViewModel(get(), get(), get(), get()) }
         factory { LoanDetailsViewModel(get(), get()) }
+        factory { ReportsViewModel(get()) }
         factory { TransactionEntryViewModel(get(), get(), get(), get(), get()) }
         factory {
             SmsTransactionReviewViewModel(
