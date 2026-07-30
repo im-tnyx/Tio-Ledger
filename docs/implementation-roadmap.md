@@ -5,9 +5,10 @@
 - Ledger Engine: Frozen v1 as of 2026-06-30.
 - Approved architectural blockers for commonMain compatibility, type-safe posting strategies, and strategy registry separation are resolved.
 - Application Layer, repository contracts, SQLDelight repository implementations, application bootstrap, and shared UI foundation are implemented.
-- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, and SMS-Assisted Transaction Review Flow v1 are implemented and locally validated.
+- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, and Spending Analytics / Reports Screen v1 are implemented and locally validated.
 - Phase 6 Finance Features is complete.
-- Current planned milestone: Phase 7 Spending Analytics / Reports Screen v1.
+- Phase 7 Analytics And Notifications is in progress.
+- Current planned milestone: Phase 7 Cash-flow analytics.
 
 ## Phase 0: Documentation And Decisions
 
@@ -157,7 +158,11 @@ Deliverables:
 
 ## Phase 7: Analytics And Notifications
 
-Current planned milestone: Spending Analytics / Reports Screen v1.
+Spending Analytics / Reports Screen v1 is implemented and locally validated
+through PR #20. Its reference note retains separate visual and accessibility
+review follow-up.
+
+Current planned milestone: Cash-flow analytics.
 
 Objectives:
 
@@ -168,7 +173,8 @@ Objectives:
 
 Current sequence:
 
-1. Spending Analytics / Reports Screen v1.
+1. Spending Analytics / Reports Screen v1 — implementation complete through
+   PR #20; visual and accessibility review follow-up remains documented.
 2. Cash-flow analytics.
 3. Loan payoff analytics.
 4. EMI and budget reminders.

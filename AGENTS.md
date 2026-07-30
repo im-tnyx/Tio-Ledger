@@ -12,16 +12,21 @@ These instructions apply to AI agents working in this repository.
 
 ## Source Of Truth
 
-Before code changes, inspect the actual repo and read the relevant source-of-truth docs:
+Before repository changes:
 
-1. `README.md`
-2. `docs/README.md`
-3. `docs/engineering-guidelines.md`
-4. `docs/definition-of-done.md`
-5. `docs/architecture.md`
-6. `docs/adr/README.md`
-7. `.ai/README.md`
-8. `.ai/workflow.md`
+1. Inspect the actual repository, Git state, and relevant runtime source.
+2. Read `README.md` for repository status and documentation entry points.
+3. Read `.ai/current.md`.
+4. When `Active Task` is not `none`, read only its referenced task file and the
+   `.ai/core/` files listed under that task's `Required Context`.
+5. Read only canonical docs and ADRs relevant to the requested scope. Use
+   `docs/README.md` and `docs/adr/README.md` as indexes when needed.
+6. Apply `docs/engineering-guidelines.md` and `docs/definition-of-done.md` to
+   implementation and review work.
+
+Do not preload `.ai/core/`, `.ai/tasks/`, `.ai/archive/`, unrelated docs, or
+historical status reports. Read `.ai/README.md` only when maintaining the AI
+context system itself.
 
 Runtime source/config wins for actual behavior. Product docs and ADRs win for intended architecture and product rules. If docs and runtime disagree, call out the stale doc clearly.
 
