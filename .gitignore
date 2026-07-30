@@ -81,6 +81,9 @@ $RECYCLE.BIN/
 ~$*
 
 archive/
+!.ai/archive/
+!.ai/archive/*.md
+!.ai/archive/**/*.md
 realbyteapps/
 
 .obsidian/

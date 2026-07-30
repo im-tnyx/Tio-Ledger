@@ -84,6 +84,7 @@ docs/
 
 1. Keep frozen layers stable: Database Schema, Ledger Engine, Application Layer, and Data Layer.
 2. Preserve completed Phase 6 finance workflows unless a verified defect requires a focused fix.
-3. Start Phase 7 with Spending Analytics / Reports Screen v1 using existing immutable read contracts and integer-only calculations.
-4. Keep analytics aggregation outside Compose and expose immutable UI-ready state through Application use cases and ViewModels.
-5. Add approved Reports references and acceptance notes before production UI implementation.
+3. Preserve the merged Spending Analytics / Reports Screen v1 boundaries and its integer-only, immutable-read analytics path.
+4. Plan Phase 7 Cash-flow analytics as the next product slice, reusing existing Application and analytics boundaries.
+5. Keep analytics aggregation outside Compose and expose immutable UI-ready state through Application use cases and ViewModels.
+6. Treat the remaining Reports visual and accessibility checklist items as explicit review follow-up, not as completed validation.

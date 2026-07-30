@@ -4,6 +4,31 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-07-30 - Compact AI Context Workflow
+
+- Introduced `.ai/current.md` as the single session continuity pointer with at
+  most one active task.
+- Separated stable summaries under `.ai/core/` from scoped work state under
+  `.ai/tasks/` and completed records under `.ai/archive/`.
+- Changed repository startup guidance to load only the active task and its
+  explicitly required context instead of preloading the AI context tree.
+- Retired duplicate and stale top-level AI context files; Git history and the
+  archive migration map preserve their provenance.
+- Kept runtime source, canonical docs, ADRs, and `AGENTS.md` above `.ai`
+  continuity notes in the truth hierarchy.
+
+## 2026-07-30 - Reports Screen v1 Activation
+
+- Activated deterministic weekly, monthly, and yearly spending aggregation in
+  `shared:analytics` using integer minor units and immutable history reads.
+- Added the Application use case, Bootstrap/UI DI, immutable ViewModel state,
+  and production Reports route with multi-currency summaries and category and
+  account breakdowns.
+- Preserved ledger, database schema, and persistence write behavior; Reports v1
+  is read-only analytics.
+- Recorded remaining visual and accessibility review work separately in the
+  Reports reference note.
+
 ## 2026-07-19 - Budgets Screen v1 Activation
 
 - Activated `shared:budget-engine` with deterministic, timezone-aware recurring-period and budget-progress calculations while preserving integer-only money arithmetic.
