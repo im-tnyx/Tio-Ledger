@@ -1,9 +1,11 @@
 package com.tioledger.bootstrap.di
 
+import com.tioledger.analytics.SpendingAnalyticsCalculator
 import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
+import com.tioledger.application.usecase.analytics.GetSpendingAnalyticsUseCase
 import com.tioledger.application.usecase.budget.CreateBudgetUseCase
 import com.tioledger.application.usecase.budget.ListBudgetSummariesUseCase
 import com.tioledger.application.usecase.budget.ListBudgetsUseCase
@@ -87,6 +89,7 @@ fun applicationModule(): Module =
         factory { UpdateAccountUseCase(get()) }
         factory { ArchiveAccountUseCase(get()) }
         factory { ListAccountSummariesUseCase(get(), get(), get()) }
+        factory { GetSpendingAnalyticsUseCase(get(), get()) }
         factory { ListCategoriesUseCase(get()) }
         factory { CreateCategoryUseCase(get()) }
         factory { UpdateCategoryUseCase(get()) }
@@ -122,6 +125,11 @@ fun budgetEngineModule(): Module =
         single { BudgetProgressCalculator() }
     }
 
+fun analyticsModule(): Module =
+    module {
+        single { SpendingAnalyticsCalculator() }
+    }
+
 fun loanEngineModule(): Module =
     module {
         single<LoanCalculator> { MonthlyReducingBalanceLoanCalculator() }
@@ -149,6 +157,7 @@ fun diagnosticsModule(): Module =
                 useCasesRegistered =
                     getOrNull<CreateAccountUseCase>() != null &&
                         getOrNull<ListAccountSummariesUseCase>() != null &&
+                        getOrNull<GetSpendingAnalyticsUseCase>() != null &&
                         getOrNull<CreateCategoryUseCase>() != null &&
                         getOrNull<CreateBudgetUseCase>() != null &&
                         getOrNull<ListBudgetsUseCase>() != null &&
@@ -171,6 +180,7 @@ fun tioApplicationModules(): List<Module> =
         dataModule(),
         financeEngineModule(),
         budgetEngineModule(),
+        analyticsModule(),
         loanEngineModule(),
         smsReviewModule(),
         applicationModule(),

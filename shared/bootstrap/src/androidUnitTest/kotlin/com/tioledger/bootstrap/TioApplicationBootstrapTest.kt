@@ -2,6 +2,7 @@ package com.tioledger.bootstrap
 
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.analytics.GetSpendingAnalyticsUseCase
 import com.tioledger.application.usecase.loan.CreateLoanUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
 import com.tioledger.application.usecase.loan.ListLoansUseCase
@@ -50,6 +51,7 @@ class TioApplicationBootstrapTest {
         assertNotNull(app.koin.get<AccountRepository>())
         assertNotNull(app.koin.get<LoanRepository>())
         assertNotNull(app.koin.get<TransactionRepository>())
+        assertNotNull(app.koin.get<GetSpendingAnalyticsUseCase>())
         assertNotNull(app.koin.get<LoanCalculator>())
         assertNotNull(app.koin.get<SmsTransactionParser>())
         assertNotNull(app.koin.get<CreateAccountUseCase>())

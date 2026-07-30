@@ -23,6 +23,7 @@ import com.tioledger.ui.navigation.MainGraph
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
+import com.tioledger.ui.reports.ReportsRoute
 import com.tioledger.ui.sms.SmsTransactionReviewRoute
 import com.tioledger.ui.transactions.TransactionEntryHost
 import com.tioledger.ui.transactions.TransactionsRoute
@@ -78,6 +79,12 @@ fun RootNavigationHost(
                         TransactionEntryHost(
                             onNavigateBack = {
                                 onNavigate(RootRoute.Main(MainRoute.Transactions))
+                            },
+                        )
+                    MainRoute.Reports ->
+                        ReportsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
                             },
                         )
                     MainRoute.SmsTransactionReview ->

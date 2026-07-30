@@ -22,6 +22,7 @@ kotlin {
         }
 
         commonTest.dependencies {
+            implementation(project(":shared:analytics"))
             implementation(libs.kotlin.test)
         }
     }
