@@ -48,6 +48,33 @@ private object ReportsPreviewData {
                                 expenseLabel = "INR 14250.00",
                                 netLabel = "+INR 80750.00",
                                 netMinorUnits = 8_075_000L,
+                                cashFlowRows =
+                                    listOf(
+                                        ReportsCashFlowRowUiModel(
+                                            id = "2026-07-01",
+                                            label = "2026-07-01",
+                                            incomeLabel = "INR 95000.00",
+                                            expenseLabel = "INR 0.00",
+                                            netLabel = "+INR 95000.00",
+                                            netMinorUnits = 9_500_000L,
+                                        ),
+                                        ReportsCashFlowRowUiModel(
+                                            id = "2026-07-02",
+                                            label = "2026-07-02",
+                                            incomeLabel = "INR 0.00",
+                                            expenseLabel = "INR 5250.00",
+                                            netLabel = "-INR 5250.00",
+                                            netMinorUnits = -525_000L,
+                                        ),
+                                        ReportsCashFlowRowUiModel(
+                                            id = "2026-07-03",
+                                            label = "2026-07-03",
+                                            incomeLabel = "INR 0.00",
+                                            expenseLabel = "INR 0.00",
+                                            netLabel = "INR 0.00",
+                                            netMinorUnits = 0L,
+                                        ),
+                                    ),
                                 categoryBreakdown =
                                     listOf(
                                         ReportsBreakdownRowUiModel(
