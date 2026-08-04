@@ -5,6 +5,7 @@ Objective: Scope the SQLDelight SQLite test driver in `shared/database` to Andro
 Branch: `fix/database-sqlite-driver-test-scope`
 Scope: `shared/database` build configuration and focused validation
 Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/23`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/24`
 Created: `2026-08-04`
 Last Updated: `2026-08-04`
 
@@ -37,18 +38,23 @@ Last Updated: `2026-08-04`
 - [x] Confirm PR #22 merged and `main` contains an idle task pointer.
 - [x] Create the dedicated branch from merged `main`.
 - [x] Inspect issue #23, repository rules, and established module patterns.
-- [ ] Apply the source-set dependency correction.
-- [ ] Open a focused PR and run CI validation.
-- [ ] Update validation evidence and mark ready for review when checks pass.
+- [x] Apply the source-set dependency correction.
+- [x] Open draft PR #24 for focused review and CI validation.
+- [ ] Confirm final-head CI validation passes.
+- [ ] Update validation evidence and mark ready for review.
 
 ## Validation
 
-- Not run yet.
+- GitHub compare: branch starts from merged `main`, 0 commits behind.
+- Final-head GitHub Actions: pending.
+- Local `git diff --check`: not available in the connected environment.
 
 ## Changed Files
 
+- `.ai/current.md`
 - `.ai/tasks/shared/local-20260804-database-sqlite-driver-test-scope.md`
+- `shared/database/build.gradle.kts`
 
 ## Next Action
 
-Update `.ai/current.md`, apply the `shared/database/build.gradle.kts` correction, and open a draft PR for CI validation.
+Wait for PR #24 final-head CI checks, record the results, and mark the PR ready only if all required jobs pass.
