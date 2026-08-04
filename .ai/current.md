@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
-Last Updated: `2026-07-30`
-Next Action: `Start the next objective only when explicitly requested.`
+Status: Ready for Review
+Active Task: `.ai/tasks/shared/local-20260804-database-sqlite-driver-test-scope.md`
+Branch: `fix/database-sqlite-driver-test-scope`
+Platform Scope: `shared-database-build`
+Last Updated: `2026-08-04`
+Next Action: `Review PR #24 checks and merge only when explicitly authorized.`
 
 ## Usage
 
