@@ -207,6 +207,12 @@ private fun ReportsCurrencySection(section: ReportsCurrencySectionUiModel) {
                 tone = section.netMinorUnits.toAmountTone(),
             )
 
+            HorizontalDivider()
+
+            CashFlowSection(rows = section.cashFlowRows)
+
+            HorizontalDivider()
+
             BreakdownSection(
                 title = "By category",
                 rows = section.categoryBreakdown,
@@ -221,6 +227,78 @@ private fun ReportsCurrencySection(section: ReportsCurrencySectionUiModel) {
                 emptyLabel = "No spending accounts in this period.",
             )
         }
+    }
+}
+
+@Composable
+private fun CashFlowSection(rows: List<ReportsCashFlowRowUiModel>) {
+    Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
+        Text(
+            text = "Cash flow over time",
+            style = MaterialTheme.typography.titleSmall,
+        )
+
+        if (rows.isEmpty()) {
+            Text(
+                text = "No cash-flow buckets are available for this period.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            rows.forEachIndexed { index, row ->
+                CashFlowRow(row)
+                if (index < rows.lastIndex) {
+                    HorizontalDivider()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CashFlowRow(row: ReportsCashFlowRowUiModel) {
+    Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.xs)) {
+        Text(
+            text = row.label,
+            style = MaterialTheme.typography.labelLarge,
+        )
+        CashFlowMetricRow(
+            label = "Income",
+            amount = row.incomeLabel,
+            tone = TioAmountTone.Positive,
+        )
+        CashFlowMetricRow(
+            label = "Expense",
+            amount = row.expenseLabel,
+            tone = TioAmountTone.Negative,
+        )
+        CashFlowMetricRow(
+            label = "Net",
+            amount = row.netLabel,
+            tone = row.netMinorUnits.toAmountTone(),
+        )
+    }
+}
+
+@Composable
+private fun CashFlowMetricRow(
+    label: String,
+    amount: String,
+    tone: TioAmountTone,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TioAmountText(
+            amount = amount,
+            tone = tone,
+        )
     }
 }
 
