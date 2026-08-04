@@ -31,11 +31,11 @@ Run these from the repository root. Use `./gradlew` on bash/macOS/Linux and `./g
 
 - [ ] Compile shared metadata:
   ```powershell
-  .\gradlew.bat :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:finance-engine:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
+  .\gradlew.bat :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:finance-engine:compileKotlinMetadata :shared:analytics:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
   ```
 - [ ] Run critical tests:
   ```powershell
-  .\gradlew.bat :shared:finance-engine:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
+  .\gradlew.bat :shared:finance-engine:test :shared:analytics:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
   ```
 - [ ] Verify SQLDelight migrations explicitly:
   ```powershell
