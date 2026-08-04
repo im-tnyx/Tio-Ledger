@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
+Status: Validation
 Active Task: `.ai/tasks/shared/local-20260804-cash-flow-analytics-v1.md`
 Branch: `feat/cash-flow-analytics-v1`
 Platform Scope: `shared-analytics-reports`
 Last Updated: `2026-08-04`
-Next Action: `Implement deterministic cash-flow buckets and focused analytics tests.`
+Next Action: `Verify final-head checks and mark PR #27 ready without merging.`
 
 ## Usage
 
