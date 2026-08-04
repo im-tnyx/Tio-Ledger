@@ -1,6 +1,6 @@
 # Cash-flow Analytics v1
 
-Status: Validation
+Status: Ready for Review
 Objective: Extend Reports v1 with deterministic, per-currency cash-flow buckets derived from immutable transaction history.
 Branch: `feat/cash-flow-analytics-v1`
 Scope: `shared/analytics`, `shared/application`, `shared/ui`, focused CI/tests, and Reports milestone documentation
@@ -54,12 +54,13 @@ Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/27`
 - [x] Update Reports reference note and milestone documentation.
 - [x] Add direct analytics validation to CI and `.github/PUSH_TEMPLATE.md`.
 - [x] Open draft PR #27.
-- [ ] Pass final status-inclusive head checks and complete final diff review.
-- [ ] Mark PR ready for review only after final-head checks pass.
+- [x] Pass final status-inclusive head checks and complete final diff review.
+- [x] Confirm PR #27 has no unresolved review threads or comments.
+- [ ] Merge only after explicit user authorization.
 
 ## Validation
 
-GitHub Actions run `30914349499` on implementation/tooling head `9905a2d8fdbef97beaf685af8c475a02d2a93c41`:
+GitHub Actions run `30914890489` on status-inclusive head `5e68c3c2653d39905dc2ee97268e2c6186eb953a`:
 
 - `Targeted KMP validation`: PASS.
   - Shared metadata compilation including `shared:analytics`: PASS.
@@ -67,7 +68,11 @@ GitHub Actions run `30914349499` on implementation/tooling head `9905a2d8fdbef97
   - `ktlintCheck`: PASS.
   - `detekt`: PASS.
 - `SQLDelight migration verification`: PASS.
-- Earlier full implementation head run `30914096107`: PASS before direct analytics CI coverage was added.
+
+Earlier validation:
+
+- Run `30914349499` on implementation/tooling head `9905a2d8fdbef97beaf685af8c475a02d2a93c41`: PASS for both required jobs with direct analytics coverage.
+- Run `30914096107` on the earlier full implementation head: PASS before direct analytics CI coverage was added.
 - Local `git diff --check`: not available because the connected execution environment has no local checkout.
 
 ## Changed Files
@@ -92,4 +97,4 @@ GitHub Actions run `30914349499` on implementation/tooling head `9905a2d8fdbef97
 
 ## Next Action
 
-Verify the status-inclusive final head through GitHub Actions, review the final branch diff, then mark PR #27 ready without merging.
+Review PR #27 and merge only when explicitly requested. After merge, perform the documented post-merge synchronization and archive this task before starting Loan payoff analytics.
