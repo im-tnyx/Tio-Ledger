@@ -80,9 +80,9 @@ See [docs/architecture.md](docs/architecture.md) for the canonical architecture.
 
 ## Development Status
 
-Current status: UI Foundation v1, Application Bootstrap v1, frozen Database Schema, frozen Ledger Engine v1, Application/Data layers, Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, and Spending Analytics / Reports Screen v1 are implemented and locally validated. Phase 6 Finance Features is complete, and Phase 7 is in progress.
+Current status: UI Foundation v1, Application Bootstrap v1, frozen Database Schema, frozen Ledger Engine v1, Application/Data layers, Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, and Cash-flow Analytics v1 are implemented and CI-validated. Phase 6 Finance Features is complete, and Phase 7 is in progress.
 
-The next planned product milestone is Phase 7 Cash-flow analytics. The Reports v1 reference note retains separate visual and accessibility review follow-up; no completion of those review items is implied here. Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
+The next planned product milestone is Phase 7 Loan payoff analytics. The Reports reference note retains separate visual and accessibility review follow-up for the Reports and Cash-flow presentation; no completion of those review items is implied here. Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
 
 ## Roadmap
 
@@ -92,9 +92,9 @@ Current engineering sequence:
 
 1. Preserve frozen financial, persistence, and architecture invariants.
 2. Keep completed Phase 6 finance workflows stable unless a verified defect is discovered.
-3. Preserve the merged Spending Analytics / Reports Screen v1 boundaries and existing read contracts.
-4. Add cash-flow analytics, followed by loan payoff analytics.
-5. Continue with notifications and release hardening after analytics foundations are complete.
+3. Preserve the Spending Analytics / Reports and Cash-flow Analytics boundaries, deterministic time buckets, multi-currency separation, and immutable read contracts.
+4. Add loan payoff analytics.
+5. Continue with EMI and budget reminders, then release hardening after analytics foundations are complete.
 
 ## Contributing
 
