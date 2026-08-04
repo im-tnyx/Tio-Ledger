@@ -29,11 +29,20 @@ data class SpendingAccountBreakdown(
     val amount: Money,
 )
 
+data class SpendingCashFlowBucket(
+    val startInclusive: Long,
+    val endExclusive: Long,
+    val income: Money,
+    val expense: Money,
+    val net: Money,
+)
+
 data class SpendingCurrencyReport(
     val currencyCode: String,
     val income: Money,
     val expense: Money,
     val net: Money,
+    val cashFlowBuckets: List<SpendingCashFlowBucket>,
     val categoryBreakdown: List<SpendingCategoryBreakdown>,
     val accountBreakdown: List<SpendingAccountBreakdown>,
 )
@@ -85,6 +94,16 @@ class GetSpendingAnalyticsUseCase(
                                         income = summary.incomeTotal,
                                         expense = summary.expenseTotal,
                                         net = summary.netTotal,
+                                        cashFlowBuckets =
+                                            summary.cashFlowBuckets.map { bucket ->
+                                                SpendingCashFlowBucket(
+                                                    startInclusive = bucket.startInclusive,
+                                                    endExclusive = bucket.endExclusive,
+                                                    income = bucket.incomeTotal,
+                                                    expense = bucket.expenseTotal,
+                                                    net = bucket.netTotal,
+                                                )
+                                            },
                                         categoryBreakdown =
                                             summary.categoryTotals.map { category ->
                                                 SpendingCategoryBreakdown(
