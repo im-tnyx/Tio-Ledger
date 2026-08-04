@@ -1,6 +1,8 @@
 package com.tioledger.application.usecase.analytics
 
 import com.tioledger.analytics.SpendingAnalyticsCalculator
+import com.tioledger.application.model.ApplicationError
+import com.tioledger.application.model.ApplicationResult
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.LedgerError
 import com.tioledger.core.model.LedgerResult
@@ -17,7 +19,7 @@ import kotlin.test.assertTrue
 
 class SpendingAnalyticsUseCaseTest {
     @Test
-    fun returnsPeriodScopedCurrencyReports() {
+    fun returnsPeriodScopedCurrencyReportsWithCashFlowBuckets() {
         val useCase =
             GetSpendingAnalyticsUseCase(
                 transactionHistoryRepository =
@@ -34,14 +36,20 @@ class SpendingAnalyticsUseCaseTest {
 
         val result = useCase(SpendingReportPeriod.MONTHLY, JULY_19_2026_UTC, "UTC")
 
-        assertTrue(result is com.tioledger.application.model.ApplicationResult.Success)
+        assertTrue(result is ApplicationResult.Success)
         val report = result.outcome.value
         assertEquals(SpendingReportPeriod.MONTHLY, report.period)
         assertEquals(1, report.currencyReports.size)
-        assertEquals("INR", report.currencyReports.single().currencyCode)
-        assertEquals(Money(90_000L, CurrencyCode("INR")), report.currencyReports.single().income)
-        assertEquals(Money(5_000L, CurrencyCode("INR")), report.currencyReports.single().expense)
-        assertEquals("Food", report.currencyReports.single().categoryBreakdown.single().categoryName)
+        val currencyReport = report.currencyReports.single()
+        assertEquals("INR", currencyReport.currencyCode)
+        assertEquals(Money(90_000L, CurrencyCode("INR")), currencyReport.income)
+        assertEquals(Money(5_000L, CurrencyCode("INR")), currencyReport.expense)
+        assertEquals("Food", currencyReport.categoryBreakdown.single().categoryName)
+        assertEquals(31, currencyReport.cashFlowBuckets.size)
+        val july19 = currencyReport.cashFlowBuckets[18]
+        assertEquals(Money(90_000L, CurrencyCode("INR")), july19.income)
+        assertEquals(Money(5_000L, CurrencyCode("INR")), july19.expense)
+        assertEquals(Money(85_000L, CurrencyCode("INR")), july19.net)
     }
 
     @Test
@@ -59,8 +67,8 @@ class SpendingAnalyticsUseCaseTest {
                 timeZoneId = "UTC",
             )
 
-        assertTrue(result is com.tioledger.application.model.ApplicationResult.Failure)
-        assertTrue(result.error is com.tioledger.application.model.ApplicationError.Repository)
+        assertTrue(result is ApplicationResult.Failure)
+        assertTrue(result.error is ApplicationError.Repository)
     }
 
     private fun record(
