@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
+Status: Ready for Review
 Active Task: `.ai/tasks/shared/local-20260804-database-sqlite-driver-test-scope.md`
 Branch: `fix/database-sqlite-driver-test-scope`
 Platform Scope: `shared-database-build`
 Last Updated: `2026-08-04`
-Next Action: `Apply issue #23, open a focused PR, and validate the KMP and SQLDelight test configuration.`
+Next Action: `Review PR #24 checks and merge only when explicitly authorized.`
 
 ## Usage
 
