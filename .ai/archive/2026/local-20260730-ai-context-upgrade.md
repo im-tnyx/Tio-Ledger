@@ -1,6 +1,6 @@
 # Compact AI Context Upgrade
 
-Status: Ready for Review
+Status: Complete
 Objective: Establish a single-pointer AI continuity system that survives
 conversation compaction without loading stale or unrelated task history.
 Branch: `codex/ai-context-upgrade`
@@ -44,6 +44,9 @@ Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/21`
 - [x] Migrate stable rules into `.ai/core/`.
 - [x] Align canonical milestone status with implemented Reports v1.
 - [x] Validate links, formatting, and final diff.
+- [x] Mark PR #21 ready for review after checks passed.
+- [x] Merge PR #21 to `main` and complete local post-merge sync.
+- [x] Archive the completed task and clear `.ai/current.md`.
 
 ## Validation
 
@@ -53,6 +56,11 @@ Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/21`
   tracking checks: PASS.
 - Live milestone text and conflicting `BigDecimal` mandate scans: PASS.
 - Draft PR #21 created against `main`: PASS.
+- PR #21 checks passed: `SQLDelight migration verification`,
+  `Targeted KMP validation`.
+- PR #21 marked ready for review: PASS.
+- PR #21 merged to `main`: PASS.
+- Local post-merge sync and remote prune completed: PASS.
 - Gradle checks not run because runtime source and build configuration did not
   change.
 
@@ -82,7 +90,8 @@ Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/21`
 - `docs/implementation-roadmap.md`
 - `docs/architecture-changelog.md`
 
-## Next Action
+## Closure
 
-Review PR #21 checks. Mark it ready or merge only after explicit user
-authorization.
+PR #21 was merged on `2026-07-30`, local `main` was synchronized with
+`origin/main`, the remote feature branch was pruned, and the continuity pointer
+was reset to idle state.
