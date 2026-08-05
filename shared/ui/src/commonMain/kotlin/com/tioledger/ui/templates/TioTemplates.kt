@@ -193,7 +193,6 @@ fun TioDashboardTemplate(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TioAppBar(title = "Tio Ledger") },
         bottomBar = {
             TioBottomNavigation(
                 items = navigationItems,
