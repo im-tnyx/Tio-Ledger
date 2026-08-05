@@ -35,19 +35,25 @@ import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioIcon
-import com.tioledger.ui.components.TioNavigationItem
 import com.tioledger.ui.components.TioSearchField
 import com.tioledger.ui.design.TioDimensions
 import com.tioledger.ui.design.TioIconToken
 import com.tioledger.ui.design.TioSpacing
+import com.tioledger.ui.navigation.MainRoute
+import com.tioledger.ui.navigation.TioNavigationGraphs
+import com.tioledger.ui.navigation.bottomNavigationModel
 import org.koin.compose.koinInject
 
 @Composable
-fun AccountsRoute(viewModel: AccountsViewModel = koinInject()) {
+fun AccountsRoute(
+    viewModel: AccountsViewModel = koinInject(),
+    onNavigate: (MainRoute) -> Unit = {},
+) {
     val state by viewModel.uiState.collectAsState()
     AccountsScreen(
         state = state,
         onAction = viewModel::onAction,
+        onNavigate = onNavigate,
     )
 }
 
@@ -55,8 +61,11 @@ fun AccountsRoute(viewModel: AccountsViewModel = koinInject()) {
 fun AccountsScreen(
     state: AccountsUiState,
     onAction: (AccountsAction) -> Unit,
+    onNavigate: (MainRoute) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Accounts)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -70,14 +79,10 @@ fun AccountsScreen(
         },
         bottomBar = {
             TioBottomNavigation(
-                items =
-                    listOf(
-                        TioNavigationItem("Trans.", TioIconToken.Transaction, false),
-                        TioNavigationItem("Stats", TioIconToken.Analytics, false),
-                        TioNavigationItem("Accounts", TioIconToken.Account, true),
-                        TioNavigationItem("More", TioIconToken.Settings, false),
-                    ),
-                onItemSelected = {},
+                items = bottomNavigation.items,
+                onItemSelected = { selectedItem ->
+                    bottomNavigation.navigate(selectedItem, onNavigate)
+                },
             )
         },
     ) { padding ->

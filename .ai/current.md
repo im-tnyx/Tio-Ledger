@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
+Status: Ready for Review
+Active Task: `.ai/tasks/shared/local-20260805-primary-bottom-navigation-wiring.md`
+Branch: `fix/primary-bottom-navigation-wiring`
+Platform Scope: `shared-ui-navigation`
 Last Updated: `2026-08-05`
-Next Action: `Start issue #34 bottom-navigation wiring from updated main.`
+Next Action: `Review and merge PR #36 after final exact-head CI.`
 
 ## Usage
 

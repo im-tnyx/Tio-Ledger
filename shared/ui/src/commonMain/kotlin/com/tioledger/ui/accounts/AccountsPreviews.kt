@@ -10,7 +10,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 private fun AccountsEmptyLightPreview() {
     TioLedgerTheme(darkTheme = false) {
-        AccountsScreen(state = AccountsPreviewData.empty, onAction = {})
+        AccountsScreen(state = AccountsPreviewData.empty, onAction = {}, onNavigate = {})
     }
 }
 
@@ -18,7 +18,7 @@ private fun AccountsEmptyLightPreview() {
 @Composable
 private fun AccountsOneAccountLightPreview() {
     TioLedgerTheme(darkTheme = false) {
-        AccountsScreen(state = AccountsPreviewData.oneAccount, onAction = {})
+        AccountsScreen(state = AccountsPreviewData.oneAccount, onAction = {}, onNavigate = {})
     }
 }
 
@@ -26,7 +26,7 @@ private fun AccountsOneAccountLightPreview() {
 @Composable
 private fun AccountsMultipleDarkPreview() {
     TioLedgerTheme(darkTheme = true) {
-        AccountsScreen(state = AccountsPreviewData.multipleAccounts, onAction = {})
+        AccountsScreen(state = AccountsPreviewData.multipleAccounts, onAction = {}, onNavigate = {})
     }
 }
 
@@ -34,6 +34,6 @@ private fun AccountsMultipleDarkPreview() {
 @Composable
 private fun AccountsLargeBalancePreview() {
     TioLedgerTheme(darkTheme = false) {
-        AccountsScreen(state = AccountsPreviewData.largeBalance, onAction = {})
+        AccountsScreen(state = AccountsPreviewData.largeBalance, onAction = {}, onNavigate = {})
     }
 }

@@ -15,14 +15,13 @@ import com.tioledger.ui.categories.CategoriesRoute
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
-import com.tioledger.ui.components.TioNavigationItem
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.loans.LoanDetailsRoute
 import com.tioledger.ui.loans.LoansRoute
-import com.tioledger.ui.navigation.MainGraph
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
+import com.tioledger.ui.navigation.bottomNavigationModel
 import com.tioledger.ui.reports.ReportsRoute
 import com.tioledger.ui.sms.SmsTransactionReviewRoute
 import com.tioledger.ui.transactions.TransactionEntryHost
@@ -37,7 +36,12 @@ fun RootNavigationHost(
             RootRoute.Splash -> Splash()
             is RootRoute.Main -> {
                 when (val destination = route.destination) {
-                    MainRoute.Accounts -> AccountsRoute()
+                    MainRoute.Accounts ->
+                        AccountsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
                     MainRoute.Budgets ->
                         BudgetsRoute(
                             onNavigate = { target ->
@@ -93,7 +97,13 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(MainRoute.Transactions))
                             },
                         )
-                    else -> MainPlaceholderDestination(destination)
+                    else ->
+                        MainPlaceholderDestination(
+                            destination = destination,
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
                 }
             }
         }
@@ -103,13 +113,20 @@ fun RootNavigationHost(
 }
 
 @Composable
-private fun MainPlaceholderDestination(destination: MainRoute) {
+private fun MainPlaceholderDestination(
+    destination: MainRoute,
+    onNavigate: (MainRoute) -> Unit,
+) {
+    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(destination)
+
     Scaffold(
         topBar = { TioAppBar(title = destination.title) },
         bottomBar = {
             TioBottomNavigation(
-                items = TioNavigationGraphs.main.bottomNavigationItems(destination),
-                onItemSelected = {},
+                items = bottomNavigation.items,
+                onItemSelected = { selectedItem ->
+                    bottomNavigation.navigate(selectedItem, onNavigate)
+                },
             )
         },
     ) { padding ->
@@ -128,12 +145,3 @@ private fun MainPlaceholderDestination(destination: MainRoute) {
         }
     }
 }
-
-private fun MainGraph.bottomNavigationItems(currentRoute: MainRoute): List<TioNavigationItem> =
-    bottomNavigationRoutes.map { route ->
-        TioNavigationItem(
-            label = route.title,
-            icon = route.icon,
-            selected = route == currentRoute,
-        )
-    }
