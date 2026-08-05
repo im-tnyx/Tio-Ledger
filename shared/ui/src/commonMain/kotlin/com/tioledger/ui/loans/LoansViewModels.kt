@@ -6,9 +6,9 @@ import com.tioledger.application.usecase.account.AccountsBalanceOverview
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.loan.CreateLoanCommand
 import com.tioledger.application.usecase.loan.CreateLoanUseCase
-import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
+import com.tioledger.application.usecase.loan.GetLoanDetailsAnalyticsUseCase
 import com.tioledger.application.usecase.loan.ListLoansUseCase
-import com.tioledger.application.usecase.loan.LoanDetailsView
+import com.tioledger.application.usecase.loan.LoanDetailsAnalyticsView
 import com.tioledger.application.usecase.loan.LoanOverview
 import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
@@ -305,7 +305,7 @@ class LoansViewModel(
 }
 
 class LoanDetailsViewModel(
-    private val getLoanDetailsUseCase: GetLoanDetailsUseCase,
+    private val getLoanDetailsAnalyticsUseCase: GetLoanDetailsAnalyticsUseCase,
     private val listAccountSummariesUseCase: ListAccountSummariesUseCase,
 ) {
     private val _uiState = MutableStateFlow(LoanDetailsUiState())
@@ -330,7 +330,7 @@ class LoanDetailsViewModel(
                     return
                 }
             }
-        when (val result = getLoanDetailsUseCase(loanId)) {
+        when (val result = getLoanDetailsAnalyticsUseCase(loanId)) {
             is ApplicationResult.Success -> {
                 _uiState.update {
                     it.copy(
@@ -476,6 +476,13 @@ data class LoanDetailsUiModel(
     val scheduledEmiLabel: String,
     val totalInterestLabel: String,
     val totalPayableLabel: String,
+    val principalProgressLabel: String,
+    val principalPaidLabel: String,
+    val principalRemainingLabel: String,
+    val interestPaidLabel: String,
+    val interestRemainingLabel: String,
+    val installmentsCompletedLabel: String,
+    val projectedPayoffDateLabel: String,
     val principalLabel: String,
     val annualRateLabel: String,
     val tenureLabel: String,
@@ -598,26 +605,34 @@ private fun LoanOverview.toRowUiModel(): LoanRowUiModel =
         nextDueDateLabel = nextDueDate?.toUtcDateLabel() ?: "No remaining due date",
     )
 
-private fun LoanDetailsView.toDetailsUiModel(accounts: List<Account>): LoanDetailsUiModel {
+private fun LoanDetailsAnalyticsView.toDetailsUiModel(accounts: List<Account>): LoanDetailsUiModel {
     val accountNames = accounts.associate { it.id to it.name }
-    val loan = overview.loan
+    val loan = details.overview.loan
+    val totalInstallments = payoff.paidInstallments + payoff.remainingInstallments
     return LoanDetailsUiModel(
         id = loan.id,
         name = loan.name,
         statusLabel = loan.status.name.toDisplayLabel(),
-        outstandingLabel = overview.outstandingPrincipal.toDisplayLabel(),
-        scheduledEmiLabel = overview.scheduledEmi.toDisplayLabel(),
-        totalInterestLabel = overview.totalInterest.toDisplayLabel(),
-        totalPayableLabel = overview.totalPayable.toDisplayLabel(),
+        outstandingLabel = details.overview.outstandingPrincipal.toDisplayLabel(),
+        scheduledEmiLabel = details.overview.scheduledEmi.toDisplayLabel(),
+        totalInterestLabel = details.overview.totalInterest.toDisplayLabel(),
+        totalPayableLabel = details.overview.totalPayable.toDisplayLabel(),
+        principalProgressLabel = "${payoff.principalProgressBasisPoints.toPercentLabel()} repaid",
+        principalPaidLabel = payoff.principalPaid.toDisplayLabel(),
+        principalRemainingLabel = payoff.principalRemaining.toDisplayLabel(),
+        interestPaidLabel = payoff.interestPaid.toDisplayLabel(),
+        interestRemainingLabel = payoff.interestRemaining.toDisplayLabel(),
+        installmentsCompletedLabel = "${payoff.paidInstallments} of $totalInstallments",
+        projectedPayoffDateLabel = payoff.projectedPayoffDate?.toUtcDateLabel() ?: "Not available",
         principalLabel = loan.principal.toDisplayLabel(),
         annualRateLabel = loan.annualInterestRateBasisPoints.toRateLabel(),
         tenureLabel = "${loan.tenureMonths} months",
         startDateLabel = loan.startDate.toUtcDateLabel(),
         loanAccountLabel = accountNames[loan.accountId] ?: "Unavailable account",
         disbursedAccountLabel = accountNames[loan.disbursedAccountId] ?: "Unavailable account",
-        remainingInstallmentsLabel = overview.remainingInstallments.toString(),
-        nextDueDateLabel = overview.nextDueDate?.toUtcDateLabel() ?: "None",
-        schedule = schedule.map(LoanInstallment::toUiModel),
+        remainingInstallmentsLabel = details.overview.remainingInstallments.toString(),
+        nextDueDateLabel = details.overview.nextDueDate?.toUtcDateLabel() ?: "None",
+        schedule = details.schedule.map(LoanInstallment::toUiModel),
     )
 }
 
@@ -644,6 +659,12 @@ private fun Int.toRateLabel(): String {
     val whole = this / 100
     val fraction = this % 100
     return if (fraction == 0) "$whole%" else "$whole.${fraction.toString().padStart(2, '0')}%"
+}
+
+private fun Int.toPercentLabel(): String {
+    val whole = this / 100
+    val fraction = this % 100
+    return "$whole.${fraction.toString().padStart(2, '0')}%"
 }
 
 private fun Long.toUtcDateLabel(): String = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date.toString()

@@ -35,7 +35,7 @@ Run these from the repository root. Use `./gradlew` on bash/macOS/Linux and `./g
   ```
 - [ ] Run critical tests:
   ```powershell
-  .\gradlew.bat :shared:finance-engine:test :shared:analytics:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
+  .\gradlew.bat :shared:finance-engine:test :shared:analytics:test :shared:application:test :shared:data:test :shared:bootstrap:test :shared:ui:test --no-daemon --console=plain --stacktrace
   ```
 - [ ] Verify SQLDelight migrations explicitly:
   ```powershell

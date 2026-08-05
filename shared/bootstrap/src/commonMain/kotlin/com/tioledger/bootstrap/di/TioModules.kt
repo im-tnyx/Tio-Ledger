@@ -1,5 +1,6 @@
 package com.tioledger.bootstrap.di
 
+import com.tioledger.analytics.LoanPayoffAnalyticsCalculator
 import com.tioledger.analytics.SpendingAnalyticsCalculator
 import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountUseCase
@@ -15,6 +16,7 @@ import com.tioledger.application.usecase.category.CreateCategoryUseCase
 import com.tioledger.application.usecase.category.ListCategoriesUseCase
 import com.tioledger.application.usecase.category.UpdateCategoryUseCase
 import com.tioledger.application.usecase.loan.CreateLoanUseCase
+import com.tioledger.application.usecase.loan.GetLoanDetailsAnalyticsUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
 import com.tioledger.application.usecase.loan.ListLoansUseCase
 import com.tioledger.application.usecase.sms.ConfirmSmsTransactionUseCase
@@ -100,6 +102,7 @@ fun applicationModule(): Module =
         factory { ListBudgetSummariesUseCase(get(), get(), get(), get(), get()) }
         factory { ListLoansUseCase(get()) }
         factory { GetLoanDetailsUseCase(get()) }
+        factory { GetLoanDetailsAnalyticsUseCase(get(), get()) }
         factory { CreateLoanUseCase(get(), get(), get(), get()) }
         factory { ListTransactionsUseCase(get()) }
         factory { RecordIncomeUseCase(get(), get(), get(), get()) }
@@ -128,6 +131,7 @@ fun budgetEngineModule(): Module =
 fun analyticsModule(): Module =
     module {
         single { SpendingAnalyticsCalculator() }
+        single { LoanPayoffAnalyticsCalculator() }
     }
 
 fun loanEngineModule(): Module =
@@ -165,6 +169,7 @@ fun diagnosticsModule(): Module =
                         getOrNull<CreateLoanUseCase>() != null &&
                         getOrNull<ListLoansUseCase>() != null &&
                         getOrNull<GetLoanDetailsUseCase>() != null &&
+                        getOrNull<GetLoanDetailsAnalyticsUseCase>() != null &&
                         getOrNull<ListTransactionsUseCase>() != null &&
                         getOrNull<RecordIncomeUseCase>() != null &&
                         getOrNull<PrepareSmsTransactionReviewUseCase>() != null &&

@@ -85,6 +85,7 @@ docs/
 1. Keep frozen layers stable: Database Schema, Ledger Engine, Application Layer, and Data Layer.
 2. Preserve completed Phase 6 finance workflows unless a verified defect requires a focused fix.
 3. Preserve the merged Spending Analytics / Reports and Cash-flow Analytics boundaries, including immutable reads, integer-only aggregation, deterministic timezone buckets, and multi-currency separation.
-4. Plan Phase 7 Loan payoff analytics as the next product slice, reusing existing Loan, Application, and analytics boundaries.
-5. Keep analytics calculations outside Compose and expose immutable UI-ready state through Application use cases and ViewModels.
-6. Treat the remaining Reports and Cash-flow visual/accessibility checklist items as explicit review follow-up, not as completed validation.
+4. Complete review and merge of Loan Payoff Analytics v1 through issue #29 and PR #30 while preserving its read-only derived metrics and Application-owned immutable DTO boundary.
+5. Plan Phase 7 EMI and budget reminders as the next product slice after PR #30 merges.
+6. Keep analytics calculations outside Compose and expose immutable UI-ready state through Application use cases and ViewModels.
+7. Treat the remaining Reports and Cash-flow visual/accessibility checklist items as explicit review follow-up, not as completed validation.

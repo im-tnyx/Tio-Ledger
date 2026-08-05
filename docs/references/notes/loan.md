@@ -1,18 +1,18 @@
-# Loan Creation And Details v1 Reference Note
+# Loan Creation, Details, And Payoff Analytics Reference Note
 
 ## Screen
 
-Loan Creation and Loan Details v1
+Loan Creation and Loan Details v1 with Loan Payoff Analytics v1
 
 ## Reference Readiness
 
 - Checked-in Loan screenshot reference: unavailable at milestone start.
-- Approved fallback product source: issue #12 scope and acceptance criteria.
-- Approved fallback visual source: the existing production Accounts, Budgets, Categories, app-bar, card, dialog, empty/error/loading, and typed-navigation patterns already checked into `shared:ui`.
-- Financial source of truth: persisted Application read models produced from the deterministic loan engine and SQLDelight schedule rows.
+- Approved fallback product sources: issue #12 for Loan Creation and Loan Details v1 and issue #29 for Loan Payoff Analytics v1.
+- Approved fallback visual source: the existing production Accounts, Budgets, Categories, Reports, app-bar, card, dialog, empty/error/loading, and typed-navigation patterns already checked into `shared:ui`.
+- Financial source of truth: persisted Application read models produced from deterministic loan terms and SQLDelight schedule rows.
 - Technical reference boundary: no proprietary Java/Kotlin source, XML, resources, assets, strings, colors, dimensions, animations, or implementation details are copied or adapted.
 
-The fallback package is sufficient because it fixes the workflow, information hierarchy, component vocabulary, navigation contract, error behavior, and financial boundaries without inventing a proprietary visual layout.
+The fallback package is sufficient because it fixes the workflow, information hierarchy, component vocabulary, navigation contract, error behavior, payoff metrics, and financial boundaries without inventing a proprietary visual layout.
 
 ## Workflow Summary
 
@@ -27,7 +27,21 @@ The fallback package is sufficient because it fixes the workflow, information hi
 9. Successful creation closes the dialog, refreshes the list, and exposes the persisted loan.
 10. Select a loan card to navigate to typed Loan Details.
 11. Loan Details shows contractual terms, EMI/outstanding totals, linked account labels, and the persisted amortization schedule.
-12. Navigate back to Loans without mutating the persisted schedule.
+12. Review read-only payoff analytics derived from the same persisted schedule.
+13. Navigate back to Loans without mutating loan terms, installment statuses, or financial history.
+
+## Payoff Analytics Rules
+
+- Only installments with status `PAID` contribute to paid principal, paid interest, paid amount, and completed-installment metrics.
+- `PENDING`, `OVERDUE`, `WAIVED`, and `ADJUSTED` installments remain in outstanding metrics in v1.
+- Principal progress is calculated in integer basis points from paid principal divided by original principal, rounded half-up and clamped to `0..10_000`.
+- Principal remaining equals original principal minus paid principal.
+- Interest remaining and scheduled amount remaining are derived from installments not marked `PAID`.
+- Next due date is the earliest due date among installments not marked `PAID`.
+- Projected payoff date is the latest due date among installments not marked `PAID`; when every installment is paid, it is the final persisted schedule date.
+- Empty schedules are valid and show zero paid metrics, full principal remaining, and no projected date.
+- All schedule money must use the loan principal currency.
+- Analytics are derived only. They do not update installment status, balances, terms, schedules, or ledger entries.
 
 ## Information Hierarchy
 
@@ -59,9 +73,13 @@ The fallback package is sufficient because it fixes the workflow, information hi
 
 1. Back navigation and loan name.
 2. Outstanding principal, EMI, total interest, and total payable summary.
-3. Principal, annual rate, tenure, start date, status, linked loan account, and disbursed account.
-4. Amortization schedule ordered by installment number.
-5. Each installment shows due date, payment, principal, interest, opening balance, closing balance, and status.
+3. Payoff progress derived from persisted installment statuses.
+4. Principal paid and remaining.
+5. Interest paid and remaining.
+6. Completed installment count and projected payoff date.
+7. Principal, annual rate, tenure, start date, status, linked loan account, and disbursed account.
+8. Amortization schedule ordered by installment number.
+9. Each installment shows due date, payment, principal, interest, opening balance, closing balance, and status.
 
 ## Tio UI Specification
 
@@ -69,23 +87,26 @@ The fallback package is sufficient because it fixes the workflow, information hi
 - Use a dialog for loan creation so the v1 workflow remains compact on Android and iOS.
 - Use separate account-selection dialogs so account lists do not overlap the creation dialog.
 - Use a dedicated details destination rather than expanding a card inline.
-- Use text labels with every status; color must never be the only status signal.
+- Use text labels with every status and payoff metric; color must never be the only signal.
 - Use compact stacked schedule cards at phone widths instead of a horizontally scrolling financial table.
-- Format money, rates, and dates in the ViewModel/presentation mapping layer, not in Composables.
+- Place the `Payoff progress` card after the existing top summary and before `Loan terms`.
+- Render payoff analytics as text-first rows; do not add a chart dependency or gesture model in v1.
+- Format money, rates, percentages, and dates in the ViewModel/presentation mapping layer, not in Composables.
 - Parse editable principal and percentage text in the ViewModel without floating-point money arithmetic.
 - Convert percentage input to integer basis points with at most two decimal places.
-- Do not calculate EMI, amortization, totals, or outstanding principal inside UI or ViewModels; consume Application read models only.
-- Do not expose payment, prepayment, refinance, close, or payoff actions in v1.
+- Do not calculate EMI, amortization, totals, outstanding principal, or payoff metrics inside UI or ViewModels; consume Application read models only.
+- Do not expose payment, prepayment, refinance, recast, close, or payoff-posting actions in v1.
 
 ## Navigation Definition
 
 - Keep `MainRoute.Loans` at path `loans` with `TioIconToken.Loan`.
-- Add typed `MainRoute.LoanDetails(loanId)` with path `loans/{loanId}` semantics and the Loan icon token.
-- Register both cases in `RootNavigationHost`.
+- Keep typed `MainRoute.LoanDetails(loanId)` with path `loans/{loanId}` semantics and the Loan icon token.
+- Keep both cases registered in `RootNavigationHost`.
 - Selecting a loan card emits the typed details destination.
 - Details back navigation returns to `MainRoute.Loans`.
 - Loans remains outside the five-item primary bottom navigation; bottom navigation still renders for the list and can exit to primary destinations.
 - The details screen omits bottom navigation to preserve a focused nested-destination hierarchy.
+- Loan Payoff Analytics introduces no new destination.
 
 ## Intentional Deviations
 
@@ -94,23 +115,27 @@ The fallback package is sufficient because it fixes the workflow, information hi
 - Interest entry accepts a percentage with up to two decimals, while persistence uses integer basis points.
 - The schedule uses stacked cards instead of a dense table for phone readability and accessibility.
 - Loans is not added to the primary bottom navigation because the current five destinations are already allocated; the typed route remains available for direct/overflow entry.
-- Payment, prepayment, payoff, contractual editing, and closure controls are absent because the posting and reconciliation policies are explicitly out of scope.
+- Payoff progress uses accessible text rows instead of a chart because no approved chart reference or interaction model exists.
+- Payment, prepayment, refinance, schedule recast, payoff posting, contractual editing, and closure controls remain absent because posting and reconciliation policies are not part of issue #29.
+- V1 follows persisted installment statuses and does not infer payment completion from dates, balances, or external account activity.
 
 ## Accessibility Considerations
 
 - Loan cards expose a combined semantic description covering name, status, outstanding principal, EMI, remaining installments, and next due date.
 - Add, back, account-selection, retry, cancel, and create controls have readable labels or content descriptions.
-- All loading, empty, validation, persistence, and repository failures are conveyed as text.
+- All loading, empty, validation, persistence, repository, and calculation failures are conveyed as text.
+- The payoff card exposes explicit progress, principal paid/remaining, interest paid/remaining, completed installments, and projected payoff labels in reading order.
+- Progress meaning remains understandable without color or a visual chart.
 - Schedule cards expose installment number, due date, payment, principal, interest, balances, and status in reading order.
 - Long account/loan names wrap or truncate without obscuring financial values.
 - Touch targets use Material components and existing Tio spacing.
-- Light/dark previews must preserve contrast and hierarchy.
+- Light/dark previews preserve contrast and hierarchy.
 
 ## Functional Acceptance Checklist
 
 - [ ] Loading state is visible.
 - [ ] Empty state offers an add-loan action.
-- [ ] Repository failure offers retry.
+- [ ] Repository or payoff-calculation failure offers retry.
 - [ ] Populated list shows persisted loan summaries in deterministic order.
 - [ ] Add dialog validates name, principal, percentage rate, tenure, date, and account selections.
 - [ ] Account selectors expose only eligible active accounts for each role.
@@ -119,11 +144,18 @@ The fallback package is sufficient because it fixes the workflow, information hi
 - [ ] Successful creation refreshes the list and shows feedback.
 - [ ] Selecting a loan opens typed details navigation.
 - [ ] Details show contractual terms, summaries, account labels, and persisted schedule rows.
-- [ ] Details loading/repository failure and retry are visible.
-- [ ] UI/ViewModels do not access repositories, SQLDelight, or the loan engine.
-- [ ] No UI-side EMI, amortization, interest, or outstanding calculation exists.
-- [ ] Navigation, ViewModel, and presentation behavior are test-covered.
-- [ ] Previews cover list, empty, creation, and details states.
+- [ ] Payoff analytics use only persisted loan terms and installment rows.
+- [ ] Only `PAID` installments contribute to paid metrics.
+- [ ] Other installment statuses remain in outstanding metrics.
+- [ ] Principal progress uses integer basis points and deterministic rounding.
+- [ ] Principal paid/remaining and interest paid/remaining are visible.
+- [ ] Completed installments and projected payoff date are visible.
+- [ ] Empty schedules remain valid and readable.
+- [ ] UI/ViewModels do not access repositories, SQLDelight, or analytics calculators.
+- [ ] No UI-side EMI, amortization, interest, outstanding, or payoff calculation exists.
+- [ ] No financial history or schedule mutation is available from the payoff card.
+- [ ] Navigation, Application, calculator, ViewModel, and Bootstrap behavior are test-covered.
+- [ ] Light and dark previews cover populated payoff state.
 - [ ] Pixel review confirms phone-width readability in light and dark themes.
 
 ## Pixel Review Plan
@@ -131,10 +163,12 @@ The fallback package is sufficient because it fixes the workflow, information hi
 - Verify compact list cards at common phone widths.
 - Verify long loan/account names do not collide with monetary values.
 - Verify creation dialog remains usable with validation messages and smaller heights.
+- Verify the payoff card remains readable with large text and long currency values.
 - Verify the schedule remains readable for 1-, 12-, and long-tenure loans.
 - Verify zero-interest and non-zero-interest values use the same hierarchy.
 - Verify paid/pending labels remain distinguishable without relying on color.
+- Verify the projected payoff date and completed-installment row do not overlap at phone widths.
 
 ## Approval Record
 
-Issue #12 milestone execution and the user's `go` approval authorize this checked-in fallback package for Loan Creation and Loan Details v1. A future approved screenshot may refine visual styling, but it must not change the validated financial, persistence, Application, or navigation contracts without an explicit follow-up decision.
+Issue #12 milestone execution and the user's earlier `go` approval authorize the Loan Creation and Details fallback package. Issue #29 and the user's explicit `Next go` authorization approve the narrow read-only Loan Payoff Analytics extension documented here. A future approved screenshot may refine visual styling or introduce a separately approved chart, but it must not change the validated financial, persistence, Application, status-classification, or navigation contracts without an explicit follow-up decision.

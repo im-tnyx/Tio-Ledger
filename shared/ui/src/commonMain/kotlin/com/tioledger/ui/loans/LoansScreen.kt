@@ -574,6 +574,9 @@ private fun LoanDetailsContent(
             }
         }
         item {
+            LoanPayoffProgressCard(details)
+        }
+        item {
             TioCard {
                 Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
                     Text("Loan terms", style = MaterialTheme.typography.titleMedium)
@@ -603,6 +606,40 @@ private fun LoanDetailsContent(
             items(details.schedule, key = LoanInstallmentUiModel::id) { installment ->
                 LoanInstallmentCard(installment)
             }
+        }
+    }
+}
+
+@Composable
+private fun LoanPayoffProgressCard(details: LoanDetailsUiModel) {
+    val semanticDescription =
+        "Payoff progress, ${details.principalProgressLabel}, " +
+            "principal paid ${details.principalPaidLabel}, " +
+            "principal remaining ${details.principalRemainingLabel}, " +
+            "interest paid ${details.interestPaidLabel}, " +
+            "interest remaining ${details.interestRemainingLabel}, " +
+            "installments completed ${details.installmentsCompletedLabel}, " +
+            "projected payoff ${details.projectedPayoffDateLabel}"
+    TioCard(
+        modifier = Modifier.semantics { contentDescription = semanticDescription },
+        elevated = true,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
+            Text(
+                text = "Payoff progress",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = details.principalProgressLabel,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            LoanValueRow("Principal paid", details.principalPaidLabel)
+            LoanValueRow("Principal remaining", details.principalRemainingLabel)
+            LoanValueRow("Interest paid", details.interestPaidLabel)
+            LoanValueRow("Interest remaining", details.interestRemainingLabel)
+            LoanValueRow("Installments completed", details.installmentsCompletedLabel)
+            LoanValueRow("Projected payoff", details.projectedPayoffDateLabel)
         }
     }
 }

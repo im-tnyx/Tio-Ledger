@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
+Status: Ready for Review
+Active Task: `.ai/tasks/shared/local-20260805-loan-payoff-analytics-v1.md`
+Branch: `feat/loan-payoff-analytics-v1`
+Platform Scope: `shared-loan-payoff-analytics`
 Last Updated: `2026-08-05`
-Next Action: `Start the next objective only when explicitly requested.`
+Next Action: `Complete final PR #30 review and merge only after explicit approval; archive the task after main synchronization.`
 
 ## Usage
 

@@ -5,10 +5,11 @@
 - Ledger Engine: Frozen v1 as of 2026-06-30.
 - Approved architectural blockers for commonMain compatibility, type-safe posting strategies, and strategy registry separation are resolved.
 - Application Layer, repository contracts, SQLDelight repository implementations, application bootstrap, and shared UI foundation are implemented.
-- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, and Cash-flow Analytics v1 are implemented and CI-validated.
+- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, and Cash-flow Analytics v1 are implemented and CI-validated on `main`.
+- Loan Payoff Analytics v1 is implemented and CI-validated through issue #29 and PR #30, pending final review and merge.
 - Phase 6 Finance Features is complete.
 - Phase 7 Analytics And Notifications is in progress.
-- Current planned milestone: Phase 7 Loan payoff analytics.
+- Current planned milestone after PR #30 merges: Phase 7 EMI and budget reminders.
 
 ## Phase 0: Documentation And Decisions
 
@@ -160,10 +161,12 @@ Deliverables:
 
 Spending Analytics / Reports Screen v1 is implemented and locally validated
 through PR #20. Cash-flow Analytics v1 is implemented and CI-validated through
-issue #26 and PR #27. The shared Reports reference note retains separate visual
-and accessibility review follow-up for both milestones.
+issue #26 and PR #27. Loan Payoff Analytics v1 is implemented and CI-validated
+through issue #29 and PR #30, pending final review and merge. The shared Reports
+reference note retains separate visual and accessibility review follow-up for the
+Reports and Cash-flow milestones.
 
-Current planned milestone: Loan payoff analytics.
+Current planned milestone after PR #30 merges: EMI and budget reminders.
 
 Objectives:
 
@@ -180,7 +183,10 @@ Current sequence:
    Application mapping, accessible Reports rows, direct analytics CI coverage,
    and focused tests complete through PR #27; visual and accessibility review
    follow-up remains documented.
-3. Loan payoff analytics.
+3. Loan Payoff Analytics v1 — deterministic read-only payoff metrics, an
+   Application-owned DTO boundary, Bootstrap/Koin registration, an accessible
+   Loan Details progress card, and focused Analytics, Application, Bootstrap,
+   and UI tests complete through PR #30; final review and merge remain.
 4. EMI and budget reminders.
 
 Deliverables:

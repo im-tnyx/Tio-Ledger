@@ -1,7 +1,9 @@
 package com.tioledger.ui.loans
 
+import com.tioledger.analytics.LoanPayoffAnalyticsCalculator
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.loan.CreateLoanUseCase
+import com.tioledger.application.usecase.loan.GetLoanDetailsAnalyticsUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
 import com.tioledger.application.usecase.loan.ListLoansUseCase
 import com.tioledger.core.model.CurrencyCode
@@ -118,13 +120,9 @@ class LoansViewModelsTest {
     }
 
     @Test
-    fun detailsLoadAccountLabelsAndPersistedInstallments() {
+    fun detailsLoadPayoffAnalyticsAccountLabelsAndPersistedInstallments() {
         val repository = FakeLoanRepository(existingDetails())
-        val viewModel =
-            LoanDetailsViewModel(
-                getLoanDetailsUseCase = GetLoanDetailsUseCase(repository),
-                listAccountSummariesUseCase = accountSummariesUseCase(),
-            )
+        val viewModel = createLoanDetailsViewModel(repository)
 
         viewModel.load("existing-loan")
         val state = viewModel.uiState.value
@@ -133,21 +131,25 @@ class LoansViewModelsTest {
         assertFalse(state.isLoading)
         assertNull(state.errorMessage)
         assertEquals("Existing Loan", details.name)
-        assertEquals("INR 200.00", details.outstandingLabel)
+        assertEquals("INR 100.00", details.outstandingLabel)
+        assertEquals("50.00% repaid", details.principalProgressLabel)
+        assertEquals("INR 100.00", details.principalPaidLabel)
+        assertEquals("INR 100.00", details.principalRemainingLabel)
+        assertEquals("INR 0.00", details.interestPaidLabel)
+        assertEquals("INR 0.00", details.interestRemainingLabel)
+        assertEquals("1 of 2", details.installmentsCompletedLabel)
+        assertEquals("2026-09-20", details.projectedPayoffDateLabel)
         assertEquals("Loan INR", details.loanAccountLabel)
         assertEquals("Bank INR", details.disbursedAccountLabel)
         assertEquals(2, details.schedule.size)
+        assertEquals("Paid", details.schedule.first().statusLabel)
         assertEquals("2026-08-20", details.schedule.first().dueDateLabel)
     }
 
     @Test
     fun detailsFailureIsVisibleAndRetryable() {
         val repository = FakeLoanRepository()
-        val viewModel =
-            LoanDetailsViewModel(
-                getLoanDetailsUseCase = GetLoanDetailsUseCase(repository),
-                listAccountSummariesUseCase = accountSummariesUseCase(),
-            )
+        val viewModel = createLoanDetailsViewModel(repository)
 
         viewModel.load("missing")
 
@@ -174,6 +176,16 @@ class LoansViewModelsTest {
             idGenerator = ids,
             nowProvider = { 100L },
             currentDateProvider = { LocalDate(2026, 7, 20) },
+        )
+
+    private fun createLoanDetailsViewModel(repository: LoanRepository): LoanDetailsViewModel =
+        LoanDetailsViewModel(
+            getLoanDetailsAnalyticsUseCase =
+                GetLoanDetailsAnalyticsUseCase(
+                    getLoanDetailsUseCase = GetLoanDetailsUseCase(repository),
+                    payoffCalculator = LoanPayoffAnalyticsCalculator(),
+                ),
+            listAccountSummariesUseCase = accountSummariesUseCase(),
         )
 
     private fun accountSummariesUseCase(): ListAccountSummariesUseCase =
@@ -225,6 +237,7 @@ class LoansViewModelsTest {
                     opening = 20_000L,
                     closing = 10_000L,
                     currency = currency,
+                    status = LoanInstallmentStatus.PAID,
                 ),
                 installment(
                     id = "two",
@@ -233,6 +246,7 @@ class LoansViewModelsTest {
                     opening = 10_000L,
                     closing = 0L,
                     currency = currency,
+                    status = LoanInstallmentStatus.PENDING,
                 ),
             )
         return LoanDetails(loan, schedule)
@@ -245,6 +259,7 @@ class LoansViewModelsTest {
         opening: Long,
         closing: Long,
         currency: CurrencyCode,
+        status: LoanInstallmentStatus,
     ): LoanInstallment =
         LoanInstallment(
             id = id,
@@ -256,7 +271,7 @@ class LoansViewModelsTest {
             principalComponent = Money(10_000L, currency),
             interestComponent = Money.zero(currency),
             closingBalance = Money(closing, currency),
-            status = LoanInstallmentStatus.PENDING,
+            status = status,
             createdAt = 1L,
             updatedAt = 1L,
         )
