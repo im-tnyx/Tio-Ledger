@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
+Status: In Progress
+Active Task: `.ai/tasks/shared/local-20260805-home-dashboard-clean-header.md`
+Branch: `fix/home-dashboard-clean-header`
+Platform Scope: `shared/ui`
 Last Updated: `2026-08-05`
-Next Action: `Start the next objective only when explicitly requested.`
+Next Action: `Remove the Dashboard branded top app bar, update its reference note, and validate the focused change.`
 
 ## Usage
 
