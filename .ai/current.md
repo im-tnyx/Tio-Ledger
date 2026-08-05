@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Ready for Review
-Active Task: `.ai/tasks/shared/local-20260805-align-post-merge-status.md`
-Branch: `docs/align-post-merge-status`
-Platform Scope: `documentation-status`
+Status: Idle
+Active Task: `none`
+Branch: `main`
+Platform Scope: `none`
 Last Updated: `2026-08-05`
-Next Action: `Review and merge PR #39 after final exact-head CI.`
+Next Action: `Inspect canonical requirements for Phase 7 EMI and budget reminders before implementation.`
 
 ## Usage
 
