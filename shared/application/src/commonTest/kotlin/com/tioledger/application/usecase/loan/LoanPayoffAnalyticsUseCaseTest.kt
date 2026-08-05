@@ -170,7 +170,7 @@ private class CountingLoanRepository(
 
     override fun findDetails(loanId: String): LedgerResult<LoanDetails> {
         findDetailsCalls += 1
-        return details?.takeIf { it.loan.id == loanId }?.let(LedgerResult::Success)
+        return details?.takeIf { it.loan.id == loanId }?.let { LedgerResult.Success(it) }
             ?: LedgerResult.Failure(LedgerError.LoanNotFound(loanId))
     }
 
