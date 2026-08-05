@@ -174,7 +174,7 @@ private class CountingLoanRepository(
             ?: LedgerResult.Failure(LedgerError.LoanNotFound(loanId))
     }
 
-    override fun create(details: LoanDetails): LedgerResult<LoanDetails> = LedgerResult.Failure(
-        LedgerError.Unknown("not supported"),
-    )
+    override fun create(details: LoanDetails): LedgerResult<LoanDetails> {
+        return LedgerResult.Failure(LedgerError.Unknown("not supported"))
+    }
 }
