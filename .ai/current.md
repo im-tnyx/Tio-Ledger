@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
+Status: In Progress
+Active Task: `.ai/tasks/shared/local-20260805-loan-payoff-analytics-v1.md`
+Branch: `feat/loan-payoff-analytics-v1`
+Platform Scope: `shared-loan-payoff-analytics`
 Last Updated: `2026-08-05`
-Next Action: `Start the next objective only when explicitly requested.`
+Next Action: `Implement the pure payoff analytics calculator and focused tests.`
 
 ## Usage
 
