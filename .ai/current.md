@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Ready for Review
-Active Task: `.ai/tasks/shared/local-20260805-home-dashboard-clean-header.md`
-Branch: `fix/home-dashboard-clean-header`
-Platform Scope: `shared/ui`
+Status: Idle
+Active Task: `none`
+Branch: `main`
+Platform Scope: `none`
 Last Updated: `2026-08-05`
-Next Action: `Verify exact-head CI for PR #32, then mark it ready and merge if the final review remains clean.`
+Next Action: `Start the next objective only when explicitly requested.`
 
 ## Usage
 
