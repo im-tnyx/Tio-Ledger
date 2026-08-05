@@ -10,6 +10,7 @@ Dashboard
 
 ## Supporting References
 
+- User-approved clean-header decision recorded in issue #31 on 2026-08-05.
 - Approved Tio Ledger mockups, if available.
 - `docs/references/realbyteapps/` only if workflow, navigation, hierarchy, terminology, layout grouping, dialog flow, screen relationship, feature discovery, or interaction-pattern analysis is required.
 - Official Money Manager website only if higher-priority references are insufficient.
@@ -25,15 +26,17 @@ TBD before implementation. Document top-level summary order, sections, actions, 
 
 ## Intentional Deviations
 
-TBD before implementation. Any deviation from the primary reference must be listed here before production code begins.
+- The Home/Dashboard template omits a branded app-name top bar. Dashboard content begins directly on the screen surface while bottom navigation and the floating action button remain unchanged.
 
 ## Reason For Deviations
 
-TBD before implementation. Each deviation must have a product, accessibility, platform, design-system, or architecture reason.
+- The user explicitly approved a cleaner Home screen on 2026-08-05. Repeating the product name at the top adds visual weight and consumes vertical space without improving navigation or task clarity.
 
 ## Accessibility Considerations
 
-TBD before implementation. Include screen reader labels, chart/table alternatives, touch targets, dynamic type, light/dark theme behavior, and responsive layout expectations.
+- Removing the decorative branded top bar must not remove any navigation action or status information.
+- The first visible content section remains `Overview`, and existing bottom-navigation semantics remain unchanged.
+- Complete screen reader labels, touch targets, dynamic type, light/dark theme behavior, and responsive-layout review before Dashboard is promoted from template to production screen.
 
 ## JADX Boundary
 
