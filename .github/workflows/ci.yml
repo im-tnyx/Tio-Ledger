@@ -37,7 +37,7 @@ jobs:
         run: ./gradlew :shared:core:compileKotlinMetadata :shared:domain:compileKotlinMetadata :shared:finance-engine:compileKotlinMetadata :shared:analytics:compileKotlinMetadata :shared:application:compileKotlinMetadata :shared:data:compileKotlinMetadata :shared:database:compileKotlinMetadata :shared:bootstrap:compileKotlinMetadata :shared:ui:compileKotlinMetadata --no-daemon --console=plain --stacktrace
 
       - name: Run critical tests
-        run: ./gradlew :shared:finance-engine:test :shared:analytics:test :shared:application:test :shared:data:test :shared:ui:test --no-daemon --console=plain --stacktrace
+        run: ./gradlew :shared:finance-engine:test :shared:analytics:test :shared:application:test :shared:data:test :shared:bootstrap:test :shared:ui:test --no-daemon --console=plain --stacktrace
 
       - name: Ktlint
         run: ./gradlew ktlintCheck --no-daemon --console=plain --stacktrace
