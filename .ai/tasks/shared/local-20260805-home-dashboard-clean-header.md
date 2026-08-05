@@ -31,19 +31,24 @@ Last Updated: `2026-08-05`
 - [x] Inspect repository state and current open PRs.
 - [x] Locate the hard-coded Dashboard app bar.
 - [x] Create issue #31 and isolated branch.
-- [ ] Remove the Dashboard top app bar.
-- [ ] Update the Dashboard reference note.
+- [x] Remove the Dashboard top app bar.
+- [x] Update the Dashboard reference note.
 - [ ] Run required validation and review the final diff.
 - [ ] Open a focused pull request.
 
 ## Validation
 
-- Not run yet.
+- Branch is 0 commits behind `main`.
+- Focused diff contains one Compose deletion plus AI task and Dashboard reference-note updates.
+- Automated CI not run yet.
 
 ## Changed Files
 
+- `.ai/current.md`
 - `.ai/tasks/shared/local-20260805-home-dashboard-clean-header.md`
+- `docs/references/notes/dashboard.md`
+- `shared/ui/src/commonMain/kotlin/com/tioledger/ui/templates/TioTemplates.kt`
 
 ## Next Action
 
-Update the Dashboard template and reference note, then run the repository validation gates.
+Open a focused draft pull request and verify exact-head CI.
