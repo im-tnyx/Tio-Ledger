@@ -1,13 +1,14 @@
 # Cash-flow Analytics v1
 
-Status: Ready for Review
+Status: Complete
 Objective: Extend Reports v1 with deterministic, per-currency cash-flow buckets derived from immutable transaction history.
 Branch: `feat/cash-flow-analytics-v1`
 Scope: `shared/analytics`, `shared/application`, `shared/ui`, focused CI/tests, and Reports milestone documentation
 Created: `2026-08-04`
-Last Updated: `2026-08-04`
+Last Updated: `2026-08-05`
 Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/26`
 Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/27`
+Merge Commit: `6bc7834bcf38b2345eac2a3c6456bcc6b0ffb6a3`
 
 ## Required Context
 
@@ -36,11 +37,11 @@ Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/27`
 
 ## Decisions
 
-- Extend existing Reports analytics instead of introducing a second repository read path.
-- Use daily buckets for weekly/monthly periods and monthly buckets for yearly periods.
-- Include zero-value buckets in populated currency sections for continuous time-series presentation.
-- Render accessible text rows before considering graphical charts in a later approved slice.
-- Add direct `shared:analytics` compile/test coverage to CI and the push checklist because calculator tests were not previously part of the required job command.
+- Extended existing Reports analytics instead of introducing a second repository read path.
+- Used daily buckets for weekly/monthly periods and monthly buckets for yearly periods.
+- Included zero-value buckets in populated currency sections for continuous time-series presentation.
+- Rendered accessible text rows before considering graphical charts in a later approved slice.
+- Added direct `shared:analytics` compile/test coverage to CI and the push checklist because calculator tests were not previously part of the required job command.
 
 ## Progress
 
@@ -53,14 +54,16 @@ Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/27`
 - [x] Extend Reports UI state, ViewModel mapping, screen, previews, and tests.
 - [x] Update Reports reference note and milestone documentation.
 - [x] Add direct analytics validation to CI and `.github/PUSH_TEMPLATE.md`.
-- [x] Open draft PR #27.
+- [x] Open PR #27 and mark it ready after exact-head validation.
 - [x] Pass final status-inclusive head checks and complete final diff review.
 - [x] Confirm PR #27 has no unresolved review threads or comments.
-- [ ] Merge only after explicit user authorization.
+- [x] Merge PR #27 after explicit user authorization.
+- [x] Confirm issue #26 closed as completed.
+- [x] Archive this task and reset `.ai/current.md`.
 
 ## Validation
 
-GitHub Actions run `30914890489` on status-inclusive head `5e68c3c2653d39905dc2ee97268e2c6186eb953a`:
+GitHub Actions run `30915261006` on exact PR head `10b19f644354c686160f72cdfb2eeda0a8cca83e`:
 
 - `Targeted KMP validation`: PASS.
   - Shared metadata compilation including `shared:analytics`: PASS.
@@ -69,11 +72,11 @@ GitHub Actions run `30914890489` on status-inclusive head `5e68c3c2653d39905dc2e
   - `detekt`: PASS.
 - `SQLDelight migration verification`: PASS.
 
-Earlier validation:
+Additional validated heads:
 
-- Run `30914349499` on implementation/tooling head `9905a2d8fdbef97beaf685af8c475a02d2a93c41`: PASS for both required jobs with direct analytics coverage.
-- Run `30914096107` on the earlier full implementation head: PASS before direct analytics CI coverage was added.
-- Local `git diff --check`: not available because the connected execution environment has no local checkout.
+- Run `30914890489` on status-inclusive head `5e68c3c2653d39905dc2ee97268e2c6186eb953a`: PASS.
+- Run `30914349499` on implementation/tooling head `9905a2d8fdbef97beaf685af8c475a02d2a93c41`: PASS with direct analytics coverage.
+- Local `git diff --check` was unavailable because the connected execution environment had no local checkout; exact-head GitHub Actions formatting and static-analysis checks passed.
 
 ## Changed Files
 
@@ -95,6 +98,6 @@ Earlier validation:
 - `shared/ui/src/commonMain/kotlin/com/tioledger/ui/reports/ReportsViewModel.kt`
 - `shared/ui/src/commonTest/kotlin/com/tioledger/ui/reports/ReportsViewModelTest.kt`
 
-## Next Action
+## Closure
 
-Review PR #27 and merge only when explicitly requested. After merge, perform the documented post-merge synchronization and archive this task before starting Loan payoff analytics.
+PR #27 was merged on `2026-08-05` as commit `6bc7834bcf38b2345eac2a3c6456bcc6b0ffb6a3`. Issue #26 closed automatically as completed. The active continuity pointer was reset to idle before starting the next objective. The next documented milestone is Phase 7 Loan payoff analytics.
