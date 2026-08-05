@@ -74,8 +74,20 @@ private fun LoanEditorPreview() {
 
 @Preview
 @Composable
-private fun LoanDetailsPreview() {
+private fun LoanDetailsLightPreview() {
     TioLedgerTheme(darkTheme = false) {
+        LoanDetailsScreen(
+            state = LoanDetailsUiState(details = LoansPreviewData.details),
+            onRetry = {},
+            onNavigateBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun LoanDetailsDarkPreview() {
+    TioLedgerTheme(darkTheme = true) {
         LoanDetailsScreen(
             state = LoanDetailsUiState(details = LoansPreviewData.details),
             onRetry = {},
@@ -141,6 +153,13 @@ private object LoansPreviewData {
             scheduledEmiLabel = "INR 22093.00",
             totalInterestLabel = "INR 2802320.00",
             totalPayableLabel = "INR 5302320.00",
+            principalProgressLabel = "1.03% repaid",
+            principalPaidLabel = "INR 25700.00",
+            principalRemainingLabel = "INR 2474300.00",
+            interestPaidLabel = "INR 36430.00",
+            interestRemainingLabel = "INR 2765890.00",
+            installmentsCompletedLabel = "2 of 240",
+            projectedPayoffDateLabel = "2046-07-20",
             principalLabel = "INR 2500000.00",
             annualRateLabel = "8.75%",
             tenureLabel = "240 months",
@@ -160,7 +179,7 @@ private object LoansPreviewData {
                         interestLabel = "INR 18229.00",
                         openingBalanceLabel = "INR 2500000.00",
                         closingBalanceLabel = "INR 2496136.00",
-                        statusLabel = "Pending",
+                        statusLabel = "Paid",
                     ),
                     LoanInstallmentUiModel(
                         id = "installment-2",
@@ -171,7 +190,7 @@ private object LoansPreviewData {
                         interestLabel = "INR 18201.00",
                         openingBalanceLabel = "INR 2496136.00",
                         closingBalanceLabel = "INR 2492244.00",
-                        statusLabel = "Pending",
+                        statusLabel = "Paid",
                     ),
                 ),
         )
