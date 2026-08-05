@@ -1,12 +1,13 @@
 # Align Post-Merge Status Documentation
 
-Status: In Progress
+Status: Ready for Review
 Objective: Align canonical repository status documentation with merged Loan Payoff Analytics and primary bottom-navigation work.
 Branch: `docs/align-post-merge-status`
 Scope: `README.md`, `docs/README.md`, `docs/implementation-roadmap.md`, and AI continuity
 Created: `2026-08-05`
 Last Updated: `2026-08-05`
 Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/38`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/39`
 
 ## Required Context
 
@@ -33,16 +34,26 @@ Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/38`
 - [x] Verify `main` idle state.
 - [x] Identify stale canonical status statements.
 - [x] Create issue #38 and dedicated branch.
-- [ ] Update root README status and engineering sequence.
-- [ ] Update documentation home priorities.
-- [ ] Update implementation roadmap milestone status and sequence.
-- [ ] Run exact-head CI and final documentation diff review.
-- [ ] Merge PR and archive this task.
+- [x] Update root README status and engineering sequence.
+- [x] Update documentation home priorities.
+- [x] Update implementation roadmap milestone status and sequence.
+- [x] Run implementation-head CI and review the documentation diff.
+- [x] Open draft PR #39.
+- [ ] Run final task-state head CI and complete PR review.
+- [ ] Merge PR #39 and archive this task.
 
 ## Validation
 
-- Not run yet.
+Documentation head `d4b196a7b3e3385f149b3325b032c81fb8993006` passed GitHub Actions CI run #352:
+
+- Shared metadata compilation.
+- Critical tests.
+- SQLDelight migration verification.
+- `ktlintCheck`.
+- `detekt`.
+
+The diff remains documentation and AI continuity only. No reminder implementation decision was introduced.
 
 ## Next Action
 
-Update the three canonical status documents with merged evidence and no reminder implementation assumptions.
+Run exact-head CI for this Ready for Review state, finish the issue and PR acceptance audit, then merge PR #39 if all checks remain green.
