@@ -40,9 +40,7 @@ class GetLoanDetailsAnalyticsUseCase(
             is ApplicationResult.Failure -> result
         }
 
-    private fun calculate(
-        result: ApplicationResult.Success<LoanDetailsView>,
-    ): ApplicationResult<LoanDetailsAnalyticsView> =
+    private fun calculate(result: ApplicationResult.Success<LoanDetailsView>): ApplicationResult<LoanDetailsAnalyticsView> =
         try {
             val details = result.outcome.value
             val payoff =
