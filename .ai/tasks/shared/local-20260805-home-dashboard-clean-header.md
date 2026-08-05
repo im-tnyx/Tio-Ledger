@@ -1,6 +1,6 @@
 # Home Dashboard Clean Header
 
-Status: In Progress
+Status: Ready for Review
 Objective: Remove the branded app-name top bar from the Home/Dashboard template so the screen remains visually clean.
 Branch: `fix/home-dashboard-clean-header`
 Scope: `shared/ui`, Dashboard reference documentation
@@ -33,14 +33,20 @@ Last Updated: `2026-08-05`
 - [x] Create issue #31 and isolated branch.
 - [x] Remove the Dashboard top app bar.
 - [x] Update the Dashboard reference note.
-- [ ] Run required validation and review the final diff.
-- [ ] Open a focused pull request.
+- [x] Run required validation and review the final diff.
+- [x] Open focused draft PR #32.
 
 ## Validation
 
-- Branch is 0 commits behind `main`.
-- Focused diff contains one Compose deletion plus AI task and Dashboard reference-note updates.
-- Automated CI not run yet.
+CI run #324 passed on implementation head `b465a5414bf70e09dee7ff4ff08626eec91be6a6`:
+
+- Shared metadata compilation: passed.
+- Critical tests: passed.
+- SQLDelight migration verification: passed.
+- `ktlintCheck`: passed.
+- `detekt`: passed.
+- Branch was 0 commits behind `main` during final implementation diff review.
+- Production behavior diff is one Compose deletion: removal of the Dashboard `topBar`.
 
 ## Changed Files
 
@@ -51,4 +57,4 @@ Last Updated: `2026-08-05`
 
 ## Next Action
 
-Open a focused draft pull request and verify exact-head CI.
+Verify exact-head CI after this state-only documentation update, then mark PR #32 ready for review and merge.
