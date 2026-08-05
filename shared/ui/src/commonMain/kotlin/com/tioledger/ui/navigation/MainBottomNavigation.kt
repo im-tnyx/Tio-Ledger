@@ -2,12 +2,13 @@ package com.tioledger.ui.navigation
 
 import com.tioledger.ui.components.TioNavigationItem
 
-data class MainBottomNavigationModel internal constructor(
+class MainBottomNavigationModel internal constructor(
     val routes: List<MainRoute>,
     val items: List<TioNavigationItem>,
 ) {
-    fun routeFor(item: TioNavigationItem): MainRoute? =
-        items.indexOf(item).takeIf { index -> index >= 0 }?.let(routes::get)
+    fun routeFor(item: TioNavigationItem): MainRoute? {
+        return items.indexOf(item).takeIf { index -> index >= 0 }?.let(routes::get)
+    }
 
     fun navigate(
         item: TioNavigationItem,
