@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
+Status: Ready for Review
 Active Task: `.ai/tasks/shared/local-20260805-primary-bottom-navigation-wiring.md`
 Branch: `fix/primary-bottom-navigation-wiring`
 Platform Scope: `shared-ui-navigation`
 Last Updated: `2026-08-05`
-Next Action: `Implement the shared bottom-navigation model and wire Accounts and Dashboard callbacks.`
+Next Action: `Review and merge PR #36 after final exact-head CI.`
 
 ## Usage
 
