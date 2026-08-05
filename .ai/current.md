@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
+Status: Ready for Review
+Active Task: `.ai/tasks/shared/local-20260805-align-post-merge-status.md`
+Branch: `docs/align-post-merge-status`
+Platform Scope: `documentation-status`
 Last Updated: `2026-08-05`
-Next Action: `Inspect the updated repository and select the next documented objective.`
+Next Action: `Review and merge PR #39 after final exact-head CI.`
 
 ## Usage
 
