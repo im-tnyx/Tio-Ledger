@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
+Status: Ready for Review
 Active Task: `.ai/tasks/shared/local-20260805-home-dashboard-clean-header.md`
 Branch: `fix/home-dashboard-clean-header`
 Platform Scope: `shared/ui`
 Last Updated: `2026-08-05`
-Next Action: `Remove the Dashboard branded top app bar, update its reference note, and validate the focused change.`
+Next Action: `Verify exact-head CI for PR #32, then mark it ready and merge if the final review remains clean.`
 
 ## Usage
 
