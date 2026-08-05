@@ -98,11 +98,11 @@ class LoanPayoffAnalyticsCalculator {
         if (paid == 0L) return 0
         if (paid >= total) return BASIS_POINT_SCALE
 
-        val whole = paid / total
-        val remainder = paid % total
-        val scaledWhole = whole * BASIS_POINT_SCALE
-        val scaledFraction = scaledFractionHalfUp(remainder, total, BASIS_POINT_SCALE)
-        return (scaledWhole + scaledFraction).coerceIn(0, BASIS_POINT_SCALE)
+        return scaledFractionHalfUp(
+            numerator = paid,
+            denominator = total,
+            scale = BASIS_POINT_SCALE,
+        )
     }
 
     private fun scaledFractionHalfUp(
@@ -120,7 +120,8 @@ class LoanPayoffAnalyticsCalculator {
                 accumulator += numerator
             }
         }
-        if (accumulator >= (denominator + 1L) / 2L && result < scale) {
+        val halfThreshold = denominator / 2L + denominator % 2L
+        if (accumulator >= halfThreshold && result < scale) {
             result += 1
         }
         return result
