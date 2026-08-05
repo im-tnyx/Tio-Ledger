@@ -6,11 +6,28 @@ import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
 import com.tioledger.application.model.UseCaseOutcome
 import com.tioledger.core.model.LedgerError
+import com.tioledger.core.model.Money
 import com.tioledger.domain.model.LoanDetails
+
+data class LoanPayoffAnalyticsView(
+    val originalPrincipal: Money,
+    val principalPaid: Money,
+    val principalRemaining: Money,
+    val principalProgressBasisPoints: Int,
+    val interestPaid: Money,
+    val interestRemaining: Money,
+    val totalScheduledInterest: Money,
+    val amountPaid: Money,
+    val amountRemaining: Money,
+    val paidInstallments: Int,
+    val remainingInstallments: Int,
+    val nextDueDate: Long?,
+    val projectedPayoffDate: Long?,
+)
 
 data class LoanDetailsAnalyticsView(
     val details: LoanDetailsView,
-    val payoff: LoanPayoffAnalytics,
+    val payoff: LoanPayoffAnalyticsView,
 )
 
 class GetLoanDetailsAnalyticsUseCase(
@@ -37,7 +54,11 @@ class GetLoanDetailsAnalyticsUseCase(
                 )
             ApplicationResult.Success(
                 UseCaseOutcome(
-                    value = LoanDetailsAnalyticsView(details = details, payoff = payoff),
+                    value =
+                        LoanDetailsAnalyticsView(
+                            details = details,
+                            payoff = payoff.toApplicationView(),
+                        ),
                     events = result.outcome.events,
                 ),
             )
@@ -55,3 +76,20 @@ class GetLoanDetailsAnalyticsUseCase(
             )
         }
 }
+
+private fun LoanPayoffAnalytics.toApplicationView(): LoanPayoffAnalyticsView =
+    LoanPayoffAnalyticsView(
+        originalPrincipal = originalPrincipal,
+        principalPaid = principalPaid,
+        principalRemaining = principalRemaining,
+        principalProgressBasisPoints = principalProgressBasisPoints,
+        interestPaid = interestPaid,
+        interestRemaining = interestRemaining,
+        totalScheduledInterest = totalScheduledInterest,
+        amountPaid = amountPaid,
+        amountRemaining = amountRemaining,
+        paidInstallments = paidInstallments,
+        remainingInstallments = remainingInstallments,
+        nextDueDate = nextDueDate,
+        projectedPayoffDate = projectedPayoffDate,
+    )
