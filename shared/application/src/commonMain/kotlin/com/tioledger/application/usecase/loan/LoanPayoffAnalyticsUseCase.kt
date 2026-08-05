@@ -30,6 +30,9 @@ data class LoanDetailsAnalyticsView(
     val payoff: LoanPayoffAnalyticsView,
 )
 
+private typealias LoanDetailsSuccess = ApplicationResult.Success<LoanDetailsView>
+private typealias LoanDetailsAnalyticsResult = ApplicationResult<LoanDetailsAnalyticsView>
+
 class GetLoanDetailsAnalyticsUseCase(
     private val getLoanDetailsUseCase: GetLoanDetailsUseCase,
     private val payoffCalculator: LoanPayoffAnalyticsCalculator,
@@ -40,8 +43,8 @@ class GetLoanDetailsAnalyticsUseCase(
             is ApplicationResult.Failure -> result
         }
 
-    private fun calculate(result: ApplicationResult.Success<LoanDetailsView>) =
-        try {
+    private fun calculate(result: LoanDetailsSuccess): LoanDetailsAnalyticsResult {
+        return try {
             val details = result.outcome.value
             val payoff =
                 payoffCalculator.calculate(
@@ -73,6 +76,7 @@ class GetLoanDetailsAnalyticsUseCase(
                 ),
             )
         }
+    }
 }
 
 private fun LoanPayoffAnalytics.toApplicationView(): LoanPayoffAnalyticsView =
