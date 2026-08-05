@@ -4,6 +4,7 @@ import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
 import com.tioledger.application.usecase.analytics.GetSpendingAnalyticsUseCase
 import com.tioledger.application.usecase.analytics.SpendingAnalyticsReport
+import com.tioledger.application.usecase.analytics.SpendingCashFlowBucket
 import com.tioledger.application.usecase.analytics.SpendingCurrencyReport
 import com.tioledger.application.usecase.analytics.SpendingReportPeriod
 import com.tioledger.core.model.Money
@@ -80,16 +81,20 @@ private fun SpendingAnalyticsReport.toUiModel(timeZoneId: String): ReportsPeriod
     ReportsPeriodUiModel(
         periodLabel = period.toLabel(),
         dateRangeLabel = formatDateRange(startInclusive, endExclusive, timeZoneId),
-        currencySections = currencyReports.map(SpendingCurrencyReport::toUiModel),
+        currencySections = currencyReports.map { report -> report.toUiModel(period, timeZoneId) },
     )
 
-private fun SpendingCurrencyReport.toUiModel(): ReportsCurrencySectionUiModel =
+private fun SpendingCurrencyReport.toUiModel(
+    period: SpendingReportPeriod,
+    timeZoneId: String,
+): ReportsCurrencySectionUiModel =
     ReportsCurrencySectionUiModel(
         currencyCode = currencyCode,
         incomeLabel = income.toDisplayAmount(),
         expenseLabel = expense.toDisplayAmount(),
         netLabel = net.toDisplayAmount(showPlusForPositive = true),
         netMinorUnits = net.amount,
+        cashFlowRows = cashFlowBuckets.map { bucket -> bucket.toUiModel(period, timeZoneId) },
         categoryBreakdown =
             categoryBreakdown.map { category ->
                 ReportsBreakdownRowUiModel(
@@ -108,6 +113,19 @@ private fun SpendingCurrencyReport.toUiModel(): ReportsCurrencySectionUiModel =
             },
     )
 
+private fun SpendingCashFlowBucket.toUiModel(
+    period: SpendingReportPeriod,
+    timeZoneId: String,
+): ReportsCashFlowRowUiModel =
+    ReportsCashFlowRowUiModel(
+        id = "$startInclusive-$endExclusive",
+        label = formatCashFlowBucketLabel(startInclusive, period, timeZoneId),
+        incomeLabel = income.toDisplayAmount(),
+        expenseLabel = expense.toDisplayAmount(),
+        netLabel = net.toDisplayAmount(showPlusForPositive = true),
+        netMinorUnits = net.amount,
+    )
+
 private fun SpendingReportPeriod.toLabel(): String =
     when (this) {
         SpendingReportPeriod.WEEKLY -> "Weekly"
@@ -124,6 +142,25 @@ private fun formatDateRange(
     val startDate = Instant.fromEpochMilliseconds(startInclusive).toLocalDateTime(timeZone).date
     val endDate = Instant.fromEpochMilliseconds(endExclusive - 1L).toLocalDateTime(timeZone).date
     return "$startDate to $endDate"
+}
+
+private fun formatCashFlowBucketLabel(
+    startInclusive: Long,
+    period: SpendingReportPeriod,
+    timeZoneId: String,
+): String {
+    val startDate =
+        Instant
+            .fromEpochMilliseconds(startInclusive)
+            .toLocalDateTime(TimeZone.of(timeZoneId))
+            .date
+    return when (period) {
+        SpendingReportPeriod.WEEKLY,
+        SpendingReportPeriod.MONTHLY,
+        -> startDate.toString()
+        SpendingReportPeriod.YEARLY ->
+            "${startDate.year}-${startDate.monthNumber.toString().padStart(2, '0')}"
+    }
 }
 
 private fun Money.toDisplayAmount(showPlusForPositive: Boolean = false): String {

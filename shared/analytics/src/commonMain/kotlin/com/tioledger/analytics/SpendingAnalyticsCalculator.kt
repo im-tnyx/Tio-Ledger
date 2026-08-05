@@ -3,8 +3,6 @@ package com.tioledger.analytics
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
 import com.tioledger.domain.model.TransactionHistoryRecord
-import com.tioledger.domain.model.TransactionHistorySplit
-import com.tioledger.domain.model.TransactionType
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -34,11 +32,20 @@ data class SpendingAccountTotal(
     val amount: Money,
 )
 
+data class SpendingCashFlowBucket(
+    val startInclusive: Long,
+    val endExclusive: Long,
+    val incomeTotal: Money,
+    val expenseTotal: Money,
+    val netTotal: Money,
+)
+
 data class SpendingCurrencySummary(
     val currency: CurrencyCode,
     val incomeTotal: Money,
     val expenseTotal: Money,
     val netTotal: Money,
+    val cashFlowBuckets: List<SpendingCashFlowBucket>,
     val categoryTotals: List<SpendingCategoryTotal>,
     val accountTotals: List<SpendingAccountTotal>,
 )
@@ -60,60 +67,59 @@ class SpendingAnalyticsCalculator {
         require(timeZoneId.isNotBlank()) { "timeZoneId must not be blank" }
 
         val window = currentWindow(period, anchorTimestamp, timeZoneId)
+        val bucketWindows = bucketWindows(period, window, timeZoneId)
         val periodTransactions =
             transactions.filter { record ->
                 record.timestamp >= window.startInclusive && record.timestamp < window.endExclusive
             }
 
-        val incomeSplits =
+        val incomeEntries =
             periodTransactions
                 .asSequence()
-                .filter { it.type == TransactionType.INCOME }
-                .mapNotNull { it.primarySplit() }
-                .filter { it.amount.isPositive() }
+                .filter { it.type == com.tioledger.domain.model.TransactionType.INCOME }
+                .mapNotNull { record -> record.cashFlowEntry() }
                 .toList()
 
-        val expenseSplits =
+        val expenseEntries =
             periodTransactions
                 .asSequence()
-                .filter { it.type == TransactionType.EXPENSE }
-                .mapNotNull { it.primarySplit() }
-                .filter { it.amount.isPositive() }
+                .filter { it.type == com.tioledger.domain.model.TransactionType.EXPENSE }
+                .mapNotNull { record -> record.cashFlowEntry() }
                 .toList()
 
         val categoryEntries =
             periodTransactions
                 .asSequence()
-                .filter { it.type == TransactionType.EXPENSE }
+                .filter { it.type == com.tioledger.domain.model.TransactionType.EXPENSE }
                 .mapNotNull { it.categoryExpenseEntry() }
                 .toList()
 
         val accountEntries =
             periodTransactions
                 .asSequence()
-                .filter { it.type == TransactionType.EXPENSE }
+                .filter { it.type == com.tioledger.domain.model.TransactionType.EXPENSE }
                 .mapNotNull { it.accountExpenseEntry() }
                 .toList()
 
         val currencies =
             buildSet {
-                incomeSplits.forEach { add(it.amount.currency) }
-                expenseSplits.forEach { add(it.amount.currency) }
+                incomeEntries.forEach { add(it.amount.currency) }
+                expenseEntries.forEach { add(it.amount.currency) }
             }.sortedBy(CurrencyCode::code)
 
         val currencySummaries =
             currencies.map { currency ->
+                val currencyIncomeEntries = incomeEntries.filter { it.amount.currency == currency }
+                val currencyExpenseEntries = expenseEntries.filter { it.amount.currency == currency }
                 val incomeTotal =
-                    incomeSplits
+                    currencyIncomeEntries
                         .asSequence()
-                        .filter { it.amount.currency == currency }
-                        .map(TransactionHistorySplit::amount)
+                        .map(CashFlowEntry::amount)
                         .fold(Money.zero(currency)) { total, amount -> total + amount }
                 val expenseTotal =
-                    expenseSplits
+                    currencyExpenseEntries
                         .asSequence()
-                        .filter { it.amount.currency == currency }
-                        .map(TransactionHistorySplit::amount)
+                        .map(CashFlowEntry::amount)
                         .fold(Money.zero(currency)) { total, amount -> total + amount }
                 val netTotal = incomeTotal - expenseTotal
                 SpendingCurrencySummary(
@@ -121,6 +127,18 @@ class SpendingAnalyticsCalculator {
                     incomeTotal = incomeTotal,
                     expenseTotal = expenseTotal,
                     netTotal = netTotal,
+                    cashFlowBuckets =
+                        bucketWindows.map { bucket ->
+                            val bucketIncome = currencyIncomeEntries.totalWithin(bucket, currency)
+                            val bucketExpense = currencyExpenseEntries.totalWithin(bucket, currency)
+                            SpendingCashFlowBucket(
+                                startInclusive = bucket.startInclusive,
+                                endExclusive = bucket.endExclusive,
+                                incomeTotal = bucketIncome,
+                                expenseTotal = bucketExpense,
+                                netTotal = bucketIncome - bucketExpense,
+                            )
+                        },
                     categoryTotals =
                         categoryEntries
                             .asSequence()
@@ -187,6 +205,52 @@ class SpendingAnalyticsCalculator {
         )
     }
 
+    private fun bucketWindows(
+        period: SpendingAnalyticsPeriod,
+        window: SpendingAnalyticsWindow,
+        timeZoneId: String,
+    ): List<AnalyticsBucketWindow> {
+        val timeZone = TimeZone.of(timeZoneId)
+        val startDate =
+            Instant
+                .fromEpochMilliseconds(window.startInclusive)
+                .toLocalDateTime(timeZone)
+                .date
+        val endDate =
+            Instant
+                .fromEpochMilliseconds(window.endExclusive)
+                .toLocalDateTime(timeZone)
+                .date
+
+        return when (period) {
+            SpendingAnalyticsPeriod.WEEKLY,
+            SpendingAnalyticsPeriod.MONTHLY,
+            ->
+                (startDate.toEpochDays() until endDate.toEpochDays()).map { epochDay ->
+                    val bucketStart = LocalDate.fromEpochDays(epochDay)
+                    val bucketEnd = LocalDate.fromEpochDays(epochDay + 1)
+                    AnalyticsBucketWindow(
+                        startInclusive = bucketStart.atStartOfDayIn(timeZone).toEpochMilliseconds(),
+                        endExclusive = bucketEnd.atStartOfDayIn(timeZone).toEpochMilliseconds(),
+                    )
+                }
+            SpendingAnalyticsPeriod.YEARLY ->
+                (1..MONTHS_PER_YEAR).map { monthNumber ->
+                    val bucketStart = LocalDate(startDate.year, monthNumber, 1)
+                    val bucketEnd =
+                        if (monthNumber == MONTHS_PER_YEAR) {
+                            LocalDate(startDate.year + 1, 1, 1)
+                        } else {
+                            LocalDate(startDate.year, monthNumber + 1, 1)
+                        }
+                    AnalyticsBucketWindow(
+                        startInclusive = bucketStart.atStartOfDayIn(timeZone).toEpochMilliseconds(),
+                        endExclusive = bucketEnd.atStartOfDayIn(timeZone).toEpochMilliseconds(),
+                    )
+                }
+        }
+    }
+
     private fun periodDates(
         period: SpendingAnalyticsPeriod,
         anchorDate: LocalDate,
@@ -209,7 +273,16 @@ class SpendingAnalyticsCalculator {
             SpendingAnalyticsPeriod.YEARLY -> LocalDate(anchorDate.year, 1, 1) to LocalDate(anchorDate.year + 1, 1, 1)
         }
 
-    private fun TransactionHistoryRecord.primarySplit(): TransactionHistorySplit? = splits.firstOrNull()
+    private fun TransactionHistoryRecord.cashFlowEntry(): CashFlowEntry? {
+        val split = primarySplit() ?: return null
+        if (!split.amount.isPositive()) return null
+        return CashFlowEntry(
+            timestamp = timestamp,
+            amount = split.amount,
+        )
+    }
+
+    private fun TransactionHistoryRecord.primarySplit() = splits.firstOrNull()
 
     private fun TransactionHistoryRecord.categoryExpenseEntry(): CategoryExpenseEntry? {
         val split = splits.firstOrNull { it.categoryId != null } ?: primarySplit() ?: return null
@@ -230,6 +303,27 @@ class SpendingAnalyticsCalculator {
             amount = split.amount,
         )
     }
+
+    private fun List<CashFlowEntry>.totalWithin(
+        bucket: AnalyticsBucketWindow,
+        currency: CurrencyCode,
+    ): Money =
+        asSequence()
+            .filter { entry ->
+                entry.timestamp >= bucket.startInclusive && entry.timestamp < bucket.endExclusive
+            }
+            .map(CashFlowEntry::amount)
+            .fold(Money.zero(currency)) { total, amount -> total + amount }
+
+    private data class CashFlowEntry(
+        val timestamp: Long,
+        val amount: Money,
+    )
+
+    private data class AnalyticsBucketWindow(
+        val startInclusive: Long,
+        val endExclusive: Long,
+    )
 
     private data class CategoryExpenseEntry(
         val categoryId: String?,

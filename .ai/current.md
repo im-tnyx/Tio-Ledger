@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
+Status: Ready for Review
+Active Task: `.ai/tasks/shared/local-20260804-cash-flow-analytics-v1.md`
+Branch: `feat/cash-flow-analytics-v1`
+Platform Scope: `shared-analytics-reports`
 Last Updated: `2026-08-04`
-Next Action: `Start the next objective only when explicitly requested.`
+Next Action: `Review PR #27 and merge only when explicitly requested.`
 
 ## Usage
 

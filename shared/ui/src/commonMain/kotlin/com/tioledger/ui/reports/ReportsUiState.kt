@@ -24,8 +24,18 @@ data class ReportsCurrencySectionUiModel(
     val expenseLabel: String,
     val netLabel: String,
     val netMinorUnits: Long,
+    val cashFlowRows: List<ReportsCashFlowRowUiModel>,
     val categoryBreakdown: List<ReportsBreakdownRowUiModel>,
     val accountBreakdown: List<ReportsBreakdownRowUiModel>,
+)
+
+data class ReportsCashFlowRowUiModel(
+    val id: String,
+    val label: String,
+    val incomeLabel: String,
+    val expenseLabel: String,
+    val netLabel: String,
+    val netMinorUnits: Long,
 )
 
 data class ReportsBreakdownRowUiModel(

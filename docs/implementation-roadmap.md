@@ -5,10 +5,10 @@
 - Ledger Engine: Frozen v1 as of 2026-06-30.
 - Approved architectural blockers for commonMain compatibility, type-safe posting strategies, and strategy registry separation are resolved.
 - Application Layer, repository contracts, SQLDelight repository implementations, application bootstrap, and shared UI foundation are implemented.
-- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, and Spending Analytics / Reports Screen v1 are implemented and locally validated.
+- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, and Cash-flow Analytics v1 are implemented and CI-validated.
 - Phase 6 Finance Features is complete.
 - Phase 7 Analytics And Notifications is in progress.
-- Current planned milestone: Phase 7 Cash-flow analytics.
+- Current planned milestone: Phase 7 Loan payoff analytics.
 
 ## Phase 0: Documentation And Decisions
 
@@ -159,10 +159,11 @@ Deliverables:
 ## Phase 7: Analytics And Notifications
 
 Spending Analytics / Reports Screen v1 is implemented and locally validated
-through PR #20. Its reference note retains separate visual and accessibility
-review follow-up.
+through PR #20. Cash-flow Analytics v1 is implemented and CI-validated through
+issue #26 and PR #27. The shared Reports reference note retains separate visual
+and accessibility review follow-up for both milestones.
 
-Current planned milestone: Cash-flow analytics.
+Current planned milestone: Loan payoff analytics.
 
 Objectives:
 
@@ -175,7 +176,10 @@ Current sequence:
 
 1. Spending Analytics / Reports Screen v1 — implementation complete through
    PR #20; visual and accessibility review follow-up remains documented.
-2. Cash-flow analytics.
+2. Cash-flow Analytics v1 — deterministic per-currency daily/monthly buckets,
+   Application mapping, accessible Reports rows, direct analytics CI coverage,
+   and focused tests complete through PR #27; visual and accessibility review
+   follow-up remains documented.
 3. Loan payoff analytics.
 4. EMI and budget reminders.
 

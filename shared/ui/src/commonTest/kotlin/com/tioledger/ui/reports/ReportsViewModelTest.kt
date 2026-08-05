@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 
 class ReportsViewModelTest {
     @Test
-    fun loadsMonthlyReportByDefault() {
+    fun loadsMonthlyReportWithCashFlowByDefault() {
         val repository =
             FakeReportsRepository(
                 records =
@@ -27,23 +27,35 @@ class ReportsViewModelTest {
         assertFalse(state.isLoading)
         assertEquals(SpendingReportPeriod.MONTHLY, state.selectedPeriod)
         assertEquals("Monthly", state.report?.periodLabel)
-        assertEquals("INR", state.report?.currencySections?.single()?.currencyCode)
-        assertEquals("Food", state.report?.currencySections?.single()?.categoryBreakdown?.single()?.label)
+        val section = state.report?.currencySections?.single()
+        assertEquals("INR", section?.currencyCode)
+        assertEquals("Food", section?.categoryBreakdown?.single()?.label)
+        assertEquals(31, section?.cashFlowRows?.size)
+        val july19 = section?.cashFlowRows?.get(18)
+        assertEquals("2026-07-19", july19?.label)
+        assertEquals("INR 1250.00", july19?.incomeLabel)
+        assertEquals("INR 25.00", july19?.expenseLabel)
+        assertEquals("+INR 1225.00", july19?.netLabel)
     }
 
     @Test
-    fun periodSelectionReloadsReport() {
+    fun periodSelectionReloadsReportAndUsesYearMonthLabels() {
         val repository =
             FakeReportsRepository(
                 records = listOf(reportRecord("expense", TransactionType.EXPENSE, 1_000L, categoryId = "food", categoryName = "Food")),
             )
         val viewModel = reportsViewModel(repository)
 
-        viewModel.onAction(ReportsAction.PeriodSelected(SpendingReportPeriod.WEEKLY))
+        viewModel.onAction(ReportsAction.PeriodSelected(SpendingReportPeriod.YEARLY))
 
-        assertFalse(viewModel.uiState.value.isLoading)
-        assertEquals(SpendingReportPeriod.WEEKLY, viewModel.uiState.value.selectedPeriod)
-        assertEquals("Weekly", viewModel.uiState.value.report?.periodLabel)
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertEquals(SpendingReportPeriod.YEARLY, state.selectedPeriod)
+        assertEquals("Yearly", state.report?.periodLabel)
+        val cashFlowRows = state.report?.currencySections?.single()?.cashFlowRows.orEmpty()
+        assertEquals(12, cashFlowRows.size)
+        assertEquals("2026-07", cashFlowRows[6].label)
+        assertEquals("-INR 10.00", cashFlowRows[6].netLabel)
     }
 
     @Test
