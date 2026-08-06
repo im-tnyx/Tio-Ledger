@@ -10,7 +10,7 @@
 - Primary bottom-navigation callback wiring is completed through issue #34 and PR #36 without changing the canonical five destinations or redesigning Dashboard content.
 - Phase 6 Finance Features is complete.
 - Phase 7 Analytics And Notifications is in progress.
-- Current planned milestone: Phase 7 EMI and budget reminders.
+- EMI and budget reminders v1 product rules and platform boundaries are approved through issue #41; canonical specification merge is the active milestone.
 
 ## Phase 0: Documentation And Decisions
 
@@ -104,7 +104,7 @@ Objectives:
 Deliverables:
 
 - `shared/database`
-- `shared/data`
+- `shared:data`
 - Repository tests.
 - Migration tests.
 - Ledger reconciliation tests.
@@ -167,7 +167,10 @@ CI-validated through issue #29 and PR #30. The shared Reports reference note
 retains separate visual and accessibility review follow-up for the Reports and
 Cash-flow milestones.
 
-Current planned milestone: EMI and budget reminders.
+EMI and budget reminders v1 rules are approved through issue #41. The canonical
+specification is `docs/emi-budget-reminders-v1.md`; production implementation
+must be split into a shared-planner/Application slice and an Android platform
+adapter slice.
 
 Objectives:
 
@@ -188,9 +191,15 @@ Current sequence:
    Application-owned DTO boundary, Bootstrap/Koin registration, an accessible
    Loan Details progress card, and focused Analytics, Application, Bootstrap,
    and UI tests complete through PR #30.
-4. EMI and budget reminders — define canonical requirements, shared notification
-   contracts, platform adapter boundaries, permission behavior, and testable
-   scheduling semantics before implementation.
+4. EMI and budget reminders v1 specification — approved conservative behavior,
+   stable identities, timezone rules, read-only safety, platform boundaries,
+   permission behavior, lifecycle reconciliation, and testing matrix tracked by
+   issue #41 and `docs/emi-budget-reminders-v1.md`.
+5. Shared reminder planner and Application orchestration — next implementation
+   slice after the specification merges.
+6. Android permission, settings, scheduling, cancellation, delivery receipts,
+   and destination integration — separate implementation slice after the shared
+   planner contract is validated.
 
 Deliverables:
 
