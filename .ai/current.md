@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
+Status: Ready for Review
 Active Task: `.ai/tasks/shared/local-20260806-shared-reminder-planner-v1.md`
 Branch: `feat/shared-reminder-planner-v1`
 Platform Scope: `shared-notifications`
 Last Updated: `2026-08-06`
-Next Action: `Implement shared notification contracts and deterministic planner for issue #42.`
+Next Action: `Verify final exact-head CI for PR #47, review the complete diff, and merge issue #42.`
 
 ## Usage
 
