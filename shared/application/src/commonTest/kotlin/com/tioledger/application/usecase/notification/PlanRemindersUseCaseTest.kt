@@ -111,14 +111,11 @@ class PlanRemindersUseCaseTest {
     fun mapsLoanRepositoryFailure() {
         val loanRepository =
             object : LoanRepository {
-                override fun findAll(): LedgerResult<List<Loan>> =
-                    LedgerResult.Failure(LedgerError.StorageUnavailable)
+                override fun findAll(): LedgerResult<List<Loan>> = LedgerResult.Failure(LedgerError.StorageUnavailable)
 
-                override fun findDetails(loanId: String): LedgerResult<LoanDetails> =
-                    error("must not be called")
+                override fun findDetails(loanId: String): LedgerResult<LoanDetails> = error("must not be called")
 
-                override fun create(details: LoanDetails): LedgerResult<LoanDetails> =
-                    error("must not be called")
+                override fun create(details: LoanDetails): LedgerResult<LoanDetails> = error("must not be called")
             }
         val useCase = createUseCase(loanRepository)
 
@@ -257,8 +254,7 @@ class PlanRemindersUseCaseTest {
     private object EmptyCategoryRepository : CategoryRepository {
         override fun findAll(): LedgerResult<List<Category>> = LedgerResult.Success(emptyList())
 
-        override fun findById(categoryId: String): LedgerResult<Category> =
-            LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
+        override fun findById(categoryId: String): LedgerResult<Category> = LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
 
         override fun create(category: Category): LedgerResult<Category> = LedgerResult.Success(category)
 
