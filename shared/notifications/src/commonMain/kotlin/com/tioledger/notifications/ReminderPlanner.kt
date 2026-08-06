@@ -178,9 +178,7 @@ class ReminderPlanner {
             else -> null
         }
 
-    private fun validateEmiCandidates(
-        candidates: List<EmiReminderCandidate>,
-    ): ReminderPlanningError.InvalidInput? {
+    private fun validateEmiCandidates(candidates: List<EmiReminderCandidate>): ReminderPlanningError.InvalidInput? {
         candidates.forEachIndexed { index, candidate ->
             when {
                 candidate.loanId.isBlank() -> return invalidCandidate("emiCandidates[$index].loanId")
@@ -192,9 +190,7 @@ class ReminderPlanner {
         return null
     }
 
-    private fun validateBudgetCandidates(
-        candidates: List<BudgetReminderCandidate>,
-    ): ReminderPlanningError.InvalidInput? {
+    private fun validateBudgetCandidates(candidates: List<BudgetReminderCandidate>): ReminderPlanningError.InvalidInput? {
         candidates.forEachIndexed { index, candidate ->
             when {
                 candidate.budgetId.isBlank() -> return invalidCandidate("budgetCandidates[$index].budgetId")
