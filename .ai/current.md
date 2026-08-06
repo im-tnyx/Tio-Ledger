@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
+Status: Ready for Review
 Active Task: `.ai/tasks/docs/local-20260806-notification-reminders-v1-spec.md`
 Branch: `docs/notifications-reminders-v1-spec`
 Platform Scope: `docs-notifications-spec`
 Last Updated: `2026-08-06`
-Next Action: `Write the canonical EMI and budget reminders v1 specification and split implementation issues.`
+Next Action: `Review and merge PR #44 after final exact-head CI.`
 
 ## Usage
 
