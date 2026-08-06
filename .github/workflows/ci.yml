@@ -43,7 +43,17 @@ jobs:
         run: ./gradlew :shared:finance-engine:test :shared:analytics:test :shared:notifications:test :shared:application:test :shared:data:test :shared:bootstrap:test :shared:ui:test :apps:android:testDebugUnitTest --no-daemon --console=plain --stacktrace
 
       - name: Ktlint
-        run: ./gradlew ktlintCheck --no-daemon --console=plain --stacktrace
+        id: ktlint
+        run: ./gradlew ktlintCheck --no-daemon --console=plain --stacktrace 2>&1 | tee ktlint-output.txt
+
+      - name: Upload ktlint diagnostics
+        if: failure() && steps.ktlint.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-diagnostics
+          path: ktlint-output.txt
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Detekt
         run: ./gradlew detekt --no-daemon --console=plain --stacktrace
