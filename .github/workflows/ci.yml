@@ -56,7 +56,17 @@ jobs:
           retention-days: 7
 
       - name: Detekt
-        run: ./gradlew detekt --no-daemon --console=plain --stacktrace
+        id: detekt
+        run: ./gradlew detekt --no-daemon --console=plain --stacktrace 2>&1 | tee detekt-output.txt
+
+      - name: Upload detekt diagnostics
+        if: failure() && steps.detekt.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: detekt-diagnostics
+          path: detekt-output.txt
+          if-no-files-found: error
+          retention-days: 7
 
   migration-verification:
     name: SQLDelight migration verification
