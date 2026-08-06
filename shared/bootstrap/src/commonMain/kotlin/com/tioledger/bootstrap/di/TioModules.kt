@@ -96,7 +96,7 @@ fun applicationModule(): Module =
         factory { GetSpendingAnalyticsUseCase(get(), get()) }
         factory { ListCategoriesUseCase(get()) }
         factory { CreateCategoryUseCase(get()) }
-        factory { UpdateCategoryUseCase(get(), get()) }
+        factory { UpdateCategoryUseCase(get()) }
         factory { ArchiveCategoryUseCase(get()) }
         factory { ListBudgetsUseCase(get()) }
         factory { CreateBudgetUseCase(get(), get()) }
