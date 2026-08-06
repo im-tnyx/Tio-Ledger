@@ -1,13 +1,14 @@
 # Notification Reminders V1 Specification
 
-Status: Ready for Review
+Status: Complete
 Objective: Define the approved EMI and budget reminders v1 product rules, shared planner boundary, Android adapter boundary, and implementation split before production code.
 Branch: `docs/notifications-reminders-v1-spec`
 Scope: `docs`, issue #41, and AI continuity only
 Created: `2026-08-06`
-Last Updated: `2026-08-06`
+Completed: `2026-08-06`
 Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/41`
 Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/44`
+Merge Commit: `95c56f1888032ff33ce3b52bc390b3948d59ed64`
 Shared Planner Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/42`
 Android Adapter Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/43`
 
@@ -47,22 +48,22 @@ Android Adapter Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/43`
 - No exact-alarm permission solely for precise 09:00 delivery.
 - Reminder settings and receipts are non-financial platform-local state; no financial-schema migration.
 
-## Progress
+## Outcome
 
-- [x] Audit current repository, open PRs/issues, and remote branches.
-- [x] Approve conservative v1 decisions in issue #41 under user principal-judgment authorization.
-- [x] Create dedicated documentation branch.
-- [x] Add canonical reminders v1 specification.
-- [x] Update documentation index and roadmap.
-- [x] Create shared-planner issue #42 and Android-adapter issue #43.
-- [x] Run implementation-documentation head CI and review the documentation-only diff.
-- [x] Open draft PR #44.
-- [ ] Run final task-state head CI and complete final PR review.
-- [ ] Merge specification PR and archive this task.
+- [x] Repository, issues, PRs, and remote branches audited.
+- [x] Conservative v1 product decisions approved in issue #41.
+- [x] Canonical specification added at `docs/emi-budget-reminders-v1.md`.
+- [x] Documentation index and Phase 7 roadmap updated.
+- [x] Shared planner issue #42 and Android adapter issue #43 created.
+- [x] Duplicate issue #45 closed as duplicate of #42.
+- [x] PR #44 final diff reviewed and limited to five documentation/AI continuity files.
+- [x] Final exact-head CI passed.
+- [x] PR #44 squash-merged.
+- [x] Issue #41 closed as completed.
 
 ## Validation
 
-GitHub Actions CI run #358 on head `bc5884972d15ab348464ca0436dc2305721e3c77` passed:
+GitHub Actions CI run #360 on exact head `9476807be8f1e612adcad5530db9d8d5a180a8e6` passed:
 
 - Shared metadata compilation.
 - Critical tests.
@@ -70,16 +71,16 @@ GitHub Actions CI run #358 on head `bc5884972d15ab348464ca0436dc2305721e3c77` pa
 - `ktlintCheck`.
 - `detekt`.
 
-Branch comparison was 0 commits behind `main`. The diff was limited to five documentation and AI continuity files. Local `git diff --check` was not run because this session uses the GitHub connector rather than a repository checkout.
+The branch was 0 commits behind `main`, contained only five documentation and AI continuity files, and had no unresolved review threads or submitted reviews. Local `git diff --check` was not run because the session used the GitHub connector.
 
 ## Changed Files
 
 - `.ai/current.md`
-- This task file
+- `.ai/tasks/docs/local-20260806-notification-reminders-v1-spec.md`
 - `docs/README.md`
 - `docs/emi-budget-reminders-v1.md`
 - `docs/implementation-roadmap.md`
 
 ## Next Action
 
-Run exact-head CI for the Ready-for-Review task state, complete the final scope/review audit, and merge PR #44 if all checks remain green.
+Start issue #42 from updated `main` after this post-merge closeout is merged and synchronized.
