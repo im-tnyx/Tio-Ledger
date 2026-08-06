@@ -11,6 +11,7 @@ kotlin {
             api(project(":shared:budget-engine"))
             api(project(":shared:loan-engine"))
             implementation(project(":shared:analytics"))
+            implementation(project(":shared:notifications"))
             api(libs.kotlinx.datetime)
         }
 

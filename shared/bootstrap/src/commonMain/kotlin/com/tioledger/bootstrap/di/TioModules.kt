@@ -19,6 +19,7 @@ import com.tioledger.application.usecase.loan.CreateLoanUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsAnalyticsUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
 import com.tioledger.application.usecase.loan.ListLoansUseCase
+import com.tioledger.application.usecase.notification.PlanRemindersUseCase
 import com.tioledger.application.usecase.sms.ConfirmSmsTransactionUseCase
 import com.tioledger.application.usecase.sms.PrepareSmsTransactionReviewUseCase
 import com.tioledger.application.usecase.transaction.ListTransactionsUseCase
@@ -58,6 +59,7 @@ import com.tioledger.finance.engine.PostingStrategyRegistry
 import com.tioledger.finance.engine.PostingValidator
 import com.tioledger.loan.engine.LoanCalculator
 import com.tioledger.loan.engine.MonthlyReducingBalanceLoanCalculator
+import com.tioledger.notifications.ReminderPlanner
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -104,6 +106,7 @@ fun applicationModule(): Module =
         factory { GetLoanDetailsUseCase(get()) }
         factory { GetLoanDetailsAnalyticsUseCase(get(), get()) }
         factory { CreateLoanUseCase(get(), get(), get(), get()) }
+        factory { PlanRemindersUseCase(get(), get(), get()) }
         factory { ListTransactionsUseCase(get()) }
         factory { RecordIncomeUseCase(get(), get(), get(), get()) }
         factory { RecordExpenseUseCase(get(), get(), get(), get()) }
@@ -132,6 +135,11 @@ fun analyticsModule(): Module =
     module {
         single { SpendingAnalyticsCalculator() }
         single { LoanPayoffAnalyticsCalculator() }
+    }
+
+fun notificationModule(): Module =
+    module {
+        single { ReminderPlanner() }
     }
 
 fun loanEngineModule(): Module =
@@ -170,6 +178,7 @@ fun diagnosticsModule(): Module =
                         getOrNull<ListLoansUseCase>() != null &&
                         getOrNull<GetLoanDetailsUseCase>() != null &&
                         getOrNull<GetLoanDetailsAnalyticsUseCase>() != null &&
+                        getOrNull<PlanRemindersUseCase>() != null &&
                         getOrNull<ListTransactionsUseCase>() != null &&
                         getOrNull<RecordIncomeUseCase>() != null &&
                         getOrNull<PrepareSmsTransactionReviewUseCase>() != null &&
@@ -186,6 +195,7 @@ fun tioApplicationModules(): List<Module> =
         financeEngineModule(),
         budgetEngineModule(),
         analyticsModule(),
+        notificationModule(),
         loanEngineModule(),
         smsReviewModule(),
         applicationModule(),

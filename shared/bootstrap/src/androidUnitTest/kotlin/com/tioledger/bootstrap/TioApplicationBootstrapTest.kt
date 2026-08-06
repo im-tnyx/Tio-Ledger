@@ -8,6 +8,7 @@ import com.tioledger.application.usecase.loan.CreateLoanUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsAnalyticsUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
 import com.tioledger.application.usecase.loan.ListLoansUseCase
+import com.tioledger.application.usecase.notification.PlanRemindersUseCase
 import com.tioledger.application.usecase.sms.ConfirmSmsTransactionUseCase
 import com.tioledger.application.usecase.sms.PrepareSmsTransactionReviewUseCase
 import com.tioledger.application.usecase.transaction.RecordIncomeUseCase
@@ -22,6 +23,7 @@ import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.LoanRepository
 import com.tioledger.domain.repository.TransactionRepository
 import com.tioledger.loan.engine.LoanCalculator
+import com.tioledger.notifications.ReminderPlanner
 import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -55,6 +57,7 @@ class TioApplicationBootstrapTest {
         assertNotNull(app.koin.get<TransactionRepository>())
         assertNotNull(app.koin.get<GetSpendingAnalyticsUseCase>())
         assertNotNull(app.koin.get<LoanPayoffAnalyticsCalculator>())
+        assertNotNull(app.koin.get<ReminderPlanner>())
         assertNotNull(app.koin.get<LoanCalculator>())
         assertNotNull(app.koin.get<SmsTransactionParser>())
         assertNotNull(app.koin.get<CreateAccountUseCase>())
@@ -63,6 +66,7 @@ class TioApplicationBootstrapTest {
         assertNotNull(app.koin.get<ListLoansUseCase>())
         assertNotNull(app.koin.get<GetLoanDetailsUseCase>())
         assertNotNull(app.koin.get<GetLoanDetailsAnalyticsUseCase>())
+        assertNotNull(app.koin.get<PlanRemindersUseCase>())
         assertNotNull(app.koin.get<RecordIncomeUseCase>())
         assertNotNull(app.koin.get<PrepareSmsTransactionReviewUseCase>())
         assertNotNull(app.koin.get<ConfirmSmsTransactionUseCase>())

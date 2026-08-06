@@ -80,9 +80,9 @@ See [docs/architecture.md](docs/architecture.md) for the canonical architecture.
 
 ## Development Status
 
-Current status on `main`: UI Foundation v1, Application Bootstrap v1, frozen Database Schema, frozen Ledger Engine v1, Application/Data layers, Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, Cash-flow Analytics v1, and Loan Payoff Analytics v1 are implemented and CI-validated. Phase 6 Finance Features is complete, and Phase 7 is in progress.
+Current status on `main`: UI Foundation v1, Application Bootstrap v1, frozen Database Schema, frozen Ledger Engine v1, Application/Data layers, Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, Cash-flow Analytics v1, Loan Payoff Analytics v1, and Shared Reminder Planner v1 are implemented and CI-validated. Phase 6 Finance Features is complete, and Phase 7 is in progress.
 
-Loan Payoff Analytics v1 is merged through issue #29 and PR #30. Primary bottom-navigation wiring for Dashboard, Accounts, Transactions, Categories, and Budgets is completed through issue #34 and PR #36; this records callback consistency only and does not imply a Dashboard content redesign. The current planned Phase 7 product milestone is EMI and budget reminders. The Reports reference note retains separate visual and accessibility review follow-up for the Reports and Cash-flow presentation; no completion of those review items is implied here. Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
+Loan Payoff Analytics v1 is merged through issue #29 and PR #30. Primary bottom-navigation wiring for Dashboard, Accounts, Transactions, Categories, and Budgets is completed through issue #34 and PR #36; this records callback consistency only and does not imply a Dashboard content redesign. Shared Reminder Planner v1 is implemented through issue #42 and PR #47 with deterministic, platform-neutral EMI and budget planning plus read-only Application orchestration. Android notification permission, scheduling, cancellation, delivery receipts, lifecycle reconciliation, and destination integration remain the next isolated slice under issue #43. The Reports reference note retains separate visual and accessibility review follow-up for the Reports and Cash-flow presentation; no completion of those review items is implied here. Production UI work must follow the reference-source policy documented in `docs/references/README.md`, including the JADX decompiled-reference restrictions.
 
 ## Roadmap
 
@@ -92,9 +92,9 @@ Current engineering sequence:
 
 1. Preserve frozen financial, persistence, and architecture invariants.
 2. Keep completed Phase 6 finance workflows stable unless a verified defect is discovered.
-3. Preserve the Spending Analytics / Reports, Cash-flow Analytics, and Loan Payoff Analytics boundaries, deterministic calculations, multi-currency separation, and immutable read contracts.
+3. Preserve the Spending Analytics / Reports, Cash-flow Analytics, Loan Payoff Analytics, and Shared Reminder Planner boundaries, deterministic calculations, multi-currency separation, immutable read contracts, and stable reminder identities.
 4. Preserve canonical primary bottom-navigation routing without inventing Dashboard content that lacks an approved specification.
-5. Define and implement EMI and budget reminders from documented requirements, then continue to release hardening.
+5. Implement the Android reminder delivery adapter from the validated shared planning contract, then continue to release hardening.
 
 ## Contributing
 

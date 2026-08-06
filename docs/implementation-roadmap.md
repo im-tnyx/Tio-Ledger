@@ -5,12 +5,12 @@
 - Ledger Engine: Frozen v1 as of 2026-06-30.
 - Approved architectural blockers for commonMain compatibility, type-safe posting strategies, and strategy registry separation are resolved.
 - Application Layer, repository contracts, SQLDelight repository implementations, application bootstrap, and shared UI foundation are implemented.
-- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, Cash-flow Analytics v1, and Loan Payoff Analytics v1 are implemented and CI-validated on `main`.
+- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, Cash-flow Analytics v1, Loan Payoff Analytics v1, and Shared Reminder Planner v1 are implemented and CI-validated on `main`.
 - Loan Payoff Analytics v1 is merged through issue #29 and PR #30.
 - Primary bottom-navigation callback wiring is completed through issue #34 and PR #36 without changing the canonical five destinations or redesigning Dashboard content.
 - Phase 6 Finance Features is complete.
 - Phase 7 Analytics And Notifications is in progress.
-- EMI and budget reminders v1 product rules and platform boundaries are approved through issue #41; canonical specification merge is the active milestone.
+- EMI and budget reminders v1 product rules and platform boundaries are approved through issue #41, and the pure shared planner/Application slice is implemented through issue #42 and PR #47. Android delivery integration under issue #43 is the active next milestone.
 
 ## Phase 0: Documentation And Decisions
 
@@ -168,9 +168,10 @@ retains separate visual and accessibility review follow-up for the Reports and
 Cash-flow milestones.
 
 EMI and budget reminders v1 rules are approved through issue #41. The canonical
-specification is `docs/emi-budget-reminders-v1.md`; production implementation
-must be split into a shared-planner/Application slice and an Android platform
-adapter slice.
+specification is `docs/emi-budget-reminders-v1.md`. The shared planner and
+Application read-orchestration slice is implemented through issue #42 and PR
+#47. Android permission, scheduling, cancellation, delivery-receipt, lifecycle,
+and destination integration remains isolated under issue #43.
 
 Objectives:
 
@@ -195,11 +196,14 @@ Current sequence:
    stable identities, timezone rules, read-only safety, platform boundaries,
    permission behavior, lifecycle reconciliation, and testing matrix tracked by
    issue #41 and `docs/emi-budget-reminders-v1.md`.
-5. Shared reminder planner and Application orchestration — next implementation
-   slice after the specification merges.
+5. Shared reminder planner and Application orchestration — deterministic EMI
+   and budget planning, stable identities, Application-owned DTOs, read-only
+   repository orchestration, Bootstrap/Koin registration, and focused CI
+   coverage complete through issue #42 and PR #47.
 6. Android permission, settings, scheduling, cancellation, delivery receipts,
-   and destination integration — separate implementation slice after the shared
-   planner contract is validated.
+   lifecycle reconciliation, and destination integration — next separate slice
+   under issue #43; platform code must consume shared plans without duplicating
+   reminder business rules.
 
 Deliverables:
 

@@ -4,6 +4,14 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-08-06 - Shared Reminder Planner v1 Activation
+
+- Activated `shared:notifications` as a pure, deterministic, repository-free planning module with immutable reminder identities, semantic destinations, content contracts, explicit timezone context, and typed validation failures.
+- Added read-only Application orchestration that reuses persisted loan schedules and existing budget summaries, then maps plans to Application-owned immutable DTOs without introducing repository or financial write contracts.
+- Defined persisted EMI due dates as UTC calendar dates while computing delivery instants at 09:00 in the requested timezone; budget transition plans use stable identity suppression and the injected current timestamp.
+- Registered the planner and Application use case through Bootstrap/Koin and added direct shared-notifications CI coverage.
+- Kept Android/iOS/Wear permission handling, scheduling, cancellation, delivery receipts, lifecycle reconciliation, and destination delivery in platform modules; no schema, migration, ledger, balance, or transaction mutation was introduced.
+
 ## 2026-07-30 - Compact AI Context Workflow
 
 - Introduced `.ai/current.md` as the single session continuity pointer with at
