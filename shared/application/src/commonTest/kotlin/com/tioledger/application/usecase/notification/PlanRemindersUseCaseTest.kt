@@ -307,7 +307,7 @@ class PlanRemindersUseCaseTest {
 
         override fun findDetails(loanId: String): LedgerResult<LoanDetails> {
             findDetailsCalls += 1
-            return detailsById[loanId]?.let(LedgerResult::Success)
+            return detailsById[loanId]?.let { details -> LedgerResult.Success(details) }
                 ?: LedgerResult.Failure(LedgerError.LoanNotFound(loanId))
         }
 
