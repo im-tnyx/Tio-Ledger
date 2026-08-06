@@ -24,16 +24,19 @@ object ReminderNavigationIntent {
 
     fun routeOrNull(intent: Intent?): RootRoute? {
         if (intent?.action != ACTION_OPEN_REMINDER) return null
-        return when (intent.getStringExtra(EXTRA_DESTINATION)) {
-            DESTINATION_LOAN ->
-                intent.getStringExtra(EXTRA_LOAN_ID)
-                    ?.takeIf(String::isNotBlank)
-                    ?.let { loanId -> RootRoute.Main(MainRoute.LoanDetails(loanId)) }
+        return intent.reminderDestinationOrNull()?.toRootRoute()
+    }
 
-            DESTINATION_BUDGETS -> RootRoute.Main(MainRoute.Budgets)
+    private fun Intent.reminderDestinationOrNull(): AndroidReminderDestination? =
+        when (getStringExtra(EXTRA_DESTINATION)) {
+            DESTINATION_LOAN ->
+                getStringExtra(EXTRA_LOAN_ID)
+                    ?.takeIf(String::isNotBlank)
+                    ?.let(AndroidReminderDestination::LoanDetails)
+
+            DESTINATION_BUDGETS -> AndroidReminderDestination.Budgets
             else -> null
         }
-    }
 
     private fun AndroidReminderDestination.destinationValue(): String =
         when (this) {
@@ -47,3 +50,9 @@ object ReminderNavigationIntent {
     private const val DESTINATION_LOAN = "loan"
     private const val DESTINATION_BUDGETS = "budgets"
 }
+
+internal fun AndroidReminderDestination.toRootRoute(): RootRoute =
+    when (this) {
+        is AndroidReminderDestination.LoanDetails -> RootRoute.Main(MainRoute.LoanDetails(loanId))
+        AndroidReminderDestination.Budgets -> RootRoute.Main(MainRoute.Budgets)
+    }
