@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
-Last Updated: `2026-08-05`
-Next Action: `Inspect canonical requirements for Phase 7 EMI and budget reminders before implementation.`
+Status: In Progress
+Active Task: `.ai/tasks/docs/local-20260806-notification-reminders-v1-spec.md`
+Branch: `docs/notifications-reminders-v1-spec`
+Platform Scope: `docs-notifications-spec`
+Last Updated: `2026-08-06`
+Next Action: `Write the canonical EMI and budget reminders v1 specification and split implementation issues.`
 
 ## Usage
 
