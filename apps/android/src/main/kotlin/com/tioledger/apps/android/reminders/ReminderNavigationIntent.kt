@@ -32,7 +32,7 @@ object ReminderNavigationIntent {
             DESTINATION_LOAN ->
                 getStringExtra(EXTRA_LOAN_ID)
                     ?.takeIf(String::isNotBlank)
-                    ?.let(AndroidReminderDestination::LoanDetails)
+                    ?.let { loanId -> AndroidReminderDestination.LoanDetails(loanId) }
 
             DESTINATION_BUDGETS -> AndroidReminderDestination.Budgets
             else -> null
