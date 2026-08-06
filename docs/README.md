@@ -17,6 +17,7 @@ The product should remain functionally familiar to Money Manager. The goal is to
 - [Offline-First Data Strategy](offline-first-data-strategy.md)
 - [Loan Engine Design](loan-engine-design.md)
 - [SMS Assisted Transaction Capture](sms-assisted-transaction-capture.md)
+- [EMI And Budget Reminders v1](emi-budget-reminders-v1.md)
 - [Engineering Guidelines](engineering-guidelines.md)
 - [Definition Of Done](definition-of-done.md)
 - [Implementation Roadmap](implementation-roadmap.md)
@@ -86,6 +87,6 @@ docs/
 2. Preserve completed Phase 6 finance workflows unless a verified defect requires a focused fix.
 3. Preserve the merged Spending Analytics / Reports, Cash-flow Analytics, and Loan Payoff Analytics boundaries, including immutable reads, integer-only calculations, deterministic time or schedule semantics, and multi-currency separation.
 4. Preserve the canonical five primary bottom-navigation destinations and their typed callback wiring; Dashboard content remains governed by its approved specification rather than this navigation fix.
-5. Define Phase 7 EMI and budget reminders from canonical product and architecture requirements before implementation.
+5. Implement the approved [EMI And Budget Reminders v1](emi-budget-reminders-v1.md) contract in separate shared-planner and Android-adapter slices.
 6. Keep analytics and reminder business logic outside Compose and expose immutable UI-ready state through Application use cases and ViewModels.
 7. Treat the remaining Reports and Cash-flow visual/accessibility checklist items as explicit review follow-up, not as completed validation.
