@@ -38,7 +38,10 @@ class ReminderReconciliationPlannerTest {
 
         val result = planner.plan(listOf(payload), listOf(payload.toScheduledRecord()))
 
-        assertEquals(emptyList<ReminderReconciliationOperation>(), (result as ReminderReconciliationResult.Success).operations)
+        assertEquals(
+            emptyList<ReminderReconciliationOperation>(),
+            (result as ReminderReconciliationResult.Success).operations,
+        )
     }
 
     @Test
@@ -99,7 +102,10 @@ class ReminderReconciliationPlannerTest {
             ).toAndroidPayload()
         val revised = original.copy(deliveryTimestamp = 200L)
 
-        assertEquals(AndroidMoneyPayload(12_345L, "INR"), (original.content as AndroidReminderContent.Emi).payment)
+        assertEquals(
+            AndroidMoneyPayload(12_345L, "INR"),
+            (original.content as AndroidReminderContent.Emi).payment,
+        )
         assertEquals(AndroidReminderDestination.LoanDetails("loan-1"), original.destination)
         assertEquals(original.uniqueWorkName, revised.uniqueWorkName)
         assertEquals(original.notificationId, revised.notificationId)

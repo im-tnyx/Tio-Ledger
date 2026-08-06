@@ -13,7 +13,9 @@ enum class AndroidReminderType {
 }
 
 sealed interface AndroidReminderDestination {
-    data class LoanDetails(val loanId: String) : AndroidReminderDestination
+    data class LoanDetails(
+        val loanId: String,
+    ) : AndroidReminderDestination
 
     data object Budgets : AndroidReminderDestination
 }
@@ -48,7 +50,7 @@ data class ReminderWorkPayload(
     val content: AndroidReminderContent,
 ) {
     val payloadFingerprint: String = stableSha256(canonicalValue())
-    val uniqueWorkName: String = "tio-reminder-${stableSha256(identityKey)}"
+    val uniqueWorkName: String = reminderUniqueWorkName(identityKey)
     val notificationId: Int = stableNotificationId(identityKey)
 
     private fun canonicalValue(): String =
@@ -62,6 +64,7 @@ data class ReminderWorkPayload(
                     appendField("loan")
                     appendField(target.loanId)
                 }
+
                 AndroidReminderDestination.Budgets -> appendField("budgets")
             }
             when (val semanticContent = content) {
@@ -71,6 +74,7 @@ data class ReminderWorkPayload(
                     appendField(semanticContent.dueDate.toString())
                     appendMoney(semanticContent.payment)
                 }
+
                 is AndroidReminderContent.Budget -> {
                     appendField("budget")
                     appendField(semanticContent.budgetName)
@@ -124,6 +128,9 @@ fun ReminderWorkPayload.toScheduledRecord(): ScheduledReminderRecord =
         payloadFingerprint = payloadFingerprint,
     )
 
+internal fun reminderUniqueWorkName(identityKey: String): String =
+    "tio-reminder-${stableSha256(identityKey)}"
+
 private fun ReminderDestinationView.toAndroidDestination(): AndroidReminderDestination =
     when (this) {
         is ReminderDestinationView.LoanDetails -> AndroidReminderDestination.LoanDetails(loanId)
@@ -138,6 +145,7 @@ private fun ReminderContentView.toAndroidContent(): AndroidReminderContent =
                 dueDate = dueDate,
                 payment = AndroidMoneyPayload(payment.amount, payment.currency.toString()),
             )
+
         is ReminderContentView.Budget ->
             AndroidReminderContent.Budget(
                 budgetName = budgetName,
@@ -155,6 +163,10 @@ private fun stableSha256(value: String): String =
         .joinToString(separator = "") { byte -> "%02x".format(byte) }
 
 private fun stableNotificationId(identityKey: String): Int {
-    val candidate = stableSha256(identityKey).take(8).toLong(radix = 16).toInt() and Int.MAX_VALUE
+    val candidate =
+        stableSha256(identityKey)
+            .take(8)
+            .toLong(radix = 16)
+            .toInt() and Int.MAX_VALUE
     return candidate.takeUnless { it == 0 } ?: 1
 }

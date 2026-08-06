@@ -33,7 +33,7 @@ interface BudgetReminderReceiptStore {
     fun recordDelivered(
         identityKey: String,
         deliveredAt: Long,
-    )
+    ): Boolean
 }
 
 interface ScheduledReminderStore {
@@ -94,15 +94,19 @@ class SharedPreferencesBudgetReminderReceiptStore(
     override fun recordDelivered(
         identityKey: String,
         deliveredAt: Long,
-    ) {
+    ): Boolean {
         require(identityKey.isNotBlank()) { "identityKey must not be blank" }
         require(deliveredAt >= 0L) { "deliveredAt must be zero or greater" }
-        preferences.edit().putLong(BUDGET_RECEIPT_PREFIX + identityKey, deliveredAt).commit()
-        pruneOldestReceipts()
+        val stored =
+            preferences
+                .edit()
+                .putLong(BUDGET_RECEIPT_PREFIX + identityKey, deliveredAt)
+                .commit()
+        return stored && pruneOldestReceipts()
     }
 
-    private fun pruneOldestReceipts() {
-        val staleKeys =
+    private fun pruneOldestReceipts(): Boolean {
+        val receiptTimestamps =
             preferences.all
                 .asSequence()
                 .mapNotNull { (key, value) ->
@@ -111,17 +115,13 @@ class SharedPreferencesBudgetReminderReceiptStore(
                     } else {
                         null
                     }
-                }.sortedWith(
-                    compareByDescending<Pair<String, Long>> { it.second }
-                        .thenByDescending { it.first },
-                ).drop(maxEntries)
-                .map(Pair<String, Long>::first)
-                .toList()
-        if (staleKeys.isEmpty()) return
+                }.toMap()
+        val staleKeys = budgetReceiptKeysToPrune(receiptTimestamps, maxEntries)
+        if (staleKeys.isEmpty()) return true
 
         val editor = preferences.edit()
         staleKeys.forEach(editor::remove)
-        editor.commit()
+        return editor.commit()
     }
 }
 
@@ -144,7 +144,10 @@ class SharedPreferencesScheduledReminderStore(
         require(record.identityKey.isNotBlank()) { "identityKey must not be blank" }
         require(record.deliveryTimestamp >= 0L) { "deliveryTimestamp must be zero or greater" }
         val encoded = "${record.type.name}|${record.deliveryTimestamp}|${record.payloadFingerprint}"
-        return preferences.edit().putString(SCHEDULED_REMINDER_PREFIX + record.identityKey, encoded).commit()
+        return preferences
+            .edit()
+            .putString(SCHEDULED_REMINDER_PREFIX + record.identityKey, encoded)
+            .commit()
     }
 
     override fun remove(identityKey: String): Boolean =
@@ -153,7 +156,10 @@ class SharedPreferencesScheduledReminderStore(
     private fun String.toScheduledRecordOrNull(identityKey: String): ScheduledReminderRecord? {
         val parts = split('|', limit = 3)
         if (parts.size != 3) return null
-        val type = runCatching { AndroidReminderType.valueOf(parts[0]) }.getOrNull() ?: return null
+        val type =
+            runCatching { AndroidReminderType.valueOf(parts[0]) }
+                .getOrNull()
+                ?: return null
         val deliveryTimestamp = parts[1].toLongOrNull() ?: return null
         if (deliveryTimestamp < 0L || parts[2].isBlank()) return null
         return ScheduledReminderRecord(
@@ -163,6 +169,19 @@ class SharedPreferencesScheduledReminderStore(
             payloadFingerprint = parts[2],
         )
     }
+}
+
+internal fun budgetReceiptKeysToPrune(
+    receiptTimestamps: Map<String, Long>,
+    maxEntries: Int,
+): List<String> {
+    require(maxEntries > 0) { "maxEntries must be greater than zero" }
+    return receiptTimestamps.entries
+        .sortedWith(
+            compareByDescending<Map.Entry<String, Long>> { entry -> entry.value }
+                .thenByDescending { entry -> entry.key },
+        ).drop(maxEntries)
+        .map { entry -> entry.key }
 }
 
 private fun Context.reminderSharedPreferences(): SharedPreferences =

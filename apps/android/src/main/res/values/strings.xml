@@ -1,0 +1,15 @@
+<resources>
+    <string name="notification_channel_emi_name">EMI reminders</string>
+    <string name="notification_channel_emi_description">Upcoming and due loan installment reminders</string>
+    <string name="notification_channel_budget_name">Budget reminders</string>
+    <string name="notification_channel_budget_description">Budget warning and limit reminders</string>
+
+    <string name="notification_emi_title">EMI reminder</string>
+    <string name="notification_emi_body">%1$s payment of %2$s is due %3$s.</string>
+
+    <string name="notification_budget_title">Budget update</string>
+    <string name="notification_budget_warning_title">Budget warning</string>
+    <string name="notification_budget_reached_title">Budget limit reached</string>
+    <string name="notification_budget_exceeded_title">Budget limit exceeded</string>
+    <string name="notification_budget_body">%1$s spending is %2$s of %3$s.</string>
+</resources>
