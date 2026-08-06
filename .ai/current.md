@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Ready for Review
-Active Task: `.ai/tasks/shared/local-20260806-shared-reminder-planner-v1.md`
-Branch: `feat/shared-reminder-planner-v1`
-Platform Scope: `shared-notifications`
+Status: Idle
+Active Task: `none`
+Branch: `main`
+Platform Scope: `none`
 Last Updated: `2026-08-06`
-Next Action: `Verify final exact-head CI for PR #47, review the complete diff, and merge issue #42.`
+Next Action: `Start issue #43 for Android reminder delivery integration from updated main after branch cleanup planning.`
 
 ## Usage
 
