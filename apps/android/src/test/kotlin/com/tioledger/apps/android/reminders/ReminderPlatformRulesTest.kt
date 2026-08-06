@@ -10,7 +10,8 @@ class ReminderPlatformRulesTest {
             AndroidNotificationPermissionStatus.NOT_REQUIRED,
             resolveNotificationPermissionStatus(
                 requiresRuntimePermission = false,
-                granted = false,
+                runtimePermissionGranted = true,
+                notificationsEnabled = true,
                 history = NotificationPermissionHistory(false, false),
             ),
         )
@@ -18,7 +19,8 @@ class ReminderPlatformRulesTest {
             AndroidNotificationPermissionStatus.NOT_REQUESTED,
             resolveNotificationPermissionStatus(
                 requiresRuntimePermission = true,
-                granted = false,
+                runtimePermissionGranted = false,
+                notificationsEnabled = false,
                 history = NotificationPermissionHistory(false, false),
             ),
         )
@@ -26,7 +28,8 @@ class ReminderPlatformRulesTest {
             AndroidNotificationPermissionStatus.DENIED,
             resolveNotificationPermissionStatus(
                 requiresRuntimePermission = true,
-                granted = false,
+                runtimePermissionGranted = false,
+                notificationsEnabled = false,
                 history = NotificationPermissionHistory(true, false),
             ),
         )
@@ -34,7 +37,8 @@ class ReminderPlatformRulesTest {
             AndroidNotificationPermissionStatus.REVOKED,
             resolveNotificationPermissionStatus(
                 requiresRuntimePermission = true,
-                granted = false,
+                runtimePermissionGranted = false,
+                notificationsEnabled = false,
                 history = NotificationPermissionHistory(true, true),
             ),
         )
@@ -42,8 +46,31 @@ class ReminderPlatformRulesTest {
             AndroidNotificationPermissionStatus.GRANTED,
             resolveNotificationPermissionStatus(
                 requiresRuntimePermission = true,
-                granted = true,
+                runtimePermissionGranted = true,
+                notificationsEnabled = true,
                 history = NotificationPermissionHistory(false, false),
+            ),
+        )
+    }
+
+    @Test
+    fun disabledAppNotificationsAreTreatedAsRevoked() {
+        assertEquals(
+            AndroidNotificationPermissionStatus.REVOKED,
+            resolveNotificationPermissionStatus(
+                requiresRuntimePermission = false,
+                runtimePermissionGranted = true,
+                notificationsEnabled = false,
+                history = NotificationPermissionHistory(false, false),
+            ),
+        )
+        assertEquals(
+            AndroidNotificationPermissionStatus.REVOKED,
+            resolveNotificationPermissionStatus(
+                requiresRuntimePermission = true,
+                runtimePermissionGranted = true,
+                notificationsEnabled = false,
+                history = NotificationPermissionHistory(true, true),
             ),
         )
     }
