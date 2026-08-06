@@ -1,6 +1,7 @@
 package com.tioledger.apps.android.reminders
 
 import android.Manifest
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -19,14 +20,19 @@ class AndroidNotificationPermissionController(
 ) {
     fun status(): AndroidNotificationPermissionStatus {
         val requiresRuntimePermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-        val granted =
+        val runtimePermissionGranted =
             !requiresRuntimePermission ||
                 context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
                 PackageManager.PERMISSION_GRANTED
+        val notificationsEnabled =
+            context
+                .getSystemService(NotificationManager::class.java)
+                .areNotificationsEnabled()
         val status =
             resolveNotificationPermissionStatus(
                 requiresRuntimePermission = requiresRuntimePermission,
-                granted = granted,
+                runtimePermissionGranted = runtimePermissionGranted,
+                notificationsEnabled = notificationsEnabled,
                 history = stateStore.permissionHistory(),
             )
         if (status == AndroidNotificationPermissionStatus.GRANTED) {
@@ -51,12 +57,17 @@ class AndroidNotificationPermissionController(
 
 internal fun resolveNotificationPermissionStatus(
     requiresRuntimePermission: Boolean,
-    granted: Boolean,
+    runtimePermissionGranted: Boolean,
+    notificationsEnabled: Boolean,
     history: NotificationPermissionHistory,
 ): AndroidNotificationPermissionStatus =
     when {
+        !notificationsEnabled &&
+            (runtimePermissionGranted || history.grantObserved) -> {
+            AndroidNotificationPermissionStatus.REVOKED
+        }
         !requiresRuntimePermission -> AndroidNotificationPermissionStatus.NOT_REQUIRED
-        granted -> AndroidNotificationPermissionStatus.GRANTED
+        runtimePermissionGranted -> AndroidNotificationPermissionStatus.GRANTED
         history.grantObserved -> AndroidNotificationPermissionStatus.REVOKED
         history.requestAttempted -> AndroidNotificationPermissionStatus.DENIED
         else -> AndroidNotificationPermissionStatus.NOT_REQUESTED
