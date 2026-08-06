@@ -85,8 +85,8 @@ docs/
 
 1. Keep frozen layers stable: Database Schema, Ledger Engine, Application Layer, and Data Layer.
 2. Preserve completed Phase 6 finance workflows unless a verified defect requires a focused fix.
-3. Preserve the merged Spending Analytics / Reports, Cash-flow Analytics, and Loan Payoff Analytics boundaries, including immutable reads, integer-only calculations, deterministic time or schedule semantics, and multi-currency separation.
+3. Preserve the merged Spending Analytics / Reports, Cash-flow Analytics, Loan Payoff Analytics, and Shared Reminder Planner boundaries, including immutable reads, integer-only calculations, deterministic time or schedule semantics, multi-currency separation, and stable reminder identities.
 4. Preserve the canonical five primary bottom-navigation destinations and their typed callback wiring; Dashboard content remains governed by its approved specification rather than this navigation fix.
-5. Implement the approved [EMI And Budget Reminders v1](emi-budget-reminders-v1.md) contract in separate shared-planner and Android-adapter slices.
-6. Keep analytics and reminder business logic outside Compose and expose immutable UI-ready state through Application use cases and ViewModels.
+5. Implement Android notification permission, scheduling, cancellation, delivery-receipt, lifecycle-reconciliation, and destination integration under issue #43 by consuming the validated shared planner contract without duplicating reminder rules.
+6. Keep analytics and reminder business logic outside Compose and platform schedulers; expose immutable Application-owned state and semantic reminder plans at module boundaries.
 7. Treat the remaining Reports and Cash-flow visual/accessibility checklist items as explicit review follow-up, not as completed validation.
