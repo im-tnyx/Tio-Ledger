@@ -9,6 +9,7 @@ Responsibilities:
 - Android application entry point.
 - Compose navigation host.
 - Android-specific permissions and notification registration.
+- Android reminder scheduling, cancellation, delivery receipts, and boot/time-zone reconciliation.
 - Android SMS permission and import surfaces where approved by product policy.
 - Koin startup for Android.
 - Platform-specific theming where needed.
@@ -95,24 +96,27 @@ Pure Kotlin application orchestration.
 
 Responsibilities:
 
-- Use cases for account, category, and transaction workflows.
+- Use cases for account, category, transaction, budget, loan, analytics, and reminder workflows.
 - Input validation at application boundaries.
 - Ledger Engine dispatch for posting financial transactions.
 - Typed application results and errors.
 - Domain event emission for successful business operations.
 - Repository contract consumption without knowing persistence details.
+- Read-only reminder candidate orchestration and mapping to Application-owned immutable DTOs.
 
 Must not contain:
 
 - SQL queries.
 - SQLDelight implementations.
 - UI, ViewModel, Android, iOS, or Wear OS dependencies.
+- Platform notification scheduling, permission, or delivery code.
 
 Depends on:
 
 - `shared:core`
 - `shared:domain`
 - `shared:finance-engine`
+- Feature engines and pure shared contracts required by individual use cases.
 
 ## shared/database
 
@@ -136,7 +140,7 @@ Application startup and dependency injection composition.
 
 Responsibilities:
 
-- Koin module assembly for existing Core, Database, Data, Application, and Finance Engine implementations.
+- Koin module assembly for existing Core, Database, Data, Application, Finance Engine, analytics, and notification implementations.
 - SQLDelight database initialization through platform driver factories.
 - Startup diagnostics and bootstrap logging.
 - Platform-neutral application startup wiring.
@@ -145,6 +149,7 @@ Must not contain:
 
 - Business features.
 - Financial calculations.
+- Reminder rule evaluation.
 - SQL schema definitions.
 - Repository implementations.
 - Production UI screens or navigation workflows.
@@ -157,6 +162,7 @@ Depends on:
 - `shared:application`
 - `shared:domain`
 - `shared:finance-engine`
+- Pure feature modules required for dependency composition.
 
 ## shared/data
 
@@ -249,20 +255,31 @@ Depends on:
 
 ## shared/notifications
 
-Shared notification rules and platform adapters.
+Pure shared notification contracts and deterministic reminder planning.
 
 Responsibilities:
 
-- Notification intent models.
-- Reminder rule evaluation.
-- expect/actual or interface adapters for platform scheduling.
-- EMI and budget notification planning.
+- Immutable reminder identities, types, semantic destinations, and content contracts.
+- Timezone-explicit EMI lead-day and due-day reminder planning from persisted schedule candidates.
+- Budget warning/reached/exceeded transition planning and stable-identity suppression.
+- Deterministic ordering and typed validation failures.
+- Platform-neutral preference snapshots and planning context.
+
+Must not contain:
+
+- Android, iOS, or Wear OS APIs.
+- Notification permission handling.
+- Alarm, worker, or platform scheduler implementations.
+- Delivery-receipt persistence.
+- Repository access or financial writes.
+- Duplicate loan, EMI, or budget calculations.
 
 Depends on:
 
+- `shared:core`
 - `shared:domain`
-- `shared:loan-engine`
 - `shared:budget-engine`
+- `shared:loan-engine`
 
 ## SMS-Assisted Capture Package
 
@@ -317,5 +334,6 @@ Must not contain:
 - Feature engines expose pure APIs and do not know about persistence.
 - Database rows do not escape the data layer.
 - UI state models do not become domain entities.
-- Platform apps own platform lifecycle and permissions.
+- Platform apps own platform lifecycle, permissions, scheduling, and notification delivery.
 - Shared domain owns business language.
+- Shared reminder plans remain semantic and platform-neutral; platform adapters consume them without re-evaluating business rules.
