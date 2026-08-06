@@ -6,6 +6,8 @@ import com.tioledger.application.usecase.notification.ReminderPlanTypeView
 import com.tioledger.application.usecase.notification.ReminderPlanView
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
+import com.tioledger.ui.navigation.MainRoute
+import com.tioledger.ui.navigation.RootRoute
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -111,6 +113,18 @@ class ReminderReconciliationPlannerTest {
         assertEquals(original.notificationId, revised.notificationId)
         assertNotEquals(original.payloadFingerprint, revised.payloadFingerprint)
         assertTrue(original.notificationId > 0)
+    }
+
+    @Test
+    fun semanticDestinationsMapToTypedApplicationRoutes() {
+        assertEquals(
+            RootRoute.Main(MainRoute.LoanDetails("loan-1")),
+            AndroidReminderDestination.LoanDetails("loan-1").toRootRoute(),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.Budgets),
+            AndroidReminderDestination.Budgets.toRootRoute(),
+        )
     }
 
     private fun emiPayload(
