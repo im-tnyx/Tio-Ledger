@@ -1,12 +1,15 @@
 # Notification Reminders V1 Specification
 
-Status: In Progress
+Status: Ready for Review
 Objective: Define the approved EMI and budget reminders v1 product rules, shared planner boundary, Android adapter boundary, and implementation split before production code.
 Branch: `docs/notifications-reminders-v1-spec`
 Scope: `docs`, issue #41, and AI continuity only
 Created: `2026-08-06`
 Last Updated: `2026-08-06`
 Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/41`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/44`
+Shared Planner Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/42`
+Android Adapter Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/43`
 
 ## Required Context
 
@@ -49,20 +52,34 @@ Issue: `https://github.com/im-tnyx/Tio-Ledger/issues/41`
 - [x] Audit current repository, open PRs/issues, and remote branches.
 - [x] Approve conservative v1 decisions in issue #41 under user principal-judgment authorization.
 - [x] Create dedicated documentation branch.
-- [ ] Add canonical reminders v1 specification.
-- [ ] Update documentation index and roadmap.
-- [ ] Create shared-planner and Android-adapter implementation issues.
-- [ ] Run exact-head CI and review documentation-only diff.
+- [x] Add canonical reminders v1 specification.
+- [x] Update documentation index and roadmap.
+- [x] Create shared-planner issue #42 and Android-adapter issue #43.
+- [x] Run implementation-documentation head CI and review the documentation-only diff.
+- [x] Open draft PR #44.
+- [ ] Run final task-state head CI and complete final PR review.
 - [ ] Merge specification PR and archive this task.
 
 ## Validation
 
-- Not run yet.
+GitHub Actions CI run #358 on head `bc5884972d15ab348464ca0436dc2305721e3c77` passed:
+
+- Shared metadata compilation.
+- Critical tests.
+- SQLDelight migration verification.
+- `ktlintCheck`.
+- `detekt`.
+
+Branch comparison was 0 commits behind `main`. The diff was limited to five documentation and AI continuity files. Local `git diff --check` was not run because this session uses the GitHub connector rather than a repository checkout.
 
 ## Changed Files
 
-- This task file.
+- `.ai/current.md`
+- This task file
+- `docs/README.md`
+- `docs/emi-budget-reminders-v1.md`
+- `docs/implementation-roadmap.md`
 
 ## Next Action
 
-Write the canonical reminders v1 specification and link it from the documentation index and Phase 7 roadmap.
+Run exact-head CI for the Ready-for-Review task state, complete the final scope/review audit, and merge PR #44 if all checks remain green.
