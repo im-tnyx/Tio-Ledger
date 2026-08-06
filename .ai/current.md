@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
+Status: In Progress
+Active Task: `.ai/tasks/shared/local-20260806-shared-reminder-planner-v1.md`
+Branch: `feat/shared-reminder-planner-v1`
+Platform Scope: `shared-notifications`
 Last Updated: `2026-08-06`
-Next Action: `Start issue #42 for the shared EMI and budget reminder planner from updated main.`
+Next Action: `Implement shared notification contracts and deterministic planner for issue #42.`
 
 ## Usage
 
