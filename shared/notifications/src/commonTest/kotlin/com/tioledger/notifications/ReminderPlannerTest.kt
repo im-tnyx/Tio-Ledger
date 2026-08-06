@@ -214,8 +214,7 @@ class ReminderPlannerTest {
             remaining = Money(2_000L, inr),
         )
 
-    private fun successPlans(result: ReminderPlanningResult): List<ReminderPlan> =
-        assertIs<ReminderPlanningResult.Success>(result).plans
+    private fun successPlans(result: ReminderPlanningResult): List<ReminderPlan> = assertIs<ReminderPlanningResult.Success>(result).plans
 
     private fun utcTimestamp(date: LocalDate): Long = localTimestamp(date, 0, "UTC")
 
