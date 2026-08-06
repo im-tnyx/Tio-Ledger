@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Ready for Review
-Active Task: `.ai/tasks/docs/local-20260806-notification-reminders-v1-spec.md`
-Branch: `docs/notifications-reminders-v1-spec`
-Platform Scope: `docs-notifications-spec`
+Status: Idle
+Active Task: `none`
+Branch: `main`
+Platform Scope: `none`
 Last Updated: `2026-08-06`
-Next Action: `Review and merge PR #44 after final exact-head CI.`
+Next Action: `Start issue #42 for the shared EMI and budget reminder planner from updated main.`
 
 ## Usage
 
