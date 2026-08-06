@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
+Status: Ready for Review
 Active Task: `.ai/tasks/android/local-20260806-android-reminder-delivery-foundation-v1.md`
 Branch: `feat/android-reminder-delivery-foundation-v1`
 Platform Scope: `android`
 Last Updated: `2026-08-06`
-Next Action: `Inspect navigation, reminder DTOs, Android Gradle conventions, and test setup for issue #50.`
+Next Action: `Review PR #52 and merge only after explicit approval; after main sync, archive this task and continue the reference-backed reminder UI work in issue #51.`
 
 ## Usage
 
