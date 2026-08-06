@@ -14,6 +14,7 @@ kotlin {
             implementation(project(":shared:finance-engine"))
             implementation(project(":shared:budget-engine"))
             implementation(project(":shared:loan-engine"))
+            implementation(project(":shared:notifications"))
             implementation(libs.koin.core)
             implementation(libs.sqldelight.runtime)
         }
