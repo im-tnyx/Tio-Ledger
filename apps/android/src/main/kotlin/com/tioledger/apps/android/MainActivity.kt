@@ -26,7 +26,6 @@ class MainActivity : ComponentActivity() {
     }
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            reminderSettingsService.onPermissionStateChanged()
             settingsRefreshToken.value += 1L
         }
 
@@ -55,6 +54,11 @@ class MainActivity : ComponentActivity() {
                 },
             )
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        settingsRefreshToken.value += 1L
     }
 
     override fun onNewIntent(intent: Intent) {
