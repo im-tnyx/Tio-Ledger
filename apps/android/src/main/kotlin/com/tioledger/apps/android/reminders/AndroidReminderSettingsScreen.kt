@@ -49,6 +49,11 @@ internal enum class ReminderSettingsPermissionAction {
     OPEN_NOTIFICATION_SETTINGS,
 }
 
+internal data class ReminderPreferenceWriteOutcome(
+    val snapshot: AndroidReminderSettingsSnapshot,
+    val errorMessage: String?,
+)
+
 internal fun AndroidNotificationPermissionStatus.settingsAction(): ReminderSettingsPermissionAction =
     when (this) {
         AndroidNotificationPermissionStatus.NOT_REQUIRED,
@@ -58,6 +63,16 @@ internal fun AndroidNotificationPermissionStatus.settingsAction(): ReminderSetti
         AndroidNotificationPermissionStatus.DENIED,
         AndroidNotificationPermissionStatus.REVOKED -> ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS
     }
+
+internal fun resolveReminderPreferenceWrite(
+    stored: Boolean,
+    persistedSnapshot: AndroidReminderSettingsSnapshot,
+    failureMessage: String,
+): ReminderPreferenceWriteOutcome =
+    ReminderPreferenceWriteOutcome(
+        snapshot = persistedSnapshot,
+        errorMessage = if (stored) null else failureMessage,
+    )
 
 @Composable
 fun AndroidReminderSettingsRoute(
@@ -79,6 +94,17 @@ fun AndroidReminderSettingsRoute(
         }
     }
 
+    fun applyPreferenceWrite(stored: Boolean) {
+        val outcome =
+            resolveReminderPreferenceWrite(
+                stored = stored,
+                persistedSnapshot = settingsService.snapshot(),
+                failureMessage = preferenceWriteError,
+            )
+        snapshot = outcome.snapshot
+        errorMessage = outcome.errorMessage
+    }
+
     LaunchedEffect(refreshToken) {
         refresh()
     }
@@ -88,14 +114,10 @@ fun AndroidReminderSettingsRoute(
         permissionStatus = snapshot.permissionStatus,
         errorMessage = errorMessage,
         onEmiEnabledChange = { enabled ->
-            val stored = settingsService.setEmiRemindersEnabled(enabled)
-            refresh(clearError = false)
-            errorMessage = if (stored) null else preferenceWriteError
+            applyPreferenceWrite(settingsService.setEmiRemindersEnabled(enabled))
         },
         onBudgetEnabledChange = { enabled ->
-            val stored = settingsService.setBudgetRemindersEnabled(enabled)
-            refresh(clearError = false)
-            errorMessage = if (stored) null else preferenceWriteError
+            applyPreferenceWrite(settingsService.setBudgetRemindersEnabled(enabled))
         },
         onPermissionAction = {
             when (snapshot.permissionStatus.settingsAction()) {
