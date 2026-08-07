@@ -80,7 +80,6 @@ fun AndroidReminderSettingsRoute(
     }
 
     LaunchedEffect(refreshToken) {
-        settingsService.onPermissionStateChanged()
         refresh()
     }
 
