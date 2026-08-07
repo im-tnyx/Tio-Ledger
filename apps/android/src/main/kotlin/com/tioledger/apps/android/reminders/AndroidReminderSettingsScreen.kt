@@ -1,6 +1,5 @@
 package com.tioledger.apps.android.reminders
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,12 +27,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.tioledger.apps.android.R
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
@@ -76,8 +71,6 @@ fun AndroidReminderSettingsRoute(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val preferenceWriteError = stringResource(R.string.settings_reminders_save_error)
     val permissionRequestError = stringResource(R.string.settings_notifications_permission_error)
-    val context = LocalContext.current
-    val activity = context as? ComponentActivity
 
     fun refresh(clearError: Boolean = true) {
         snapshot = settingsService.snapshot()
@@ -87,21 +80,8 @@ fun AndroidReminderSettingsRoute(
     }
 
     LaunchedEffect(refreshToken) {
+        settingsService.onPermissionStateChanged()
         refresh()
-    }
-
-    DisposableEffect(activity, settingsService) {
-        val observer =
-            LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME) {
-                    settingsService.onPermissionStateChanged()
-                    refresh()
-                }
-            }
-        activity?.lifecycle?.addObserver(observer)
-        onDispose {
-            activity?.lifecycle?.removeObserver(observer)
-        }
     }
 
     AndroidReminderSettingsScreen(
