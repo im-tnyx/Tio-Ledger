@@ -57,13 +57,11 @@ internal enum class ReminderSettingsPermissionAction {
 internal fun AndroidNotificationPermissionStatus.settingsAction(): ReminderSettingsPermissionAction =
     when (this) {
         AndroidNotificationPermissionStatus.NOT_REQUIRED,
-        AndroidNotificationPermissionStatus.GRANTED,
-        -> ReminderSettingsPermissionAction.NONE
+        AndroidNotificationPermissionStatus.GRANTED -> ReminderSettingsPermissionAction.NONE
 
         AndroidNotificationPermissionStatus.NOT_REQUESTED -> ReminderSettingsPermissionAction.REQUEST_PERMISSION
         AndroidNotificationPermissionStatus.DENIED,
-        AndroidNotificationPermissionStatus.REVOKED,
-        -> ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS
+        AndroidNotificationPermissionStatus.REVOKED -> ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS
     }
 
 @Composable
@@ -129,14 +127,12 @@ fun AndroidReminderSettingsRoute(
                 }
                 ReminderSettingsPermissionAction.REQUEST_PERMISSION -> {
                     val runtimePermission = snapshot.runtimePermission
-                    val requestRecorded =
-                        runtimePermission != null && settingsService.markPermissionRequestAttempted()
-                    if (requestRecorded) {
-                        refresh()
-                        onLaunchRuntimePermission(runtimePermission)
-                    } else {
+                    if (runtimePermission == null || !settingsService.markPermissionRequestAttempted()) {
                         refresh(clearError = false)
                         errorMessage = permissionRequestError
+                    } else {
+                        refresh()
+                        onLaunchRuntimePermission(runtimePermission)
                     }
                 }
             }
