@@ -18,6 +18,7 @@ import com.tioledger.ui.shell.TioAppShell
 class MainActivity : ComponentActivity() {
     private val currentRoute = mutableStateOf<RootRoute>(TioNavigationGraphs.root.mainEntry)
     private val settingsRefreshToken = mutableStateOf(0L)
+    private var notificationSettingsOpen = false
     private val reminderSettingsService: AndroidReminderSettingsService by lazy {
         (application as TioAndroidApplication)
             .koinApplication
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
     }
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            reminderSettingsService.onPermissionStateChanged()
             settingsRefreshToken.value += 1L
         }
 
@@ -58,7 +60,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        settingsRefreshToken.value += 1L
+        if (notificationSettingsOpen) {
+            notificationSettingsOpen = false
+            reminderSettingsService.onPermissionStateChanged()
+            settingsRefreshToken.value += 1L
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -68,6 +74,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openNotificationSettings() {
+        notificationSettingsOpen = true
         startActivity(
             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, packageName),
