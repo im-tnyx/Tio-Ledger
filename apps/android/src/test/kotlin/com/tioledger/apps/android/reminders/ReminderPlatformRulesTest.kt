@@ -76,6 +76,30 @@ class ReminderPlatformRulesTest {
     }
 
     @Test
+    fun settingsActionsRequestOnlyBeforeTheFirstPermissionAttempt() {
+        assertEquals(
+            ReminderSettingsPermissionAction.NONE,
+            AndroidNotificationPermissionStatus.NOT_REQUIRED.settingsAction(),
+        )
+        assertEquals(
+            ReminderSettingsPermissionAction.REQUEST_PERMISSION,
+            AndroidNotificationPermissionStatus.NOT_REQUESTED.settingsAction(),
+        )
+        assertEquals(
+            ReminderSettingsPermissionAction.NONE,
+            AndroidNotificationPermissionStatus.GRANTED.settingsAction(),
+        )
+        assertEquals(
+            ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS,
+            AndroidNotificationPermissionStatus.DENIED.settingsAction(),
+        )
+        assertEquals(
+            ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS,
+            AndroidNotificationPermissionStatus.REVOKED.settingsAction(),
+        )
+    }
+
+    @Test
     fun budgetReceiptPruningKeepsNewestEntriesDeterministically() {
         val receiptTimestamps =
             mapOf(
