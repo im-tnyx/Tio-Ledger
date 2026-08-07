@@ -40,7 +40,7 @@ Parent: `#43`
 - Render the Settings destination with Android-owned Compose content injected through a minimal shared navigation destination slot.
 - Reuse existing Tio design components and primary bottom-navigation model.
 - Use Android string resources for Settings/reminder copy.
-- Use Activity Result permission APIs and Activity resume callbacks in `MainActivity` rather than leaking Android lifecycle APIs into shared UI.
+- Use Activity Result permission APIs and an Activity resume refresh token rather than leaking Android lifecycle observers into shared UI.
 - Reuse the existing Settings icon affordance on Accounts as the non-primary entry.
 
 ## Progress
@@ -48,23 +48,29 @@ Parent: `#43`
 - [x] Repository/docs/runtime audit completed on merged PR #53 main.
 - [x] Issue #54 created from parent #43.
 - [x] Focused branch created from updated `main`.
-- [ ] Add minimal shared navigation destination injection and Settings entry wiring.
-- [ ] Implement Android Settings/reminder Compose screen and localized copy.
-- [ ] Implement explicit permission request/settings guidance/resume refresh bridge.
-- [ ] Add focused tests.
-- [ ] Review reference, accessibility, architecture, and financial safety.
-- [ ] Run exact-head CI and prepare focused PR.
+- [x] Add minimal shared navigation destination injection and Settings entry wiring.
+- [x] Implement Android Settings/reminder Compose screen and localized copy.
+- [x] Implement explicit permission request/settings guidance/resume refresh bridge.
+- [x] Add focused permission-action and canonical-navigation tests.
+- [x] Review architecture and financial safety; no shared reminder or financial behavior changed.
+- [ ] Exact-head Android/shared CI validation.
+- [ ] Phone-width light/dark, large-text, and TalkBack/accessibility review.
+- [ ] Final PR review and merge readiness.
 
 ## Validation
 
-Not run yet.
+- Branch comparison confirms 0 commits behind `main` before PR creation.
+- Scope review confirms no SQLDelight, ledger, transaction, balance, loan calculation, budget calculation, or shared reminder-planner changes.
+- Local Gradle and `git diff --check` are not available through the GitHub connector and are not claimed.
+- Exact-head CI and device/visual accessibility review are pending.
 
-## Changed Files
+## Changed Areas
 
-- `.ai/archive/2026/settings-reminder-permission-ui-v1.md`
-- `.ai/tasks/docs/local-20260807-settings-reminder-permission-ui-v1.md` removed
-- `.ai/tasks/android/local-20260807-reminder-settings-ui-v1.md`
+- `apps/android`: Android-owned Settings UI, permission launcher/settings Intent bridge, localized copy, focused tests, direct Compose dependencies.
+- `shared/ui`: minimal Settings destination-content injection, existing Accounts non-primary Settings entry, canonical bottom-navigation regression coverage.
+- `docs/module-design.md`: clarifies existing Android ownership for platform Settings/permission UI.
+- `.ai`: archives merged #51 task and points continuity at #54.
 
 ## Next Action
 
-Implement the shared navigation slot and Android-owned Settings/reminder screen without changing reminder planning or financial behavior.
+Open a draft PR for issue #54, use exact-head CI for compiler/test/lint validation, and keep the PR draft until required device visual/accessibility checks are complete.
