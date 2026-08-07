@@ -258,3 +258,84 @@ Depends on:
 ## shared/notifications
 
 Pure shared notification contracts and deterministic reminder planning.
+
+Responsibilities:
+
+- Immutable reminder identities, types, semantic destinations, and content contracts.
+- Timezone-explicit EMI lead-day and due-day reminder planning from persisted schedule candidates.
+- Budget warning/reached/exceeded transition planning and stable-identity suppression.
+- Deterministic ordering and typed validation failures.
+- Platform-neutral preference snapshots and planning context.
+
+Must not contain:
+
+- Android, iOS, or Wear OS APIs.
+- Notification permission handling.
+- Alarm, worker, or platform scheduler implementations.
+- Delivery-receipt persistence.
+- Repository access or financial writes.
+- Duplicate loan, EMI, or budget calculations.
+
+Depends on:
+
+- `shared:core`
+- `shared:domain`
+- `shared:budget-engine`
+- `shared:loan-engine`
+
+## SMS-Assisted Capture Package
+
+The initial project structure does not require a separate top-level SMS module. SMS-assisted capture should begin as cohesive packages inside existing modules:
+
+- `shared/domain`: suggestion, confidence, and confirmation models.
+- `shared/data`: repository coordination for confirmed saves.
+- `shared/ui`: editable review screens.
+- `apps/android`: SMS permission, receiver/import integration, and platform policy handling.
+- `apps/ios`: permitted import alternatives.
+
+If parser complexity grows, promote it later to a dedicated shared module through a new ADR.
+
+## Feature Flags Package
+
+Feature flags should begin in `shared/core` or `shared/domain` as simple typed capabilities:
+
+- Stable production defaults.
+- Explicit experimental flags.
+- Platform override support at composition root boundaries.
+
+If rollout logic becomes remote or complex, promote it to a dedicated module through a new ADR.
+
+## shared/ui
+
+Reusable presentation layer.
+
+Responsibilities:
+
+- Compose Multiplatform components.
+- Shared screens where practical.
+- ViewModels and UI state models.
+- Design system tokens.
+- Stateless reusable components and templates.
+- Formatting utilities that are presentation-specific.
+- Feature flag-aware presentation of experimental surfaces.
+
+Depends on:
+
+- Compose Multiplatform libraries.
+- `shared:bootstrap` only for app shell diagnostics integration.
+
+Must not contain:
+
+- Repository implementations.
+- SQL access.
+- Ledger calculations.
+- Production screen workflows without approved references.
+
+## Coupling Rules
+
+- Feature engines expose pure APIs and do not know about persistence.
+- Database rows do not escape the data layer.
+- UI state models do not become domain entities.
+- Platform apps own platform lifecycle, permissions, scheduling, and notification delivery.
+- Shared domain owns business language.
+- Shared reminder plans remain semantic and platform-neutral; platform adapters consume them without re-evaluating business rules.
