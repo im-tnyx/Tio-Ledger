@@ -31,6 +31,12 @@ import com.tioledger.ui.transactions.TransactionsRoute
 fun RootNavigationHost(
     currentRoute: RootRoute = TioNavigationGraphs.root.startRoute,
     onNavigate: (RootRoute) -> Unit = {},
+    settingsContent: @Composable ((MainRoute) -> Unit) -> Unit = { onSettingsNavigate ->
+        MainPlaceholderDestination(
+            destination = MainRoute.Settings,
+            onNavigate = onSettingsNavigate,
+        )
+    },
     content: @Composable (RootRoute) -> Unit = { route ->
         when (route) {
             RootRoute.Splash -> Splash()
@@ -97,6 +103,10 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(MainRoute.Transactions))
                             },
                         )
+                    MainRoute.Settings ->
+                        settingsContent { target ->
+                            onNavigate(RootRoute.Main(target))
+                        }
                     else ->
                         MainPlaceholderDestination(
                             destination = destination,
@@ -113,7 +123,7 @@ fun RootNavigationHost(
 }
 
 @Composable
-private fun MainPlaceholderDestination(
+internal fun MainPlaceholderDestination(
     destination: MainRoute,
     onNavigate: (MainRoute) -> Unit,
 ) {
