@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
+Status: Ready for Review
 Active Task: `.ai/tasks/docs/local-20260807-settings-reminder-permission-ui-v1.md`
 Branch: `docs/settings-reminder-permission-ui-v1`
 Platform Scope: `docs/android`
 Last Updated: `2026-08-07`
-Next Action: `Complete issue #51 reference-backed Settings/reminder permission UI specification without production Compose changes.`
+Next Action: `Review and merge issue #51 documentation after exact-head CI; then start the separate production Settings/reminder UI implementation slice.`
 
 ## Usage
 
