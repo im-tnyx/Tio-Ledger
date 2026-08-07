@@ -1,7 +1,9 @@
 package com.tioledger.apps.android.reminders
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReminderPlatformRulesTest {
@@ -72,6 +74,34 @@ class ReminderPlatformRulesTest {
                 runtimePermissionGranted = true,
                 notificationsEnabled = false,
                 history = NotificationPermissionHistory(true, true),
+            ),
+        )
+    }
+
+    @Test
+    fun permissionReconciliationRunsOnlyAfterAnObservedStatusChange() {
+        assertFalse(
+            shouldReconcileNotificationPermissionChange(
+                previous = null,
+                current = AndroidNotificationPermissionStatus.NOT_REQUESTED,
+            ),
+        )
+        assertFalse(
+            shouldReconcileNotificationPermissionChange(
+                previous = AndroidNotificationPermissionStatus.GRANTED,
+                current = AndroidNotificationPermissionStatus.GRANTED,
+            ),
+        )
+        assertTrue(
+            shouldReconcileNotificationPermissionChange(
+                previous = AndroidNotificationPermissionStatus.GRANTED,
+                current = AndroidNotificationPermissionStatus.REVOKED,
+            ),
+        )
+        assertTrue(
+            shouldReconcileNotificationPermissionChange(
+                previous = AndroidNotificationPermissionStatus.DENIED,
+                current = AndroidNotificationPermissionStatus.GRANTED,
             ),
         )
     }
