@@ -1,11 +1,11 @@
 # Active Task
 
 Status: Ready for Review
-Active Task: `.ai/tasks/android/local-20260806-android-reminder-delivery-foundation-v1.md`
-Branch: `feat/android-reminder-delivery-foundation-v1`
-Platform Scope: `android`
-Last Updated: `2026-08-06`
-Next Action: `Review PR #52 and merge only after explicit approval; after main sync, archive this task and continue the reference-backed reminder UI work in issue #51.`
+Active Task: `.ai/tasks/docs/local-20260807-settings-reminder-permission-ui-v1.md`
+Branch: `docs/settings-reminder-permission-ui-v1`
+Platform Scope: `docs/android`
+Last Updated: `2026-08-07`
+Next Action: `Review and merge issue #51 documentation after exact-head CI; then start the separate production Settings/reminder UI implementation slice.`
 
 ## Usage
 
