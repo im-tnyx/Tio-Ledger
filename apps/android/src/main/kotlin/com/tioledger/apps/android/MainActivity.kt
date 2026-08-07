@@ -7,9 +7,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
+import com.tioledger.apps.android.reminders.AndroidNotificationPermissionStatus
 import com.tioledger.apps.android.reminders.AndroidReminderSettingsRoute
 import com.tioledger.apps.android.reminders.AndroidReminderSettingsService
 import com.tioledger.apps.android.reminders.ReminderNavigationIntent
+import com.tioledger.apps.android.reminders.shouldReconcileNotificationPermissionChange
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
@@ -18,7 +20,7 @@ import com.tioledger.ui.shell.TioAppShell
 class MainActivity : ComponentActivity() {
     private val currentRoute = mutableStateOf<RootRoute>(TioNavigationGraphs.root.mainEntry)
     private val settingsRefreshToken = mutableStateOf(0L)
-    private var notificationSettingsOpen = false
+    private var lastObservedNotificationPermissionStatus: AndroidNotificationPermissionStatus? = null
     private val reminderSettingsService: AndroidReminderSettingsService by lazy {
         (application as TioAndroidApplication)
             .koinApplication
@@ -27,8 +29,7 @@ class MainActivity : ComponentActivity() {
     }
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            reminderSettingsService.onPermissionStateChanged()
-            settingsRefreshToken.value += 1L
+            refreshNotificationPermissionState()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +40,7 @@ class MainActivity : ComponentActivity() {
                 .koinApplication
                 .koin
                 .get<StartupDiagnostics>()
+        lastObservedNotificationPermissionStatus = reminderSettingsService.snapshot().permissionStatus
 
         setContent {
             TioAppShell(
@@ -60,11 +62,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (notificationSettingsOpen) {
-            notificationSettingsOpen = false
-            reminderSettingsService.onPermissionStateChanged()
-            settingsRefreshToken.value += 1L
-        }
+        refreshNotificationPermissionState()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -73,8 +71,21 @@ class MainActivity : ComponentActivity() {
         ReminderNavigationIntent.routeOrNull(intent)?.let { route -> currentRoute.value = route }
     }
 
+    private fun refreshNotificationPermissionState() {
+        val currentStatus = reminderSettingsService.snapshot().permissionStatus
+        if (
+            shouldReconcileNotificationPermissionChange(
+                previous = lastObservedNotificationPermissionStatus,
+                current = currentStatus,
+            )
+        ) {
+            reminderSettingsService.onPermissionStateChanged()
+        }
+        lastObservedNotificationPermissionStatus = currentStatus
+        settingsRefreshToken.value += 1L
+    }
+
     private fun openNotificationSettings() {
-        notificationSettingsOpen = true
         startActivity(
             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, packageName),
