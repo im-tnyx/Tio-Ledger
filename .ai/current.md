@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: `none`
-Branch: `main`
-Platform Scope: `none`
+Status: Ready for Review
+Active Task: `.ai/tasks/android/local-20260806-android-reminder-delivery-foundation-v1.md`
+Branch: `feat/android-reminder-delivery-foundation-v1`
+Platform Scope: `android`
 Last Updated: `2026-08-06`
-Next Action: `Start issue #43 for Android reminder delivery integration from updated main after branch cleanup planning.`
+Next Action: `Review PR #52 and merge only after explicit approval; after main sync, archive this task and continue the reference-backed reminder UI work in issue #51.`
 
 ## Usage
 

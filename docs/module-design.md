@@ -16,6 +16,7 @@ Responsibilities:
 
 Depends on:
 
+- `shared:application`
 - `shared:bootstrap`
 - `shared:ui`
 - `shared:data`

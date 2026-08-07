@@ -4,6 +4,16 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-08-06 - Android Reminder Delivery Foundation v1
+
+- Activated `apps/android` as the first platform reminder-delivery adapter consuming immutable `PlanRemindersUseCase` output through an explicit `shared:application` dependency without re-evaluating EMI, budget, balance, spend, interest, or money rules.
+- Added WorkManager-based best-effort unique scheduling with deterministic schedule, replace, cancel, and no-op reconciliation derived from stable shared reminder identities.
+- Added bounded platform-local reminder preferences, permission history, budget delivery receipts, and scheduled-work snapshots; none of this metadata is financial state or SQLDelight persistence.
+- Added Android notification channels, localized semantic copy, typed Loan Details/Budgets destinations, app-start reconciliation, and reboot, timezone, and package-upgrade recovery hooks.
+- Permission reconciliation now treats both Android 13 runtime permission and app-level notification disablement as effective delivery state, preventing undelivered budget notifications from being consumed as successful reminders.
+- Expanded CI to compile the Android application, run Android unit tests, and retain failure-only ktlint/detekt diagnostics while preserving SQLDelight migration verification.
+- Kept Settings/permission Compose UI, manual device delivery verification, exact alarms, iOS delivery, independent Wear scheduling, schema changes, and every financial mutation outside this foundation.
+
 ## 2026-08-06 - Shared Reminder Planner v1 Activation
 
 - Activated `shared:notifications` as a pure, deterministic, repository-free planning module with immutable reminder identities, semantic destinations, content contracts, explicit timezone context, and typed validation failures.
