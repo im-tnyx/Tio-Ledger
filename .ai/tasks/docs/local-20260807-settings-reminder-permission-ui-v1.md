@@ -1,6 +1,6 @@
 # Settings Reminder And Permission UI v1
 
-Status: In Progress
+Status: Ready for Review
 Objective: Define and approve the reference-backed Android Settings and notification-permission UX contract required by issue #51 before production Compose implementation.
 Branch: `docs/settings-reminder-permission-ui-v1`
 Scope: `docs/references`, Android reminder settings UX contract
@@ -42,23 +42,26 @@ Last Updated: `2026-08-07`
 - [x] Existing Settings route and placeholder behavior inspected.
 - [x] PR #52 settings/permission service contract inspected and merged to `main`.
 - [x] Approved external fallback reference identified.
-- [ ] Add the complete Settings/reminder reference note and UI contract.
-- [ ] Review issue #51 acceptance criteria against the finished document.
+- [x] Add the complete Settings/reminder reference note and UI contract.
+- [x] Review issue #51 acceptance criteria against the finished document.
 - [ ] Open a focused documentation PR for review.
 
 ## Validation
 
 - Repository/runtime inspection completed through the GitHub connector.
 - PR #52 exact-head CI run #390 passed before merge.
-- Gradle validation for this branch has not been run; planned changes are documentation and `.ai` continuity only.
-- Local `git diff --check` is not available through the connector and will not be claimed.
+- Branch diff is documentation/AI continuity only; no production Kotlin, Gradle, SQLDelight, financial, or UI implementation file changes are included.
+- Gradle validation has not been run locally through the connector and is not claimed.
+- Local `git diff --check` is not available through the connector and is not claimed.
 
 ## Changed Files
 
 - `.ai/archive/2026/android-reminder-delivery-foundation-v1.md`
 - `.ai/tasks/android/local-20260806-android-reminder-delivery-foundation-v1.md` removed after merge synchronization.
 - `.ai/tasks/docs/local-20260807-settings-reminder-permission-ui-v1.md`
+- `.ai/current.md`
+- `docs/references/notes/settings-reminders.md`
 
 ## Next Action
 
-Create `docs/references/notes/settings-reminders.md` with reference approval, functional/UI specification, navigation contract, permission-state matrix, accessibility requirements, deviation log, and acceptance checklist for issue #51.
+Open a focused documentation PR for issue #51 and use CI/review to validate the exact branch head before merge.
