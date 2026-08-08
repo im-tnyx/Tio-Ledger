@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
+import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 
@@ -16,6 +17,12 @@ fun TioAppShell(
     diagnostics: StartupDiagnostics,
     darkTheme: Boolean,
     currentRoute: RootRoute = TioNavigationGraphs.root.mainEntry,
+    settingsContent: @Composable ((MainRoute) -> Unit) -> Unit = { onNavigate ->
+        MainPlaceholderDestination(
+            destination = MainRoute.Settings,
+            onNavigate = onNavigate,
+        )
+    },
 ) {
     var activeRoute by remember(currentRoute) { mutableStateOf(currentRoute) }
     val route = if (diagnostics.koinStarted) activeRoute else TioNavigationGraphs.root.startRoute
@@ -24,6 +31,7 @@ fun TioAppShell(
         RootNavigationHost(
             currentRoute = route,
             onNavigate = { destination -> activeRoute = destination },
+            settingsContent = settingsContent,
         )
     }
 }

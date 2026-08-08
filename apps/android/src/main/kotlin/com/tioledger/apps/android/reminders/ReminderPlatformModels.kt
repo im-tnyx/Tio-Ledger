@@ -128,8 +128,9 @@ fun ReminderWorkPayload.toScheduledRecord(): ScheduledReminderRecord =
         payloadFingerprint = payloadFingerprint,
     )
 
-internal fun reminderUniqueWorkName(identityKey: String): String =
-    "tio-reminder-${stableSha256(identityKey)}"
+internal fun reminderUniqueWorkName(identityKey: String): String {
+    return "tio-reminder-${stableSha256(identityKey)}"
+}
 
 private fun ReminderDestinationView.toAndroidDestination(): AndroidReminderDestination =
     when (this) {
@@ -165,8 +166,11 @@ private fun stableSha256(value: String): String =
 private fun stableNotificationId(identityKey: String): Int {
     val candidate =
         stableSha256(identityKey)
-            .take(8)
-            .toLong(radix = 16)
+            .take(STABLE_NOTIFICATION_ID_HEX_LENGTH)
+            .toLong(radix = HEX_RADIX)
             .toInt() and Int.MAX_VALUE
     return candidate.takeUnless { it == 0 } ?: 1
 }
+
+private const val STABLE_NOTIFICATION_ID_HEX_LENGTH = 8
+private const val HEX_RADIX = 16

@@ -34,6 +34,7 @@ fun ReminderWorkPayload.toWorkData(): Data {
     return builder.build()
 }
 
+@Suppress("ReturnCount")
 fun Data.toReminderWorkPayloadOrNull(): ReminderWorkPayload? {
     val identityKey = getString(KEY_IDENTITY)?.takeIf(String::isNotBlank) ?: return null
     val type = getString(KEY_TYPE)?.enumValueOrNull<AndroidReminderType>() ?: return null
@@ -87,6 +88,7 @@ private fun Data.contentOrNull(type: AndroidReminderType): AndroidReminderConten
         }
     }
 
+@Suppress("ReturnCount")
 private fun Data.moneyOrNull(prefix: String): AndroidMoneyPayload? {
     val amount = requiredLong("${prefix}_amount") ?: return null
     val currencyCode =
@@ -96,15 +98,15 @@ private fun Data.moneyOrNull(prefix: String): AndroidMoneyPayload? {
     return AndroidMoneyPayload(amount, currencyCode)
 }
 
-private fun Data.requiredLong(key: String): Long? =
-    getLong(key, 0L).takeIf { key in keyValueMap }
+private fun Data.requiredLong(key: String): Long? = getLong(key, 0L).takeIf { key in keyValueMap }
 
 private fun Data.Builder.putMoney(
     prefix: String,
     money: AndroidMoneyPayload,
-): Data.Builder =
-    putLong("${prefix}_amount", money.amount)
+): Data.Builder {
+    return putLong("${prefix}_amount", money.amount)
         .putString("${prefix}_currency", money.currencyCode)
+}
 
 private fun AndroidReminderDestination.kind(): String =
     when (this) {
@@ -112,8 +114,9 @@ private fun AndroidReminderDestination.kind(): String =
         AndroidReminderDestination.Budgets -> DESTINATION_BUDGETS
     }
 
-private inline fun <reified T : Enum<T>> String.enumValueOrNull(): T? =
-    runCatching { enumValueOf<T>(this) }.getOrNull()
+private inline fun <reified T : Enum<T>> String.enumValueOrNull(): T? {
+    return runCatching { enumValueOf<T>(this) }.getOrNull()
+}
 
 private const val KEY_IDENTITY = "identity"
 private const val KEY_TYPE = "type"

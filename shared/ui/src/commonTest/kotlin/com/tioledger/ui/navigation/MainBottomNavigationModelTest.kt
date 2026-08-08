@@ -9,8 +9,16 @@ class MainBottomNavigationModelTest {
     @Test
     fun usesCanonicalRouteOrderAndMetadata() {
         val model = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Dashboard)
-        val expectedRoutes = TioNavigationGraphs.main.bottomNavigationRoutes
+        val expectedRoutes =
+            listOf(
+                MainRoute.Dashboard,
+                MainRoute.Accounts,
+                MainRoute.Transactions,
+                MainRoute.Categories,
+                MainRoute.Budgets,
+            )
 
+        assertEquals(expectedRoutes, TioNavigationGraphs.main.bottomNavigationRoutes)
         assertEquals(expectedRoutes, model.routes)
         assertEquals(expectedRoutes.map(MainRoute::title), model.items.map { it.label })
         assertEquals(expectedRoutes.map(MainRoute::icon), model.items.map { it.icon })

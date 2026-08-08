@@ -12,4 +12,26 @@
     <string name="notification_budget_reached_title">Budget limit reached</string>
     <string name="notification_budget_exceeded_title">Budget limit exceeded</string>
     <string name="notification_budget_body">%1$s spending is %2$s of %3$s.</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_reminders_section">Reminders</string>
+    <string name="settings_reminders_description">Optional reminders help you stay aware without changing your financial records.</string>
+    <string name="settings_emi_reminders_title">EMI reminders</string>
+    <string name="settings_emi_reminders_description">Receive upcoming and due loan installment reminders.</string>
+    <string name="settings_budget_reminders_title">Budget reminders</string>
+    <string name="settings_budget_reminders_description">Receive budget warning and limit reminders.</string>
+    <string name="settings_notification_delivery_section">Notification delivery</string>
+    <string name="settings_notifications_status_available">Notifications available</string>
+    <string name="settings_notifications_status_not_requested">Permission not requested</string>
+    <string name="settings_notifications_status_denied">Permission denied</string>
+    <string name="settings_notifications_status_disabled">Notifications disabled</string>
+    <string name="settings_notifications_not_required_description">This Android version does not require a runtime notification permission.</string>
+    <string name="settings_notifications_not_requested_description">Allow notifications if you want enabled reminders to be delivered.</string>
+    <string name="settings_notifications_granted_description">Enabled reminders can be delivered by Android.</string>
+    <string name="settings_notifications_denied_description">Notification permission was denied. Reminder preferences remain unchanged.</string>
+    <string name="settings_notifications_revoked_description">Notification delivery is disabled. Reminder preferences remain unchanged.</string>
+    <string name="settings_notifications_allow_action">Allow notifications</string>
+    <string name="settings_notifications_open_settings_action">Open notification settings</string>
+    <string name="settings_reminders_save_error">Could not save the reminder preference. Your saved setting was restored.</string>
+    <string name="settings_notifications_permission_error">Could not start the notification permission request.</string>
 </resources>
