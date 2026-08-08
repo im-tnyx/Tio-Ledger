@@ -57,11 +57,13 @@ internal data class ReminderPreferenceWriteOutcome(
 internal fun AndroidNotificationPermissionStatus.settingsAction(): ReminderSettingsPermissionAction =
     when (this) {
         AndroidNotificationPermissionStatus.NOT_REQUIRED,
-        AndroidNotificationPermissionStatus.GRANTED -> ReminderSettingsPermissionAction.NONE
+        AndroidNotificationPermissionStatus.GRANTED,
+        -> ReminderSettingsPermissionAction.NONE
 
         AndroidNotificationPermissionStatus.NOT_REQUESTED -> ReminderSettingsPermissionAction.REQUEST_PERMISSION
         AndroidNotificationPermissionStatus.DENIED,
-        AndroidNotificationPermissionStatus.REVOKED -> ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS
+        AndroidNotificationPermissionStatus.REVOKED,
+        -> ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS
     }
 
 internal fun resolveReminderPreferenceWrite(
@@ -75,7 +77,7 @@ internal fun resolveReminderPreferenceWrite(
     )
 
 @Composable
-fun AndroidReminderSettingsRoute(
+fun androidReminderSettingsRoute(
     settingsService: AndroidReminderSettingsService,
     refreshToken: Long,
     onLaunchRuntimePermission: (String) -> Unit,
@@ -109,7 +111,7 @@ fun AndroidReminderSettingsRoute(
         refresh()
     }
 
-    AndroidReminderSettingsScreen(
+    androidReminderSettingsScreen(
         preferences = snapshot.preferences,
         permissionStatus = snapshot.permissionStatus,
         errorMessage = errorMessage,
@@ -142,8 +144,9 @@ fun AndroidReminderSettingsRoute(
     )
 }
 
+@Suppress("LongMethod", "LongParameterList")
 @Composable
-internal fun AndroidReminderSettingsScreen(
+internal fun androidReminderSettingsScreen(
     preferences: AndroidReminderPreferences,
     permissionStatus: AndroidNotificationPermissionStatus,
     errorMessage: String?,
@@ -187,14 +190,14 @@ internal fun AndroidReminderSettingsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            ReminderToggleRow(
+            reminderToggleRow(
                 title = stringResource(R.string.settings_emi_reminders_title),
                 supportingText = stringResource(R.string.settings_emi_reminders_description),
                 checked = preferences.emiRemindersEnabled,
                 onCheckedChange = onEmiEnabledChange,
             )
             HorizontalDivider()
-            ReminderToggleRow(
+            reminderToggleRow(
                 title = stringResource(R.string.settings_budget_reminders_title),
                 supportingText = stringResource(R.string.settings_budget_reminders_description),
                 checked = preferences.budgetRemindersEnabled,
@@ -205,7 +208,7 @@ internal fun AndroidReminderSettingsScreen(
                 title = stringResource(R.string.settings_notification_delivery_section),
                 modifier = Modifier.padding(top = TioSpacing.md),
             )
-            NotificationStatusRow(
+            notificationStatusRow(
                 title = permissionTitle,
                 supportingText = permissionDescription,
             )
@@ -250,7 +253,7 @@ internal fun AndroidReminderSettingsScreen(
 }
 
 @Composable
-private fun ReminderToggleRow(
+private fun reminderToggleRow(
     title: String,
     supportingText: String,
     checked: Boolean,
@@ -288,7 +291,7 @@ private fun ReminderToggleRow(
 }
 
 @Composable
-private fun NotificationStatusRow(
+private fun notificationStatusRow(
     title: String,
     supportingText: String,
 ) {
@@ -334,8 +337,10 @@ private fun permissionStatusTitle(status: AndroidNotificationPermissionStatus): 
 private fun permissionStatusDescription(status: AndroidNotificationPermissionStatus): String =
     stringResource(
         when (status) {
-            AndroidNotificationPermissionStatus.NOT_REQUIRED -> R.string.settings_notifications_not_required_description
-            AndroidNotificationPermissionStatus.NOT_REQUESTED -> R.string.settings_notifications_not_requested_description
+            AndroidNotificationPermissionStatus.NOT_REQUIRED ->
+                R.string.settings_notifications_not_required_description
+            AndroidNotificationPermissionStatus.NOT_REQUESTED ->
+                R.string.settings_notifications_not_requested_description
             AndroidNotificationPermissionStatus.GRANTED -> R.string.settings_notifications_granted_description
             AndroidNotificationPermissionStatus.DENIED -> R.string.settings_notifications_denied_description
             AndroidNotificationPermissionStatus.REVOKED -> R.string.settings_notifications_revoked_description

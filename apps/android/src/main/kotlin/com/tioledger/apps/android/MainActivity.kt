@@ -8,9 +8,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
 import com.tioledger.apps.android.reminders.AndroidNotificationPermissionStatus
-import com.tioledger.apps.android.reminders.AndroidReminderSettingsRoute
 import com.tioledger.apps.android.reminders.AndroidReminderSettingsService
 import com.tioledger.apps.android.reminders.ReminderNavigationIntent
+import com.tioledger.apps.android.reminders.androidReminderSettingsRoute
 import com.tioledger.apps.android.reminders.shouldReconcileNotificationPermissionChange
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
 import com.tioledger.ui.navigation.RootRoute
@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
                 darkTheme = false,
                 currentRoute = currentRoute.value,
                 settingsContent = { onNavigate ->
-                    AndroidReminderSettingsRoute(
+                    androidReminderSettingsRoute(
                         settingsService = reminderSettingsService,
                         refreshToken = settingsRefreshToken.value,
                         onLaunchRuntimePermission = notificationPermissionLauncher::launch,
