@@ -94,8 +94,9 @@ class AndroidReminderNotificationPublisher(
                 )
         }
 
-    private fun AndroidMoneyPayload.toDisplayAmount(): String =
-        "$currencyCode ${BigDecimal.valueOf(amount, MONEY_SCALE).toPlainString()}"
+    private fun AndroidMoneyPayload.toDisplayAmount(): String {
+        return "$currencyCode ${BigDecimal.valueOf(amount, MONEY_SCALE).toPlainString()}"
+    }
 
     private fun Long.toDisplayDate(): String =
         DateFormat

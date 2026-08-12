@@ -1,6 +1,9 @@
 package com.tioledger.apps.android.reminders
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReminderPlatformRulesTest {
@@ -73,6 +76,106 @@ class ReminderPlatformRulesTest {
                 history = NotificationPermissionHistory(true, true),
             ),
         )
+    }
+
+    @Test
+    fun permissionReconciliationRunsOnlyAfterAnObservedStatusChange() {
+        assertFalse(
+            shouldReconcileNotificationPermissionChange(
+                previous = null,
+                current = AndroidNotificationPermissionStatus.NOT_REQUESTED,
+            ),
+        )
+        assertFalse(
+            shouldReconcileNotificationPermissionChange(
+                previous = AndroidNotificationPermissionStatus.GRANTED,
+                current = AndroidNotificationPermissionStatus.GRANTED,
+            ),
+        )
+        assertTrue(
+            shouldReconcileNotificationPermissionChange(
+                previous = AndroidNotificationPermissionStatus.GRANTED,
+                current = AndroidNotificationPermissionStatus.REVOKED,
+            ),
+        )
+        assertTrue(
+            shouldReconcileNotificationPermissionChange(
+                previous = AndroidNotificationPermissionStatus.DENIED,
+                current = AndroidNotificationPermissionStatus.GRANTED,
+            ),
+        )
+    }
+
+    @Test
+    fun settingsActionsRequestOnlyBeforeTheFirstPermissionAttempt() {
+        assertEquals(
+            ReminderSettingsPermissionAction.NONE,
+            AndroidNotificationPermissionStatus.NOT_REQUIRED.settingsAction(),
+        )
+        assertEquals(
+            ReminderSettingsPermissionAction.REQUEST_PERMISSION,
+            AndroidNotificationPermissionStatus.NOT_REQUESTED.settingsAction(),
+        )
+        assertEquals(
+            ReminderSettingsPermissionAction.NONE,
+            AndroidNotificationPermissionStatus.GRANTED.settingsAction(),
+        )
+        assertEquals(
+            ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS,
+            AndroidNotificationPermissionStatus.DENIED.settingsAction(),
+        )
+        assertEquals(
+            ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS,
+            AndroidNotificationPermissionStatus.REVOKED.settingsAction(),
+        )
+    }
+
+    @Test
+    fun failedPreferenceWriteRestoresPersistedSnapshotAndShowsFeedback() {
+        val persistedSnapshot =
+            AndroidReminderSettingsSnapshot(
+                preferences =
+                    AndroidReminderPreferences(
+                        emiRemindersEnabled = false,
+                        budgetRemindersEnabled = true,
+                    ),
+                permissionStatus = AndroidNotificationPermissionStatus.GRANTED,
+                runtimePermission = "android.permission.POST_NOTIFICATIONS",
+            )
+
+        val outcome =
+            resolveReminderPreferenceWrite(
+                stored = false,
+                persistedSnapshot = persistedSnapshot,
+                failureMessage = "Could not save reminder settings.",
+            )
+
+        assertEquals(persistedSnapshot, outcome.snapshot)
+        assertEquals("Could not save reminder settings.", outcome.errorMessage)
+    }
+
+    @Test
+    fun successfulPreferenceWriteUsesPersistedSnapshotAndClearsFeedback() {
+        val persistedSnapshot =
+            AndroidReminderSettingsSnapshot(
+                preferences =
+                    AndroidReminderPreferences(
+                        emiRemindersEnabled = true,
+                        budgetRemindersEnabled = false,
+                    ),
+                permissionStatus = AndroidNotificationPermissionStatus.NOT_REQUIRED,
+                runtimePermission = null,
+            )
+
+        val outcome =
+            resolveReminderPreferenceWrite(
+                stored = true,
+                persistedSnapshot = persistedSnapshot,
+                failureMessage = "Could not save reminder settings.",
+            )
+
+        assertEquals(persistedSnapshot, outcome.snapshot)
+        assertNull(outcome.errorMessage)
     }
 
     @Test

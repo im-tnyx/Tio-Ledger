@@ -4,6 +4,13 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-08-07 - Android Reminder Settings Presentation Boundary
+
+- Extended the shared `TioAppShell` / `RootNavigationHost` with an optional typed Settings destination-content slot while preserving the existing placeholder default for hosts that do not provide platform content.
+- Kept Android reminder preferences, permission status, runtime permission requests, app-notification-settings intents, and resume/result refresh handling inside `apps/android`; no Android permission type or service crosses into shared KMP contracts.
+- Reused the existing non-primary `MainRoute.Settings` and Accounts Settings affordance without changing the canonical Dashboard, Accounts, Transactions, Categories, and Budgets bottom-navigation set.
+- Kept reminder planning, financial calculations, SQLDelight persistence, ledger history, balances, and financial mutations outside the platform presentation path.
+
 ## 2026-08-06 - Android Reminder Delivery Foundation v1
 
 - Activated `apps/android` as the first platform reminder-delivery adapter consuming immutable `PlanRemindersUseCase` output through an explicit `shared:application` dependency without re-evaluating EMI, budget, balance, spend, interest, or money rules.

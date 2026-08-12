@@ -6,9 +6,9 @@ import android.content.Intent
 import androidx.work.BackoffPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.tioledger.apps.android.TioAndroidApplication
 import java.util.concurrent.TimeUnit
@@ -60,6 +60,7 @@ class ReminderDeliveryWorker(
     appContext: Context,
     workerParameters: WorkerParameters,
 ) : Worker(appContext, workerParameters) {
+    @Suppress("ReturnCount")
     override fun doWork(): Result {
         val application = applicationContext as? TioAndroidApplication ?: return Result.failure()
         val payload = inputData.toReminderWorkPayloadOrNull() ?: return Result.failure()

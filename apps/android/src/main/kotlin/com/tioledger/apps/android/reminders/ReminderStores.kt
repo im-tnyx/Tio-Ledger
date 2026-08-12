@@ -55,11 +55,13 @@ class SharedPreferencesReminderPlatformStateStore(
             budgetRemindersEnabled = preferences.getBoolean(KEY_BUDGET_ENABLED, false),
         )
 
-    override fun setEmiRemindersEnabled(enabled: Boolean): Boolean =
-        preferences.edit().putBoolean(KEY_EMI_ENABLED, enabled).commit()
+    override fun setEmiRemindersEnabled(enabled: Boolean): Boolean {
+        return preferences.edit().putBoolean(KEY_EMI_ENABLED, enabled).commit()
+    }
 
-    override fun setBudgetRemindersEnabled(enabled: Boolean): Boolean =
-        preferences.edit().putBoolean(KEY_BUDGET_ENABLED, enabled).commit()
+    override fun setBudgetRemindersEnabled(enabled: Boolean): Boolean {
+        return preferences.edit().putBoolean(KEY_BUDGET_ENABLED, enabled).commit()
+    }
 
     override fun permissionHistory(): NotificationPermissionHistory =
         NotificationPermissionHistory(
@@ -67,11 +69,13 @@ class SharedPreferencesReminderPlatformStateStore(
             grantObserved = preferences.getBoolean(KEY_PERMISSION_GRANTED_OBSERVED, false),
         )
 
-    override fun markPermissionRequestAttempted(): Boolean =
-        preferences.edit().putBoolean(KEY_PERMISSION_REQUESTED, true).commit()
+    override fun markPermissionRequestAttempted(): Boolean {
+        return preferences.edit().putBoolean(KEY_PERMISSION_REQUESTED, true).commit()
+    }
 
-    override fun recordPermissionGranted(): Boolean =
-        preferences.edit().putBoolean(KEY_PERMISSION_GRANTED_OBSERVED, true).commit()
+    override fun recordPermissionGranted(): Boolean {
+        return preferences.edit().putBoolean(KEY_PERMISSION_GRANTED_OBSERVED, true).commit()
+    }
 }
 
 class SharedPreferencesBudgetReminderReceiptStore(
@@ -150,12 +154,14 @@ class SharedPreferencesScheduledReminderStore(
             .commit()
     }
 
-    override fun remove(identityKey: String): Boolean =
-        preferences.edit().remove(SCHEDULED_REMINDER_PREFIX + identityKey).commit()
+    override fun remove(identityKey: String): Boolean {
+        return preferences.edit().remove(SCHEDULED_REMINDER_PREFIX + identityKey).commit()
+    }
 
+    @Suppress("ReturnCount")
     private fun String.toScheduledRecordOrNull(identityKey: String): ScheduledReminderRecord? {
-        val parts = split('|', limit = 3)
-        if (parts.size != 3) return null
+        val parts = split(SCHEDULED_RECORD_DELIMITER, limit = SCHEDULED_RECORD_PART_COUNT)
+        if (parts.size != SCHEDULED_RECORD_PART_COUNT) return null
         val type =
             runCatching { AndroidReminderType.valueOf(parts[0]) }
                 .getOrNull()
@@ -184,8 +190,9 @@ internal fun budgetReceiptKeysToPrune(
         .map { entry -> entry.key }
 }
 
-private fun Context.reminderSharedPreferences(): SharedPreferences =
-    getSharedPreferences(REMINDER_PREFERENCES_FILE, Context.MODE_PRIVATE)
+private fun Context.reminderSharedPreferences(): SharedPreferences {
+    return getSharedPreferences(REMINDER_PREFERENCES_FILE, Context.MODE_PRIVATE)
+}
 
 private const val REMINDER_PREFERENCES_FILE = "tio_reminders_v1"
 private const val KEY_EMI_ENABLED = "emi_enabled"
@@ -195,3 +202,5 @@ private const val KEY_PERMISSION_GRANTED_OBSERVED = "notification_permission_gra
 private const val BUDGET_RECEIPT_PREFIX = "budget_receipt:"
 private const val SCHEDULED_REMINDER_PREFIX = "scheduled_reminder:"
 private const val DEFAULT_MAX_BUDGET_RECEIPTS = 256
+private const val SCHEDULED_RECORD_DELIMITER = '|'
+private const val SCHEDULED_RECORD_PART_COUNT = 3

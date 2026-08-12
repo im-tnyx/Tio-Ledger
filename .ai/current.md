@@ -1,11 +1,11 @@
 # Active Task
 
 Status: Ready for Review
-Active Task: `.ai/tasks/docs/local-20260807-settings-reminder-permission-ui-v1.md`
-Branch: `docs/settings-reminder-permission-ui-v1`
-Platform Scope: `docs/android`
-Last Updated: `2026-08-07`
-Next Action: `Review and merge issue #51 documentation after exact-head CI; then start the separate production Settings/reminder UI implementation slice.`
+Active Task: `.ai/tasks/android/local-20260807-reminder-settings-ui-v1.md`
+Branch: `feat/android-reminder-settings-ui-v1`
+Platform Scope: `android/shared-ui`
+Last Updated: `2026-08-12`
+Next Action: `Device verification and Android tests are now clear; finish final PR review readiness for issue #54/#57 and then merge before branch cleanup.`
 
 ## Usage
 

@@ -37,6 +37,7 @@ sealed interface ReminderReconciliationResult {
 }
 
 class ReminderReconciliationPlanner {
+    @Suppress("ReturnCount")
     fun plan(
         desired: List<ReminderWorkPayload>,
         scheduled: List<ScheduledReminderRecord>,

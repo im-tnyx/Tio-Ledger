@@ -21,6 +21,7 @@ sealed interface AndroidReminderReconcileResult {
     ) : AndroidReminderReconcileResult
 }
 
+@Suppress("LongParameterList")
 class AndroidReminderReconciler(
     private val planRemindersUseCase: PlanRemindersUseCase,
     private val stateStore: ReminderPlatformStateStore,
@@ -31,6 +32,7 @@ class AndroidReminderReconciler(
     private val workOperationApplier: ReminderWorkOperationApplier,
     private val clock: AndroidReminderClock,
 ) {
+    @Suppress("ReturnCount")
     fun reconcile(): AndroidReminderReconcileResult {
         val desiredResult = desiredPayloads(stateStore.reminderPreferences())
         val desired =
@@ -99,8 +101,7 @@ class AndroidReminderReconciler(
         }
     }
 
-    private fun AndroidReminderPreferences.anyEnabled(): Boolean =
-        emiRemindersEnabled || budgetRemindersEnabled
+    private fun AndroidReminderPreferences.anyEnabled(): Boolean = emiRemindersEnabled || budgetRemindersEnabled
 
     private sealed interface DesiredPayloadResult {
         data class Success(

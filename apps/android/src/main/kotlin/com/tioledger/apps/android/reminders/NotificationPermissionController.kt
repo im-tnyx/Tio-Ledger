@@ -72,3 +72,8 @@ internal fun resolveNotificationPermissionStatus(
         history.requestAttempted -> AndroidNotificationPermissionStatus.DENIED
         else -> AndroidNotificationPermissionStatus.NOT_REQUESTED
     }
+
+internal fun shouldReconcileNotificationPermissionChange(
+    previous: AndroidNotificationPermissionStatus?,
+    current: AndroidNotificationPermissionStatus,
+): Boolean = previous != null && previous != current

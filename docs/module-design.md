@@ -7,8 +7,9 @@ Android phone and tablet shell.
 Responsibilities:
 
 - Android application entry point.
-- Compose navigation host.
+- Compose navigation host and platform-owned destination content where Android APIs are required.
 - Android-specific permissions and notification registration.
+- Android reminder Settings controls, runtime notification-permission UX, and app-notification-settings guidance.
 - Android reminder scheduling, cancellation, delivery receipts, and boot/time-zone reconciliation.
 - Android SMS permission and import surfaces where approved by product policy.
 - Koin startup for Android.
