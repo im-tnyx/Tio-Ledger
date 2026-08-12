@@ -6,6 +6,7 @@
         android:name=".TioAndroidApplication"
         android:allowBackup="true"
         android:label="Tio Ledger"
+        android:theme="@style/Theme.TioLedger"
         android:supportsRtl="true">
         <activity
             android:name=".MainActivity"

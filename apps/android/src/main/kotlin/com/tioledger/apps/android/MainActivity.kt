@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
@@ -19,8 +20,15 @@ import com.tioledger.ui.shell.TioAppShell
 
 class MainActivity : ComponentActivity() {
     private val currentRoute = mutableStateOf<RootRoute>(TioNavigationGraphs.root.mainEntry)
+    private val routeHistory = mutableStateOf(listOf<RootRoute>(TioNavigationGraphs.root.mainEntry))
     private val settingsRefreshToken = mutableStateOf(0L)
     private var lastObservedNotificationPermissionStatus: AndroidNotificationPermissionStatus? = null
+    private val backNavigationCallback =
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                navigateBackOrFinish()
+            }
+        }
     private val reminderSettingsService: AndroidReminderSettingsService by lazy {
         (application as TioAndroidApplication)
             .koinApplication
@@ -34,7 +42,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ReminderNavigationIntent.routeOrNull(intent)?.let { route -> currentRoute.value = route }
+        onBackPressedDispatcher.addCallback(this, backNavigationCallback)
+        ReminderNavigationIntent.routeOrNull(intent)?.let(::replaceRouteFromExternalEvent)
         val diagnostics =
             (application as TioAndroidApplication)
                 .koinApplication
@@ -47,6 +56,7 @@ class MainActivity : ComponentActivity() {
                 diagnostics = diagnostics,
                 darkTheme = false,
                 currentRoute = currentRoute.value,
+                onNavigate = ::navigateTo,
                 settingsContent = { onNavigate ->
                     androidReminderSettingsRoute(
                         settingsService = reminderSettingsService,
@@ -68,7 +78,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        ReminderNavigationIntent.routeOrNull(intent)?.let { route -> currentRoute.value = route }
+        ReminderNavigationIntent.routeOrNull(intent)?.let(::replaceRouteFromExternalEvent)
     }
 
     private fun refreshNotificationPermissionState() {
@@ -90,5 +100,30 @@ class MainActivity : ComponentActivity() {
             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, packageName),
         )
+    }
+
+    private fun navigateTo(route: RootRoute) {
+        if (currentRoute.value == route) return
+        currentRoute.value = route
+        routeHistory.value = routeHistory.value + route
+    }
+
+    private fun replaceRouteFromExternalEvent(route: RootRoute) {
+        currentRoute.value = route
+        routeHistory.value = listOf(route)
+    }
+
+    private fun navigateBackOrFinish() {
+        val history = routeHistory.value
+        if (history.size > 1) {
+            val previousRoute = history[history.lastIndex - 1]
+            routeHistory.value = history.dropLast(1)
+            currentRoute.value = previousRoute
+            return
+        }
+
+        backNavigationCallback.isEnabled = false
+        onBackPressedDispatcher.onBackPressed()
+        backNavigationCallback.isEnabled = true
     }
 }

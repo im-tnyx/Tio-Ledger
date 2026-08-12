@@ -32,6 +32,8 @@
     <string name="settings_notifications_revoked_description">Notification delivery is disabled. Reminder preferences remain unchanged.</string>
     <string name="settings_notifications_allow_action">Allow notifications</string>
     <string name="settings_notifications_open_settings_action">Open notification settings</string>
+    <string name="settings_toggle_enabled">Enabled</string>
+    <string name="settings_toggle_disabled">Disabled</string>
     <string name="settings_reminders_save_error">Could not save the reminder preference. Your saved setting was restored.</string>
     <string name="settings_notifications_permission_error">Could not start the notification permission request.</string>
 </resources>

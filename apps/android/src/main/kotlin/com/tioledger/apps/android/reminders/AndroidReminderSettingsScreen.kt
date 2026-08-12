@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName", "UnusedPrivateMember")
+
 package com.tioledger.apps.android.reminders
 
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -28,8 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import com.tioledger.apps.android.R
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
@@ -259,11 +265,29 @@ private fun reminderToggleRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
+    val stateDescription =
+        stringResource(
+            if (checked) {
+                R.string.settings_toggle_enabled
+            } else {
+                R.string.settings_toggle_disabled
+            },
+        )
+
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = TioDimensions.minTouchTarget)
+                .toggleable(
+                    value = checked,
+                    onValueChange = onCheckedChange,
+                    role = Role.Switch,
+                )
+                .semantics(mergeDescendants = true) {
+                    contentDescription = "$title. $supportingText"
+                    this.stateDescription = stateDescription
+                }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
@@ -284,8 +308,8 @@ private fun reminderToggleRow(
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = Modifier.semantics { contentDescription = title },
+            onCheckedChange = null,
+            modifier = Modifier.clearAndSetSemantics { },
         )
     }
 }
@@ -299,10 +323,16 @@ private fun notificationStatusRow(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .semantics(mergeDescendants = true) {
+                    contentDescription = "$title. $supportingText"
+                }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TioIconAvatar(TioIconToken.Notification)
+        TioIconAvatar(
+            token = TioIconToken.Notification,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
         Spacer(modifier = Modifier.width(TioSpacing.md))
         Column(
             modifier = Modifier.weight(1f),

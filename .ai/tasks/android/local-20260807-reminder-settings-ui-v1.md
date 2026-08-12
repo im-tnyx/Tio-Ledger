@@ -1,11 +1,11 @@
 # Android Reminder Settings UI v1
 
-Status: In Progress
+Status: Ready for Review
 Objective: Implement issue #54 production Android reminder Settings and explicit notification-permission UX from the approved reference contract.
 Branch: `feat/android-reminder-settings-ui-v1`
 Scope: `apps/android`, minimal `shared/ui` navigation extension
 Created: `2026-08-07`
-Last Updated: `2026-08-07`
+Last Updated: `2026-08-12`
 Issue: `#54`
 Parent: `#43`
 
@@ -52,25 +52,45 @@ Parent: `#43`
 - [x] Implement Android Settings/reminder Compose screen and localized copy.
 - [x] Implement explicit permission request/settings guidance/resume refresh bridge.
 - [x] Add focused permission-action and canonical-navigation tests.
+- [x] Harden reminder toggle accessibility by making the full row behave as the switch target.
+- [x] Harden TalkBack semantics so reminder rows expose explicit state and notification status avoids decorative icon announcements.
+- [x] Add Android-owned preview support for phone-width, dark-theme, and large-text reminder Settings review.
+- [x] Create follow-up issue `#57` for Settings system-back behavior and duplicate top-title removal while the branch remains open.
+- [x] Implement Android-owned route history and NoActionBar theme wiring so Settings can return via system back and no duplicate shell title consumes vertical space.
 - [x] Review architecture and financial safety; no shared reminder or financial behavior changed.
-- [ ] Exact-head Android/shared CI validation.
-- [ ] Phone-width light/dark, large-text, and TalkBack/accessibility review.
+- [x] Exact-head Android/shared CI validation.
+- [x] Phone-width light/dark, large-text, and TalkBack/accessibility review.
 - [ ] Final PR review and merge readiness.
 
 ## Validation
 
 - Branch comparison confirms 0 commits behind `main` before PR creation.
 - Scope review confirms no SQLDelight, ledger, transaction, balance, loan calculation, budget calculation, or shared reminder-planner changes.
-- Local Gradle and `git diff --check` are not available through the GitHub connector and are not claimed.
-- Exact-head CI and device/visual accessibility review are pending.
+- Local Git state on `2026-08-12` confirms the branch is restored from detached `HEAD` to `feat/android-reminder-settings-ui-v1` with a clean worktree.
+- Local exact-head validation passed on `2026-08-12` after hardening [gradle/wrapper/gradle-wrapper.properties](/G:/projects/Tio-Ledger/gradle/wrapper/gradle-wrapper.properties) network tolerance and rerunning the repository checklist commands.
+- Executed checks: shared metadata compilation, critical shared tests, SQLDelight migration verification, `ktlintCheck`, `detekt`, and `git diff --check`.
+- Additional accessibility-hardening validation on `2026-08-12`: `:apps:android:test`, `ktlintCheck`, `detekt`, and `git diff --check`.
+- Remote branch alignment cleanup on `2026-08-12` pruned every GitHub-merged remote branch after confirming squash-merge history through PR state; `origin` now retains only `main` and the active `feat/android-reminder-settings-ui-v1` branch.
+- Preview-review support validation on `2026-08-12`: `:apps:android:compileDebugKotlin` passed after adding `compose.components.uiToolingPreview` and Android-owned reminder Settings previews for light, dark, and large-text states.
+- Follow-up bug tracking on `2026-08-12`: GitHub issue `#57` created for Android Settings system-back behavior and duplicate top-title removal.
+- Follow-up implementation validation on `2026-08-12`: `:apps:android:assembleDebug` passed after moving route ownership into the Android activity boundary for system-back handling and applying an Android `NoActionBar` activity theme.
+- Device verification on `2026-08-12` confirmed `Settings -> system back -> Accounts` works and the duplicate top `Tio Ledger` title is gone.
+- Follow-up validation on `2026-08-12`: `:apps:android:test` passed after the latest Android route/theme changes, so the earlier branch-local unit-test drift is no longer reproducing.
+- Non-blocking environment notes remain: Android metrics initialization could not write `C:\Users\SANTOSH\.android\analytics.settings`, and Gradle reported the deprecated property `kotlin.mpp.androidGradlePluginCompatibility.nowarn`.
+- Non-blocking local build noise also showed Kotlin daemon access failures under `C:\Users\SANTOSH\AppData\Local\kotlin\daemon\`, but Gradle completed using fallback compilation and the successful task results above are the authoritative outcome.
+- Device/visual accessibility review completed on `2026-08-12`; `Settings -> system back -> Accounts`, duplicate-title removal, phone-width light/dark, large-text, and TalkBack expectations were verified.
 
 ## Changed Areas
 
 - `apps/android`: Android-owned Settings UI, permission launcher/settings Intent bridge, localized copy, focused tests, direct Compose dependencies.
-- `shared/ui`: minimal Settings destination-content injection, existing Accounts non-primary Settings entry, canonical bottom-navigation regression coverage.
+- `apps/android/src/main/AndroidManifest.xml`: apply an Android theme that removes the duplicate platform action bar title.
+- `apps/android/src/main/res/values/themes.xml`: define the Android `NoActionBar` activity theme.
+- `apps/android/build.gradle.kts`: Android preview dependency for reminder Settings review support.
+- `apps/android/src/main/res/values/strings.xml`: explicit switch-state accessibility copy.
+- `shared/ui`: minimal Settings destination-content injection, existing Accounts non-primary Settings entry, canonical bottom-navigation regression coverage, and optional external route ownership for Android system-back support.
 - `docs/module-design.md`: clarifies existing Android ownership for platform Settings/permission UI.
 - `.ai`: archives merged #51 task and points continuity at #54.
 
 ## Next Action
 
-Open a draft PR for issue #54, use exact-head CI for compiler/test/lint validation, and keep the PR draft until required device visual/accessibility checks are complete.
+Finish final PR review readiness for issue `#54` and follow-up issue `#57`, then merge and clean up the branch.
