@@ -1,6 +1,6 @@
 # Android Reminder Settings UI v1
 
-Status: Ready for Review
+Status: Merged
 Objective: Implement issue #54 production Android reminder Settings and explicit notification-permission UX from the approved reference contract.
 Branch: `feat/android-reminder-settings-ui-v1`
 Scope: `apps/android`, minimal `shared/ui` navigation extension
@@ -60,7 +60,7 @@ Parent: `#43`
 - [x] Review architecture and financial safety; no shared reminder or financial behavior changed.
 - [x] Exact-head Android/shared CI validation.
 - [x] Phone-width light/dark, large-text, and TalkBack/accessibility review.
-- [ ] Final PR review and merge readiness.
+- [x] Final PR review and merge readiness.
 
 ## Validation
 
@@ -79,6 +79,7 @@ Parent: `#43`
 - Non-blocking environment notes remain: Android metrics initialization could not write `C:\Users\SANTOSH\.android\analytics.settings`, and Gradle reported the deprecated property `kotlin.mpp.androidGradlePluginCompatibility.nowarn`.
 - Non-blocking local build noise also showed Kotlin daemon access failures under `C:\Users\SANTOSH\AppData\Local\kotlin\daemon\`, but Gradle completed using fallback compilation and the successful task results above are the authoritative outcome.
 - Device/visual accessibility review completed on `2026-08-12`; `Settings -> system back -> Accounts`, duplicate-title removal, phone-width light/dark, large-text, and TalkBack expectations were verified.
+- PR `#55` merged to `main` on `2026-08-12` as squash commit `d988a7a2223c6129f8970be929ff21822a3e9d56`.
 
 ## Changed Areas
 
@@ -93,4 +94,4 @@ Parent: `#43`
 
 ## Next Action
 
-Finish final PR review readiness for issue `#54` and follow-up issue `#57`, then merge and clean up the branch.
+Track the remaining umbrella acceptance work under issue `#56` / parent `#43`; this implementation slice itself is complete and merged.

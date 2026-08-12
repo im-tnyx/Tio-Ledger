@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Ready for Review
-Active Task: `.ai/tasks/android/local-20260807-reminder-settings-ui-v1.md`
-Branch: `feat/android-reminder-settings-ui-v1`
-Platform Scope: `android/shared-ui`
+Status: In Progress
+Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
+Branch: `main`
+Platform Scope: `android`
 Last Updated: `2026-08-12`
-Next Action: `Device verification and Android tests are now clear; finish final PR review readiness for issue #54/#57 and then merge before branch cleanup.`
+Next Action: `Finish provisioning a representative pre-Android-13 phone validation environment: Android 11 system image is now installed locally, but a phone AVD still needs to be created before #56 / #43 validation can resume.`
 
 ## Usage
 
