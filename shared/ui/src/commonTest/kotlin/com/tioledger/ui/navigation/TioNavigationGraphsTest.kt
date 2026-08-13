@@ -2,6 +2,7 @@ package com.tioledger.ui.navigation
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TioNavigationGraphsTest {
@@ -51,6 +52,11 @@ class TioNavigationGraphsTest {
             main.bottomNavigationRoutes,
         )
         assertTrue(main.bottomNavigationRoutes.all { it in main.routes })
+    }
+
+    @Test
+    fun settingsRouteRemainsOutsideCanonicalBottomNavigation() {
+        assertFalse(MainRoute.Settings in TioNavigationGraphs.main.bottomNavigationRoutes)
     }
 
     @Test
