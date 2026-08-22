@@ -129,7 +129,18 @@ internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
         RootRoute.Splash -> null
         is RootRoute.Main ->
             when (currentRoute.destination) {
+                MainRoute.Dashboard,
+                MainRoute.Accounts,
+                MainRoute.Transactions,
+                MainRoute.Categories,
+                MainRoute.Budgets,
+                MainRoute.Reports,
+                MainRoute.Loans,
+                -> null
+                MainRoute.TransactionEntry,
+                MainRoute.SmsTransactionReview,
+                -> RootRoute.Main(MainRoute.Transactions)
+                is MainRoute.LoanDetails -> RootRoute.Main(MainRoute.Loans)
                 MainRoute.Settings -> TioNavigationGraphs.root.mainEntry
-                else -> null
             }
     }

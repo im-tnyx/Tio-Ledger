@@ -17,6 +17,30 @@ class MainActivityNavigationTest {
     }
 
     @Test
+    fun systemBackFromTransactionEntryReturnsTransactions() {
+        assertEquals(
+            RootRoute.Main(MainRoute.Transactions),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.TransactionEntry)),
+        )
+    }
+
+    @Test
+    fun systemBackFromSmsReviewReturnsTransactions() {
+        assertEquals(
+            RootRoute.Main(MainRoute.Transactions),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.SmsTransactionReview)),
+        )
+    }
+
+    @Test
+    fun systemBackFromLoanDetailsReturnsLoans() {
+        assertEquals(
+            RootRoute.Main(MainRoute.Loans),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.LoanDetails("loan-1"))),
+        )
+    }
+
+    @Test
     fun systemBackDoesNotOverridePrimaryNavigationRoutes() {
         listOf(
             MainRoute.Dashboard,
@@ -30,13 +54,10 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun systemBackDoesNotOverrideOtherNonPrimaryRoutes() {
+    fun systemBackExitsFromTopLevelNonPrimaryRoutes() {
         listOf(
             MainRoute.Reports,
             MainRoute.Loans,
-            MainRoute.TransactionEntry,
-            MainRoute.SmsTransactionReview,
-            MainRoute.LoanDetails("loan-1"),
         ).forEach { route ->
             assertNull(systemBackTargetOrNull(RootRoute.Main(route)))
         }
