@@ -14,13 +14,13 @@ import com.tioledger.apps.android.reminders.ReminderNavigationIntent
 import com.tioledger.apps.android.reminders.androidReminderSettingsRoute
 import com.tioledger.apps.android.reminders.shouldReconcileNotificationPermissionChange
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
+import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 import com.tioledger.ui.shell.TioAppShell
 
 class MainActivity : ComponentActivity() {
     private val currentRoute = mutableStateOf<RootRoute>(TioNavigationGraphs.root.mainEntry)
-    private val routeHistory = mutableStateOf(listOf<RootRoute>(TioNavigationGraphs.root.mainEntry))
     private val settingsRefreshToken = mutableStateOf(0L)
     private var lastObservedNotificationPermissionStatus: AndroidNotificationPermissionStatus? = null
     private val backNavigationCallback =
@@ -105,20 +105,16 @@ class MainActivity : ComponentActivity() {
     private fun navigateTo(route: RootRoute) {
         if (currentRoute.value == route) return
         currentRoute.value = route
-        routeHistory.value = routeHistory.value + route
     }
 
     private fun replaceRouteFromExternalEvent(route: RootRoute) {
         currentRoute.value = route
-        routeHistory.value = listOf(route)
     }
 
     private fun navigateBackOrFinish() {
-        val history = routeHistory.value
-        if (history.size > 1) {
-            val previousRoute = history[history.lastIndex - 1]
-            routeHistory.value = history.dropLast(1)
-            currentRoute.value = previousRoute
+        val targetRoute = systemBackTargetOrNull(currentRoute.value)
+        if (targetRoute != null) {
+            currentRoute.value = targetRoute
             return
         }
 
@@ -127,3 +123,24 @@ class MainActivity : ComponentActivity() {
         backNavigationCallback.isEnabled = true
     }
 }
+
+internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
+    when (currentRoute) {
+        RootRoute.Splash -> null
+        is RootRoute.Main ->
+            when (currentRoute.destination) {
+                MainRoute.Dashboard,
+                MainRoute.Accounts,
+                MainRoute.Transactions,
+                MainRoute.Categories,
+                MainRoute.Budgets,
+                MainRoute.Reports,
+                MainRoute.Loans,
+                -> null
+                MainRoute.TransactionEntry,
+                MainRoute.SmsTransactionReview,
+                -> RootRoute.Main(MainRoute.Transactions)
+                is MainRoute.LoanDetails -> RootRoute.Main(MainRoute.Loans)
+                MainRoute.Settings -> TioNavigationGraphs.root.mainEntry
+            }
+    }
