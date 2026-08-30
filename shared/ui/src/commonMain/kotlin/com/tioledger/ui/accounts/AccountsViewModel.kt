@@ -59,6 +59,8 @@ class AccountsViewModel(
                 id = idGenerator.nextId(),
                 name = current.draftName,
                 type = current.draftType,
+                // Temporary default per docs/references/notes/account-creation-v2.md: no approved
+                // user-selectable currency flow exists yet. Not inferred from device locale.
                 currencyCode = "USD",
                 createdAt = nowProvider(),
             )
