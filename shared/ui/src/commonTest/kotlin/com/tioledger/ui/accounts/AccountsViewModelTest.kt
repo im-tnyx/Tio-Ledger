@@ -1,10 +1,12 @@
 package com.tioledger.ui.accounts
 
+import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.LedgerError
 import com.tioledger.core.model.LedgerResult
 import com.tioledger.core.model.Money
+import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
 import com.tioledger.domain.model.LedgerEntry
@@ -29,7 +31,7 @@ class AccountsViewModelTest {
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
         ledger.entriesByAccount[bank.id] = listOf(entry("bank-entry", bank, 2_500L))
 
-        val viewModel = AccountsViewModel(ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()))
+        val viewModel = testViewModel(accounts, ledger)
         val state = viewModel.uiState.value
 
         assertFalse(state.isLoading)
@@ -47,7 +49,7 @@ class AccountsViewModelTest {
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
         ledger.entriesByAccount[bank.id] = listOf(entry("bank-entry", bank, 2_500L))
-        val viewModel = AccountsViewModel(ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()))
+        val viewModel = testViewModel(accounts, ledger)
 
         viewModel.onAction(AccountsAction.SearchChanged("sbi"))
 
@@ -56,7 +58,95 @@ class AccountsViewModelTest {
         assertEquals(1, state.groups.single().accounts.size)
         assertEquals("SBI", state.groups.single().accounts.single().name)
     }
+
+    @Test
+    fun createAccountDelegatesThroughUseCaseWithDeterministicGeneratedId() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
+        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("generated-account-id"))
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("Travel Wallet"))
+        viewModel.onAction(AccountsAction.TypeChanged(AccountType.BANK))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        val created = accounts.created.single()
+        assertEquals("generated-account-id", created.id)
+        assertEquals("Travel Wallet", created.name)
+        assertEquals(AccountType.BANK, created.type)
+        assertEquals("USD", created.currencyCode)
+    }
+
+    @Test
+    fun successfulCreationRefreshesAccountList() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
+        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("generated-account-id"))
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("Travel Wallet"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isCreateDialogVisible)
+        assertFalse(state.isSaving)
+        assertEquals("", state.draftName)
+        assertTrue(state.groups.flatMap { it.accounts }.any { it.name == "Travel Wallet" })
+    }
+
+    @Test
+    fun validationFailureSurfacesThroughExistingErrorMapping() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
+        val viewModel = testViewModel(accounts, ledger)
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged(""))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        val state = viewModel.uiState.value
+        assertEquals("name: must not be blank", state.createErrorMessage)
+    }
+
+    @Test
+    fun failedCreationDoesNotFabricateOrPersistState() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
+        val viewModel = testViewModel(accounts, ledger)
+        val stateBeforeSave = viewModel.uiState.value
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged(""))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        val state = viewModel.uiState.value
+        assertTrue(accounts.created.isEmpty())
+        assertTrue(state.isCreateDialogVisible)
+        assertFalse(state.isSaving)
+        assertEquals(stateBeforeSave.groups, state.groups)
+        assertEquals(stateBeforeSave.summary, state.summary)
+    }
 }
+
+private fun testViewModel(
+    accounts: FakeAccountRepository,
+    ledger: FakeLedgerRepository,
+    idGenerator: IdGenerator = FixedIdGenerator("unused-id"),
+): AccountsViewModel =
+    AccountsViewModel(
+        listAccountSummariesUseCase = ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
+        createAccountUseCase = CreateAccountUseCase(accounts),
+        idGenerator = idGenerator,
+        nowProvider = { 1_700_000_000_000L },
+    )
 
 private fun account(
     id: String,
@@ -87,15 +177,27 @@ private fun entry(
         createdAt = 1L,
     )
 
-private class FakeAccountRepository(private val accountList: List<Account>) : AccountRepository {
+private class FixedIdGenerator(private val id: String) : IdGenerator {
+    override fun nextId(): String = id
+}
+
+private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRepository {
+    private val accounts = initialAccounts.toMutableList()
+    private val createdAccounts = mutableListOf<Account>()
+    val created: List<Account> get() = createdAccounts
+
     override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> =
-        LedgerResult.Success(accountList.filter { includeArchived || !it.isArchived })
+        LedgerResult.Success(accounts.filter { includeArchived || !it.isArchived })
 
     override fun findById(accountId: String): LedgerResult<Account> =
-        accountList.firstOrNull { it.id == accountId }?.let { LedgerResult.Success(it) }
+        accounts.firstOrNull { it.id == accountId }?.let { LedgerResult.Success(it) }
             ?: LedgerResult.Failure(LedgerError.AccountNotFound(accountId))
 
-    override fun create(account: Account): LedgerResult<Account> = LedgerResult.Success(account)
+    override fun create(account: Account): LedgerResult<Account> {
+        accounts += account
+        createdAccounts += account
+        return LedgerResult.Success(account)
+    }
 
     override fun update(account: Account): LedgerResult<Account> = LedgerResult.Success(account)
 }

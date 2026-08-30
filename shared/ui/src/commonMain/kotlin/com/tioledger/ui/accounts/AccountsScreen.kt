@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +39,8 @@ import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
+import com.tioledger.ui.components.TioFilterChip
+import com.tioledger.ui.components.TioFloatingActionButton
 import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.components.TioSearchField
 import com.tioledger.ui.design.TioDimensions
@@ -89,6 +93,12 @@ fun AccountsScreen(
                 },
             )
         },
+        floatingActionButton = {
+            TioFloatingActionButton(
+                onClick = { onAction(AccountsAction.AddClicked) },
+                contentDescription = "Add account",
+            )
+        },
         bottomBar = {
             TioBottomNavigation(
                 items = bottomNavigation.items,
@@ -124,6 +134,45 @@ fun AccountsScreen(
                 else -> AccountsGroupedList(state.groups)
             }
         }
+    }
+    if (state.isCreateDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { onAction(AccountsAction.CreateDismissed) },
+            title = { Text("Add account") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.md)) {
+                    OutlinedTextField(
+                        value = state.draftName,
+                        onValueChange = { onAction(AccountsAction.NameChanged(it)) },
+                        label = { Text("Name") },
+                        singleLine = true,
+                        enabled = !state.isSaving,
+                    )
+                    Text("Type", style = MaterialTheme.typography.labelLarge)
+                    Row(horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
+                        TioFilterChip(
+                            label = "Cash",
+                            selected = state.draftType == AccountType.CASH,
+                            onClick = { onAction(AccountsAction.TypeChanged(AccountType.CASH)) },
+                        )
+                        TioFilterChip(
+                            label = "Bank",
+                            selected = state.draftType == AccountType.BANK,
+                            onClick = { onAction(AccountsAction.TypeChanged(AccountType.BANK)) },
+                        )
+                    }
+                    state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onAction(AccountsAction.SaveClicked) }, enabled = !state.isSaving) {
+                    Text(if (state.isSaving) "Saving" else "Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onAction(AccountsAction.CreateDismissed) }, enabled = !state.isSaving) { Text("Cancel") }
+            },
+        )
     }
 }
 

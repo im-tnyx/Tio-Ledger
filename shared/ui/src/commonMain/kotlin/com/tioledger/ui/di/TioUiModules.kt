@@ -14,7 +14,7 @@ import org.koin.dsl.module
 
 fun tioUiModule(): Module =
     module {
-        factory { AccountsViewModel(get()) }
+        factory { AccountsViewModel(get(), get(), get()) }
         factory { BudgetsViewModel(get(), get(), get(), get(), get()) }
         factory { CategoriesViewModel(get(), get(), get()) }
         factory { LoansViewModel(get(), get(), get(), get()) }

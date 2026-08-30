@@ -9,6 +9,11 @@ data class AccountsUiState(
     val summary: AccountsSummaryUiModel = AccountsSummaryUiModel.Empty,
     val groups: List<AccountGroupUiModel> = emptyList(),
     val errorMessage: String? = null,
+    val isCreateDialogVisible: Boolean = false,
+    val draftName: String = "",
+    val draftType: AccountType = AccountType.CASH,
+    val isSaving: Boolean = false,
+    val createErrorMessage: String? = null,
 ) {
     val isEmpty: Boolean
         get() = !isLoading && errorMessage == null && groups.all { it.accounts.isEmpty() }
@@ -47,6 +52,16 @@ sealed interface AccountsAction {
     data class SearchChanged(val query: String) : AccountsAction
 
     data object Retry : AccountsAction
+
+    data object AddClicked : AccountsAction
+
+    data object CreateDismissed : AccountsAction
+
+    data class NameChanged(val name: String) : AccountsAction
+
+    data class TypeChanged(val type: AccountType) : AccountsAction
+
+    data object SaveClicked : AccountsAction
 }
 
 sealed interface AccountsEvent
