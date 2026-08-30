@@ -41,13 +41,14 @@ class AccountsViewModel(
             is AccountsAction.NameChanged ->
                 _uiState.value = _uiState.value.copy(draftName = action.name, createErrorMessage = null)
             is AccountsAction.TypeChanged -> _uiState.value = _uiState.value.copy(draftType = action.type)
+            is AccountsAction.CurrencyChanged -> _uiState.value = _uiState.value.copy(draftCurrencyCode = action.currencyCode)
             AccountsAction.SaveClicked -> createAccount()
         }
     }
 
     private fun dismissCreateDialog() {
         if (_uiState.value.isSaving) return
-        _uiState.value = _uiState.value.copy(isCreateDialogVisible = false, draftName = "", createErrorMessage = null)
+        _uiState.value = resetCreateDraft(_uiState.value)
     }
 
     private fun createAccount() {
@@ -59,18 +60,16 @@ class AccountsViewModel(
                 id = idGenerator.nextId(),
                 name = current.draftName,
                 type = current.draftType,
-                // Temporary default per docs/references/notes/account-creation-v2.md: no approved
-                // user-selectable currency flow exists yet. Not inferred from device locale.
-                currencyCode = "USD",
+                currencyCode = current.draftCurrencyCode,
                 createdAt = nowProvider(),
             )
         when (val result = createAccountUseCase(command)) {
             is ApplicationResult.Success -> {
-                _uiState.value = _uiState.value.copy(isCreateDialogVisible = false, draftName = "", isSaving = false)
+                _uiState.value = resetCreateDraft(_uiState.value)
                 loadAccounts()
             }
             is ApplicationResult.Failure ->
-                _uiState.value = _uiState.value.copy(isSaving = false, createErrorMessage = result.error.toMessage())
+                _uiState.value = _uiState.value.copy(isSaving = false, createErrorMessage = result.error.toCreateMessage())
         }
     }
 
@@ -158,3 +157,20 @@ private fun ApplicationError.toMessage(): String =
         is ApplicationError.Repository -> "Unable to load accounts."
         is ApplicationError.Ledger -> "Unable to calculate account balances."
     }
+
+private fun ApplicationError.toCreateMessage(): String =
+    when (this) {
+        is ApplicationError.Validation -> "$field: $reason"
+        is ApplicationError.Repository -> "Unable to save this account. Try again."
+        is ApplicationError.Ledger -> "Unable to save this account. Try again."
+    }
+
+private fun resetCreateDraft(state: AccountsUiState): AccountsUiState =
+    state.copy(
+        isCreateDialogVisible = false,
+        draftName = "",
+        draftType = AccountType.CASH,
+        draftCurrencyCode = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
+        isSaving = false,
+        createErrorMessage = null,
+    )

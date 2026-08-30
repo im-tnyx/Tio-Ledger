@@ -3,6 +3,7 @@
 package com.tioledger.ui.accounts
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -149,17 +151,30 @@ fun AccountsScreen(
                         enabled = !state.isSaving,
                     )
                     Text("Type", style = MaterialTheme.typography.labelLarge)
-                    Row(horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
-                        TioFilterChip(
-                            label = "Cash",
-                            selected = state.draftType == AccountType.CASH,
-                            onClick = { onAction(AccountsAction.TypeChanged(AccountType.CASH)) },
-                        )
-                        TioFilterChip(
-                            label = "Bank",
-                            selected = state.draftType == AccountType.BANK,
-                            onClick = { onAction(AccountsAction.TypeChanged(AccountType.BANK)) },
-                        )
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
+                    ) {
+                        CREATABLE_ACCOUNT_TYPES.forEach { type ->
+                            TioFilterChip(
+                                label = type.creationLabel(),
+                                selected = state.draftType == type,
+                                onClick = { onAction(AccountsAction.TypeChanged(type)) },
+                            )
+                        }
+                    }
+                    Text("Currency", style = MaterialTheme.typography.labelLarge)
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
+                    ) {
+                        SUPPORTED_ACCOUNT_CURRENCY_CODES.forEach { currencyCode ->
+                            TioFilterChip(
+                                label = currencyCode,
+                                selected = state.draftCurrencyCode == currencyCode,
+                                onClick = { onAction(AccountsAction.CurrencyChanged(currencyCode)) },
+                            )
+                        }
                     }
                     state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
@@ -175,6 +190,14 @@ fun AccountsScreen(
         )
     }
 }
+
+private fun AccountType.creationLabel(): String =
+    when (this) {
+        AccountType.CASH -> "Cash"
+        AccountType.BANK -> "Bank"
+        AccountType.LOAN_LINKED -> "Loan-linked"
+        AccountType.CREDIT_CARD, AccountType.WALLET, AccountType.INVESTMENT -> name
+    }
 
 @Composable
 private fun AccountsSummaryRow(summary: AccountsSummaryUiModel) {
