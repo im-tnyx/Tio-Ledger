@@ -3,6 +3,7 @@
 package com.tioledger.ui.accounts
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +18,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +41,8 @@ import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
+import com.tioledger.ui.components.TioFilterChip
+import com.tioledger.ui.components.TioFloatingActionButton
 import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.components.TioSearchField
 import com.tioledger.ui.design.TioDimensions
@@ -89,6 +95,12 @@ fun AccountsScreen(
                 },
             )
         },
+        floatingActionButton = {
+            TioFloatingActionButton(
+                onClick = { onAction(AccountsAction.AddClicked) },
+                contentDescription = "Add account",
+            )
+        },
         bottomBar = {
             TioBottomNavigation(
                 items = bottomNavigation.items,
@@ -125,7 +137,67 @@ fun AccountsScreen(
             }
         }
     }
+    if (state.isCreateDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { onAction(AccountsAction.CreateDismissed) },
+            title = { Text("Add account") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.md)) {
+                    OutlinedTextField(
+                        value = state.draftName,
+                        onValueChange = { onAction(AccountsAction.NameChanged(it)) },
+                        label = { Text("Name") },
+                        singleLine = true,
+                        enabled = !state.isSaving,
+                    )
+                    Text("Type", style = MaterialTheme.typography.labelLarge)
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
+                    ) {
+                        CREATABLE_ACCOUNT_TYPES.forEach { type ->
+                            TioFilterChip(
+                                label = type.creationLabel(),
+                                selected = state.draftType == type,
+                                onClick = { onAction(AccountsAction.TypeChanged(type)) },
+                            )
+                        }
+                    }
+                    Text("Currency", style = MaterialTheme.typography.labelLarge)
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
+                    ) {
+                        SUPPORTED_ACCOUNT_CURRENCY_CODES.forEach { currencyCode ->
+                            TioFilterChip(
+                                label = currencyCode,
+                                selected = state.draftCurrencyCode == currencyCode,
+                                onClick = { onAction(AccountsAction.CurrencyChanged(currencyCode)) },
+                            )
+                        }
+                    }
+                    state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onAction(AccountsAction.SaveClicked) }, enabled = !state.isSaving) {
+                    Text(if (state.isSaving) "Saving" else "Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onAction(AccountsAction.CreateDismissed) }, enabled = !state.isSaving) { Text("Cancel") }
+            },
+        )
+    }
 }
+
+private fun AccountType.creationLabel(): String =
+    when (this) {
+        AccountType.CASH -> "Cash"
+        AccountType.BANK -> "Bank"
+        AccountType.LOAN_LINKED -> "Loan-linked"
+        AccountType.CREDIT_CARD, AccountType.WALLET, AccountType.INVESTMENT -> name
+    }
 
 @Composable
 private fun AccountsSummaryRow(summary: AccountsSummaryUiModel) {
