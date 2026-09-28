@@ -1,6 +1,7 @@
 package com.tioledger.apps.android
 
 import android.app.Application
+import com.tioledger.apps.android.reminders.ReminderDataChangeDriverFactory
 import com.tioledger.apps.android.reminders.ReminderNotificationChannels
 import com.tioledger.apps.android.reminders.ReminderReconciliationEnqueuer
 import com.tioledger.apps.android.reminders.ReminderReconciliationReason
@@ -16,8 +17,15 @@ class TioAndroidApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        val driverFactory =
+            ReminderDataChangeDriverFactory(AndroidDatabaseDriverFactory(this)) {
+                ReminderReconciliationEnqueuer.enqueue(
+                    context = this,
+                    reason = ReminderReconciliationReason.RELEVANT_DATA_CHANGED,
+                )
+            }
         koinApplication =
-            TioApplicationBootstrap(AndroidDatabaseDriverFactory(this))
+            TioApplicationBootstrap(driverFactory)
                 .start(
                     extraModules =
                         listOf(
