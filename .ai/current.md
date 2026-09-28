@@ -2,10 +2,10 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `main`
+Branch: `fix/android-reminder-data-change-reconciliation`
 Platform Scope: `android`
 Last Updated: `2026-09-28`
-Next Action: `Pre-Android-13 (API 30, TioLedger_Android11) permission/status validation is done for #56. Next: seed a loan/budget with a near-term due reminder and exercise delivery/deep-link/restart/reboot/timezone/upgrade lifecycle evidence on that environment before deciding #56's disposition.`
+Next Action: `Review the #56 Defect 1 PR (relevant-data-change reconciliation, validated on API 30); then get a product decision on Defect 2 (time-zone-dependent budget reminder identity duplicates EXCEEDED after a time-zone change). EMI delivery checks stay blocked by #61.`
 
 ## Usage
 
