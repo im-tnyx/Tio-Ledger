@@ -4,8 +4,8 @@ Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
 Branch: `main`
 Platform Scope: `android`
-Last Updated: `2026-08-12`
-Next Action: `Finish provisioning a representative pre-Android-13 phone validation environment: Android 11 system image is now installed locally, but a phone AVD still needs to be created before #56 / #43 validation can resume.`
+Last Updated: `2026-09-28`
+Next Action: `Pre-Android-13 (API 30, TioLedger_Android11) permission/status validation is done for #56. Next: seed a loan/budget with a near-term due reminder and exercise delivery/deep-link/restart/reboot/timezone/upgrade lifecycle evidence on that environment before deciding #56's disposition.`
 
 ## Usage
 
