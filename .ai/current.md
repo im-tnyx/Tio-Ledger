@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Blocked
+Status: In Progress
 Active Task: `.ai/tasks/docs/local-20260929-budget-reminder-identity-spec.md`
 Branch: `docs/budget-reminder-identity-spec`
 Platform Scope: `docs`
 Last Updated: `2026-09-29`
-Next Action: `Get explicit approval of the #64 budget reminder identity proposal (spec-first; no production code), then amend docs/emi-budget-reminders-v1.md. #56 validation is paused behind #64 and #61.`
+Next Action: `#64 semantics approved; finish the canonical docs amendment, open and validate the docs-only spec PR, then wait for merge authorization. No production code. #56 stays blocked behind #64 and #61.`
 
 ## Usage
 

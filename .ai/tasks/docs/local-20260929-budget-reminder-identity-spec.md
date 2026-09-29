@@ -1,6 +1,6 @@
 # Budget Reminder Identity Spec (Time-Zone Stable)
 
-Status: Blocked
+Status: In Progress
 Objective: Get an explicit, approved canonical definition of a time-zone-stable budget reminder identity in `docs/emi-budget-reminders-v1.md` for issue #64, before any production change.
 Branch: `docs/budget-reminder-identity-spec`
 Scope: `docs` specification and `.ai` continuity only; no production Kotlin
@@ -34,30 +34,33 @@ Related: `#56`, `#43`, `#41` (approved contract), `#42` (shared planner)
 - #41/#42 approved `(budgetId, periodStartInclusive, status)` plus "no recurring notification while the same state remains active", but never typed the field or covered time-zone changes; #41 left "no unresolved timezone ambiguity" unchecked.
 - No existing test covers budget identity across time zones.
 
-## Proposal (awaiting approval on #64)
+## Decisions (approved on #64, 2026-09-29)
 
-- Identity `(budgetId, periodType, periodStartDate, status)`, `periodStartDate` = local calendar `LocalDate` (ISO in the key); budget engine exposes the date additively.
-- Legacy instant-keyed receipts: shared planner also treats the candidate's legacy key as delivered (no Android change, no migration).
-- Full question-by-question analysis and test list: #64 comment.
+- Identity `(budgetId, periodType, periodStartDate, status)`; `periodStartDate` = local-calendar `kotlinx.datetime.LocalDate` resolved by the budget engine, rendered as ISO text (`budget|<id>|MONTHLY|2026-09-01|EXCEEDED`); no UTC-midnight `Long` encoding.
+- `periodType` participates (MONTHLY and YEARLY both start on 1 January).
+- Timezone: same resolved period keeps the identity; crossing a real period boundary legitimately changes it; no notification-side timezone special cases; spend windows unchanged.
+- Superseded: the earlier shared-side legacy-alias suppression proposal. Pre-canonical instant keys are pre-v1 non-financial platform metadata; the implementation must define a scoped Android-local metadata transition (receipts/scheduled work only; never preferences or financial state). No SQLDelight migration.
 
 ## Progress
 
 - [x] Source-of-truth audit (spec, #41, #42, budget engine, notifications, application, Android consumers, tests).
 - [x] Spec amendment proposal posted on #64.
-- [ ] Explicit approval of the identity semantics.
-- [ ] Spec amendment PR (docs only).
+- [x] Explicit approval of the identity semantics (decision comment on #64).
+- [x] Canonical amendment to `docs/emi-budget-reminders-v1.md`.
+- [ ] Docs-only spec PR validated and merged (merge needs explicit authorization).
 - [ ] Separate implementation task/PR after spec merge.
 
 ## Validation
 
-- Not run (documentation/continuity only).
+- Documentation/continuity only: `git diff --check`; no Kotlin/Gradle/schema/UI change.
 
 ## Changed Files
 
+- `docs/emi-budget-reminders-v1.md`
 - `.ai/current.md`
 - `.ai/tasks/docs/local-20260929-budget-reminder-identity-spec.md`
 - `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
 
 ## Next Action
 
-Get an explicit decision on the #64 proposal (identity fields, date encoding, legacy-receipt strategy); then amend `docs/emi-budget-reminders-v1.md` on this branch.
+Get the docs-only #64 spec PR reviewed and merge-authorized; then start a separate implementation task (shared identity + Android-local metadata transition).
