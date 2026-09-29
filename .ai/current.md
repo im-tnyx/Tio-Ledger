@@ -1,11 +1,11 @@
 # Active Task
 
 Status: In Progress
-Active Task: `.ai/tasks/repo/local-20260929-prevent-ai-coauthor-attribution.md`
-Branch: `chore/prevent-ai-coauthor-attribution`
-Platform Scope: `repo`
+Active Task: `.ai/tasks/docs/local-20260929-loans-navigation-entry.md`
+Branch: `docs/loans-navigation-entry`
+Platform Scope: `docs`
 Last Updated: `2026-09-29`
-Next Action: `Open and verify the #66 governance PR (AGENTS.md commit-attribution rule, no AI co-author on the branch commit); wait for merge authorization. #56 stays paused (EMI blocked by #61).`
+Next Action: `Validate and get merge authorization for the docs-only #61 Loans entry-point reference PR; no production navigation until it merges. #56 EMI checks stay blocked by #61.`
 
 ## Usage
 
