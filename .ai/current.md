@@ -1,11 +1,11 @@
 # Active Task
 
 Status: In Progress
-Active Task: `.ai/tasks/docs/local-20260929-budget-reminder-identity-spec.md`
-Branch: `docs/budget-reminder-identity-spec`
-Platform Scope: `docs`
+Active Task: `.ai/tasks/shared/local-20260929-budget-reminder-timezone-identity.md`
+Branch: `fix/budget-reminder-timezone-identity`
+Platform Scope: `shared`
 Last Updated: `2026-09-29`
-Next Action: `#64 semantics approved; finish the canonical docs amendment, open and validate the docs-only spec PR, then wait for merge authorization. No production code. #56 stays blocked behind #64 and #61.`
+Next Action: `Implement the approved #64 canonical budget reminder identity (shared layers only, Option A Android transition), validate, revalidate on API 30, open PR; do not merge without authorization.`
 
 ## Usage
 

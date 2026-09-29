@@ -14,6 +14,7 @@ import kotlinx.datetime.toLocalDateTime
 data class BudgetPeriodWindow(
     val startInclusive: Long,
     val endExclusive: Long,
+    val startDate: LocalDate,
 )
 
 enum class BudgetProgressStatus {
@@ -51,6 +52,7 @@ class BudgetPeriodCalculator {
         return BudgetPeriodWindow(
             startInclusive = startDate.atStartOfDayIn(timeZone).toEpochMilliseconds(),
             endExclusive = endDate.atStartOfDayIn(timeZone).toEpochMilliseconds(),
+            startDate = startDate,
         )
     }
 

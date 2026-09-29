@@ -1,11 +1,13 @@
 # Budget Reminder Identity Spec (Time-Zone Stable)
 
-Status: In Progress
+Status: Complete
 Objective: Get an explicit, approved canonical definition of a time-zone-stable budget reminder identity in `docs/emi-budget-reminders-v1.md` for issue #64, before any production change.
 Branch: `docs/budget-reminder-identity-spec`
 Scope: `docs` specification and `.ai` continuity only; no production Kotlin
 Created: `2026-09-29`
-Last Updated: `2026-09-29`
+Completed: `2026-09-29`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/65`
+Merge Commit: `7d5cbf0ad5605c1fa8e6326b3d675d95df161b97`
 Issue: `#64`
 Related: `#56`, `#43`, `#41` (approved contract), `#42` (shared planner)
 
@@ -47,8 +49,8 @@ Related: `#56`, `#43`, `#41` (approved contract), `#42` (shared planner)
 - [x] Spec amendment proposal posted on #64.
 - [x] Explicit approval of the identity semantics (decision comment on #64).
 - [x] Canonical amendment to `docs/emi-budget-reminders-v1.md`.
-- [ ] Docs-only spec PR validated and merged (merge needs explicit authorization).
-- [ ] Separate implementation task/PR after spec merge.
+- [x] Docs-only spec PR #65 validated (CI run #420) and merged as `7d5cbf0`.
+- [x] Implementation handed off to `.ai/tasks/shared/local-20260929-budget-reminder-timezone-identity.md`.
 
 ## Validation
 
@@ -63,4 +65,4 @@ Related: `#56`, `#43`, `#41` (approved contract), `#42` (shared planner)
 
 ## Next Action
 
-Get the docs-only #64 spec PR reviewed and merge-authorized; then start a separate implementation task (shared identity + Android-local metadata transition).
+None. Implementation continues in the shared #64 implementation task.

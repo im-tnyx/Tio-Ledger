@@ -4,6 +4,13 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-09-29 - Time-Zone-Stable Budget Reminder Identity
+
+- `shared:budget-engine` `BudgetPeriodWindow` now also exposes the local calendar `startDate` it already derives. The period instants, spend aggregation, utilization, thresholds, and status are unchanged.
+- `shared:application` `BudgetSummary` carries that `periodStartDate`. `PlanRemindersUseCase` passes `periodType` and `periodStartDate` to `BudgetReminderCandidate` without recalculating the period.
+- `shared:notifications` `ReminderIdentity.Budget` is now `(budgetId, periodType, periodStartDate, status)`, keyed `budget|<budgetId>|<PERIOD_TYPE>|<YYYY-MM-DD>|<STATUS>`, as required by `docs/emi-budget-reminders-v1.md` (#64). A time-zone change within the same local budget period no longer re-delivers a budget reminder.
+- `apps/android` has no production change and keeps the identity key opaque. Pre-canonical scheduled budget identities are cancelled by the existing reconciliation `Cancel` path, and pre-canonical receipts stay inert until bounded pruning removes them. No SQLDelight schema, migration, or financial behavior changed.
+
 ## 2026-09-28 - Android Reminder Relevant-Data-Change Reconciliation
 
 - `apps/android` now wraps its `DatabaseDriverFactory` with a read-only SQLDelight change listener on the `loans`, `emi_schedules`, `budgets`, `transactions`, `transaction_splits`, and `ledger_entries` table keys, enqueuing the existing unique reminder reconciliation work with `RELEVANT_DATA_CHANGED` after committed writes.

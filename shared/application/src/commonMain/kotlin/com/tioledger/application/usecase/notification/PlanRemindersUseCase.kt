@@ -203,7 +203,8 @@ private fun BudgetSummary.toReminderCandidate(): BudgetReminderCandidate =
     BudgetReminderCandidate(
         budgetId = id,
         budgetName = name,
-        periodStartInclusive = periodStartInclusive,
+        periodType = periodType,
+        periodStartDate = periodStartDate,
         status = status,
         target = target,
         spent = spent,

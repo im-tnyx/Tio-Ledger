@@ -21,6 +21,7 @@ import com.tioledger.domain.model.TransactionType
 import com.tioledger.domain.repository.BudgetRepository
 import com.tioledger.domain.repository.CategoryRepository
 import com.tioledger.domain.repository.TransactionHistoryRepository
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -57,6 +58,7 @@ class BudgetSummaryUseCaseTest {
         assertEquals("Food", summary.categoryName)
         assertEquals(JULY_1_2026_UTC, summary.periodStartInclusive)
         assertEquals(AUGUST_1_2026_UTC, summary.periodEndExclusive)
+        assertEquals(LocalDate(2026, 7, 1), summary.periodStartDate)
         assertEquals(Money(2_500L, usd), summary.spent)
         assertEquals(Money(7_500L, usd), summary.remaining)
         assertEquals(250, summary.utilizationPermille)

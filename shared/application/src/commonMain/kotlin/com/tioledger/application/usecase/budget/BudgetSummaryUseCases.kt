@@ -14,6 +14,7 @@ import com.tioledger.domain.model.Budget
 import com.tioledger.domain.model.BudgetPeriodType
 import com.tioledger.domain.repository.CategoryRepository
 import com.tioledger.domain.repository.TransactionHistoryRepository
+import kotlinx.datetime.LocalDate
 
 data class BudgetSummary(
     val id: String,
@@ -24,6 +25,7 @@ data class BudgetSummary(
     val periodType: BudgetPeriodType,
     val periodStartInclusive: Long,
     val periodEndExclusive: Long,
+    val periodStartDate: LocalDate,
     val spent: Money,
     val remaining: Money,
     val utilizationPermille: Int,
@@ -124,6 +126,7 @@ class ListBudgetSummariesUseCase(
             periodType = periodType,
             periodStartInclusive = period.startInclusive,
             periodEndExclusive = period.endExclusive,
+            periodStartDate = period.startDate,
             spent = progress.spent,
             remaining = progress.remaining,
             utilizationPermille = progress.utilizationPermille,

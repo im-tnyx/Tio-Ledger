@@ -2,6 +2,7 @@ package com.tioledger.application.usecase.notification
 
 import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
+import com.tioledger.application.usecase.budget.BudgetSummary
 import com.tioledger.application.usecase.budget.ListBudgetSummariesUseCase
 import com.tioledger.application.usecase.budget.ListBudgetsUseCase
 import com.tioledger.budget.engine.BudgetPeriodCalculator
@@ -108,6 +109,67 @@ class PlanRemindersUseCaseTest {
     }
 
     @Test
+    fun budgetIdentityStaysStableAcrossTimeZonesResolvingTheSameLocalPeriod() {
+        val loanRepository = FakeLoanRepository(emptyList())
+        val useCase = createUseCase(loanRepository)
+        val currentTimestamp = timestamp(LocalDate(2026, 8, 6), 8)
+
+        val kolkata = budgetPlans(useCase, currentTimestamp, "Asia/Kolkata")
+        val newYork = budgetPlans(useCase, currentTimestamp, "America/New_York")
+        val afterTimeZoneChange =
+            budgetPlans(
+                useCase = useCase,
+                currentTimestamp = currentTimestamp,
+                timeZoneId = "America/New_York",
+                deliveredBudgetIdentityKeys = setOf(kolkata.single().identityKey),
+            )
+
+        assertEquals("budget|budget-1|MONTHLY|2026-08-01|WARNING", kolkata.single().identityKey)
+        assertEquals(kolkata.map { it.identityKey }, newYork.map { it.identityKey })
+        assertEquals(emptyList(), afterTimeZoneChange)
+        assertEquals(0, loanRepository.createCalls)
+    }
+
+    @Test
+    fun timeZoneCrossingALocalPeriodBoundaryResolvesThatPeriodIdentity() {
+        val loanRepository = FakeLoanRepository(emptyList())
+        val septemberFirstInKolkata = timestamp(LocalDate(2026, 8, 31), 19)
+        val useCase =
+            createUseCase(
+                loanRepository = loanRepository,
+                transactions =
+                    listOf(
+                        expense("august", timestamp(LocalDate(2026, 8, 5), 12), 8_000L),
+                        expense("september-in-kolkata", septemberFirstInKolkata, 8_000L),
+                    ),
+            )
+        val currentTimestamp = timestamp(LocalDate(2026, 8, 31), 20)
+
+        val kolkata = budgetPlans(useCase, currentTimestamp, "Asia/Kolkata")
+        val newYork = budgetPlans(useCase, currentTimestamp, "America/New_York")
+
+        assertEquals("budget|budget-1|MONTHLY|2026-09-01|WARNING", kolkata.single().identityKey)
+        assertEquals("budget|budget-1|MONTHLY|2026-08-01|EXCEEDED", newYork.single().identityKey)
+        assertEquals(0, loanRepository.createCalls)
+    }
+
+    @Test
+    fun budgetCandidateUsesAuthoritativeSummaryPeriod() {
+        val currentTimestamp = timestamp(LocalDate(2026, 8, 6), 8)
+        val summary =
+            assertIs<ApplicationResult.Success<List<BudgetSummary>>>(
+                budgetSummaries()(anchorTimestamp = currentTimestamp, timeZoneId = "Asia/Kolkata"),
+            ).outcome.value.single()
+
+        val plan = budgetPlans(createUseCase(FakeLoanRepository(emptyList())), currentTimestamp, "Asia/Kolkata").single()
+
+        assertEquals(
+            "budget|${summary.id}|${summary.periodType.name}|${summary.periodStartDate}|${summary.status.name}",
+            plan.identityKey,
+        )
+    }
+
+    @Test
     fun mapsLoanRepositoryFailure() {
         val loanRepository =
             object : LoanRepository {
@@ -177,18 +239,69 @@ class PlanRemindersUseCaseTest {
         assertEquals(0, loanRepository.findAllCalls)
     }
 
-    private fun createUseCase(loanRepository: LoanRepository): PlanRemindersUseCase =
+    private fun createUseCase(
+        loanRepository: LoanRepository,
+        transactions: List<TransactionHistoryRecord> = defaultTransactions(),
+    ): PlanRemindersUseCase =
         PlanRemindersUseCase(
             loanRepository = loanRepository,
-            listBudgetSummariesUseCase =
-                ListBudgetSummariesUseCase(
-                    listBudgetsUseCase = ListBudgetsUseCase(FakeBudgetRepository()),
-                    categoryRepository = EmptyCategoryRepository,
-                    transactionHistoryRepository = FakeTransactionHistoryRepository(),
-                    periodCalculator = BudgetPeriodCalculator(),
-                    progressCalculator = BudgetProgressCalculator(),
-                ),
+            listBudgetSummariesUseCase = budgetSummaries(transactions),
             reminderPlanner = ReminderPlanner(),
+        )
+
+    private fun budgetSummaries(transactions: List<TransactionHistoryRecord> = defaultTransactions()): ListBudgetSummariesUseCase =
+        ListBudgetSummariesUseCase(
+            listBudgetsUseCase = ListBudgetsUseCase(FakeBudgetRepository()),
+            categoryRepository = EmptyCategoryRepository,
+            transactionHistoryRepository = FakeTransactionHistoryRepository(transactions),
+            periodCalculator = BudgetPeriodCalculator(),
+            progressCalculator = BudgetProgressCalculator(),
+        )
+
+    private fun budgetPlans(
+        useCase: PlanRemindersUseCase,
+        currentTimestamp: Long,
+        timeZoneId: String,
+        deliveredBudgetIdentityKeys: Set<String> = emptySet(),
+    ): List<ReminderPlanView> =
+        assertIs<ApplicationResult.Success<List<ReminderPlanView>>>(
+            useCase(
+                PlanRemindersCommand(
+                    currentTimestamp = currentTimestamp,
+                    timeZoneId = timeZoneId,
+                    emiRemindersEnabled = false,
+                    budgetRemindersEnabled = true,
+                    deliveredBudgetIdentityKeys = deliveredBudgetIdentityKeys,
+                ),
+            ),
+        ).outcome.value
+
+    private fun defaultTransactions(): List<TransactionHistoryRecord> =
+        listOf(expense("expense-1", timestamp(LocalDate(2026, 8, 5), 12), 8_000L))
+
+    private fun expense(
+        id: String,
+        timestamp: Long,
+        amount: Long,
+    ): TransactionHistoryRecord =
+        TransactionHistoryRecord(
+            id = id,
+            timestamp = timestamp,
+            description = "Groceries",
+            type = TransactionType.EXPENSE,
+            splits =
+                listOf(
+                    TransactionHistorySplit(
+                        id = "split-$id",
+                        accountId = "bank-account",
+                        accountName = "Bank",
+                        accountType = AccountType.BANK,
+                        amount = Money(amount, inr),
+                        categoryId = null,
+                        categoryName = null,
+                        entryType = LedgerEntryType.CREDIT,
+                    ),
+                ),
         )
 
     private fun testLoanDetails(): LoanDetails {
@@ -246,9 +359,9 @@ class PlanRemindersUseCaseTest {
 
         override fun findById(budgetId: String): LedgerResult<Budget> = LedgerResult.Success(budget)
 
-        override fun create(budget: Budget): LedgerResult<Budget> = LedgerResult.Success(budget)
+        override fun create(budget: Budget): LedgerResult<Budget> = error("reminder planning must not write budgets")
 
-        override fun update(budget: Budget): LedgerResult<Budget> = LedgerResult.Success(budget)
+        override fun update(budget: Budget): LedgerResult<Budget> = error("reminder planning must not write budgets")
     }
 
     private object EmptyCategoryRepository : CategoryRepository {
@@ -261,31 +374,10 @@ class PlanRemindersUseCaseTest {
         override fun update(category: Category): LedgerResult<Category> = LedgerResult.Success(category)
     }
 
-    private inner class FakeTransactionHistoryRepository : TransactionHistoryRepository {
-        override fun findAll(): LedgerResult<List<TransactionHistoryRecord>> =
-            LedgerResult.Success(
-                listOf(
-                    TransactionHistoryRecord(
-                        id = "expense-1",
-                        timestamp = timestamp(LocalDate(2026, 8, 5), 12),
-                        description = "Groceries",
-                        type = TransactionType.EXPENSE,
-                        splits =
-                            listOf(
-                                TransactionHistorySplit(
-                                    id = "split-1",
-                                    accountId = "bank-account",
-                                    accountName = "Bank",
-                                    accountType = AccountType.BANK,
-                                    amount = Money(8_000L, inr),
-                                    categoryId = null,
-                                    categoryName = null,
-                                    entryType = LedgerEntryType.CREDIT,
-                                ),
-                            ),
-                    ),
-                ),
-            )
+    private class FakeTransactionHistoryRepository(
+        private val transactions: List<TransactionHistoryRecord>,
+    ) : TransactionHistoryRepository {
+        override fun findAll(): LedgerResult<List<TransactionHistoryRecord>> = LedgerResult.Success(transactions)
     }
 
     private class FakeLoanRepository(

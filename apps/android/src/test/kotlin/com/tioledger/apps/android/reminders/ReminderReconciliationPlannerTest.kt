@@ -1,5 +1,6 @@
 package com.tioledger.apps.android.reminders
 
+import com.tioledger.application.usecase.notification.BudgetReminderStatusView
 import com.tioledger.application.usecase.notification.ReminderContentView
 import com.tioledger.application.usecase.notification.ReminderDestinationView
 import com.tioledger.application.usecase.notification.ReminderPlanTypeView
@@ -32,6 +33,33 @@ class ReminderReconciliationPlannerTest {
             ),
             (result as ReminderReconciliationResult.Success).operations,
         )
+    }
+
+    @Test
+    fun preCanonicalBudgetScheduledIdentityIsCancelledWhenCanonicalIdentityIsDesired() {
+        val preCanonical =
+            ScheduledReminderRecord(
+                identityKey = "budget|budget-1|1788201000000|EXCEEDED",
+                type = AndroidReminderType.BUDGET,
+                deliveryTimestamp = 100L,
+                payloadFingerprint = "pre-canonical-fingerprint",
+            )
+        val canonical =
+            budgetPayload(
+                identityKey = "budget|budget-1|MONTHLY|2026-09-01|EXCEEDED",
+                deliveryTimestamp = 200L,
+            )
+
+        val result = planner.plan(desired = listOf(canonical), scheduled = listOf(preCanonical))
+
+        assertEquals(
+            listOf(
+                ReminderReconciliationOperation.Cancel(preCanonical),
+                ReminderReconciliationOperation.Schedule(canonical),
+            ),
+            (result as ReminderReconciliationResult.Success).operations,
+        )
+        assertNotEquals(reminderUniqueWorkName(preCanonical.identityKey), canonical.uniqueWorkName)
     }
 
     @Test
@@ -142,6 +170,26 @@ class ReminderReconciliationPlannerTest {
                     loanName = "Home loan",
                     dueDate = 300L,
                     payment = AndroidMoneyPayload(12_345L, "INR"),
+                ),
+        )
+
+    private fun budgetPayload(
+        identityKey: String,
+        deliveryTimestamp: Long,
+    ): ReminderWorkPayload =
+        ReminderWorkPayload(
+            identityKey = identityKey,
+            type = AndroidReminderType.BUDGET,
+            deliveryTimestamp = deliveryTimestamp,
+            timeZoneId = "America/New_York",
+            destination = AndroidReminderDestination.Budgets,
+            content =
+                AndroidReminderContent.Budget(
+                    budgetName = "Groceries",
+                    status = BudgetReminderStatusView.EXCEEDED,
+                    target = AndroidMoneyPayload(10_000L, "INR"),
+                    spent = AndroidMoneyPayload(10_500L, "INR"),
+                    remaining = AndroidMoneyPayload(-500L, "INR"),
                 ),
         )
 
