@@ -2,6 +2,7 @@
 
 Status: Approved
 Approved: 2026-08-06
+Amended: 2026-09-29 (time-zone-stable budget reminder identity, [#64](https://github.com/im-tnyx/Tio-Ledger/issues/64))
 Tracking Issue: [#41](https://github.com/im-tnyx/Tio-Ledger/issues/41)
 
 ## Purpose
@@ -124,10 +125,38 @@ No recurring reminder is emitted while the same state remains active. A later tr
 The stable budget reminder identity is:
 
 ```text
-(budgetId, periodStartInclusive, status)
+(budgetId, periodType, periodStartDate, status)
 ```
 
-A delivery receipt for this identity prevents duplicate delivery after process restart or idempotent replanning.
+Where:
+
+- `budgetId` is the budget's stable ID.
+- `periodType` is the budget's existing `BudgetPeriodType` for the current period.
+- `periodStartDate` is the local calendar date (`kotlinx.datetime.LocalDate`) on which the current budget period starts, as resolved by the existing budget engine in the planning timezone.
+- `status` is the eligible `WARNING`, `REACHED`, or `EXCEEDED` budget state.
+
+The identity key is rendered deterministically with the ISO-8601 calendar date, for example:
+
+```text
+budget|<budgetId>|MONTHLY|2026-09-01|EXCEEDED
+```
+
+`periodStartDate` is a calendar date, not an instant. It must not be encoded as epoch milliseconds, including a UTC-midnight epoch value.
+
+`periodType` is part of the identity because different recurring period types can start on the same date. For example, MONTHLY and YEARLY periods both start on 1 January. Changing a budget's configured period type can therefore create a new identity for the current period.
+
+#### Timezone Stability
+
+The budget engine remains authoritative for the current local calendar period. Notification code must not recalculate budget periods or add timezone special cases.
+
+- A timezone change that still resolves the budget to the same `periodType` and `periodStartDate` keeps the same identity. An already delivered state is not delivered again.
+- A timezone change that moves the local date across a real budget-period boundary makes the engine resolve a different current period. The identity then changes with that period. For example, 1 September 00:30 in `Asia/Kolkata` is still 31 August in `America/New_York`, so planning in New York uses the August period.
+- Daylight-saving transitions do not change `periodStartDate`, so they do not change the identity.
+- Spend attribution continues to use the engine's timezone-specific period start and end instants. This identity rule does not change any budget calculation window, spend, utilization, or threshold.
+
+`CUSTOM` budget periods are unsupported in v1. Their reminder identity must be specified before they are supported.
+
+A delivery receipt for this identity prevents duplicate delivery after process restart, timezone reconciliation, or idempotent replanning.
 
 Old budget-period receipt identities may be pruned after they are no longer needed. Receipt retention must be bounded.
 
@@ -256,6 +285,16 @@ Receipts must:
 
 EMI scheduled work uses stable identity for replace/cancel semantics. A delivered EMI receipt may be recorded for diagnostics or duplicate prevention, but it must not alter installment status.
 
+### Pre-Canonical Budget Reminder Metadata
+
+Receipts and scheduled-work keys written before the canonical budget identity embed an epoch-millisecond period-start instant, for example `budget|<budgetId>|<epochMillis>|<STATUS>`. They are pre-v1, platform-local, non-financial metadata. They are not part of any durable financial-data compatibility contract.
+
+- The canonical identity above is the only budget identity going forward. The shared planner must not treat pre-canonical instant keys as aliases.
+- No SQLDelight migration exists or is required.
+- The implementation must define the smallest safe platform-local transition for pre-canonical keys, such as a scoped reset or versioning of budget receipt and scheduled-work metadata.
+- That transition may affect only reminder receipt and scheduled-work metadata. It must never clear or change reminder preferences, transactions, budgets, loans, balances, ledger entries, or any other financial state.
+- The transition must not promise to suppress every reminder already delivered under a pre-canonical key unless the implementation can guarantee it.
+
 ## Rescheduling And Cancellation
 
 Replanning is idempotent.
@@ -314,6 +353,12 @@ Meaning must not depend only on color, icon, sound, or vibration.
 - Budget period rollover.
 - Deterministic repeated planning.
 - Money values remain precise.
+- Budget identity keys use `(budgetId, periodType, periodStartDate, status)` with an ISO calendar date.
+- WEEKLY, MONTHLY, and YEARLY budget identities.
+- MONTHLY and YEARLY periods that start on the same date produce distinct identity keys.
+- The same budget, period, and status planned with two different timezone contexts produce the same key.
+- A delivered canonical key suppresses the same state after a timezone change.
+- Notifications do not calculate money, thresholds, spend, or budget periods.
 
 ### Application
 
@@ -323,6 +368,12 @@ Meaning must not depend only on color, icon, sound, or vibration.
 - Invalid timestamp/timezone validation.
 - Immutable plan output.
 - No financial write use case invocation.
+- The same monthly period and status in two timezones that resolve to the same local period produce the same budget identity key.
+- A timezone shift that crosses a local budget-period boundary produces the correct new period and key.
+- Timezones whose local period start falls on a daylight-saving transition produce a stable `periodStartDate`.
+- Repeated planning with the same inputs is deterministic.
+- A delivered canonical key suppresses the same state after timezone reconciliation.
+- The budget engine keeps its timezone-specific spend window. Its period start and end instants and its spend results do not change.
 
 ### Android Adapter
 
@@ -334,6 +385,9 @@ Meaning must not depend only on color, icon, sound, or vibration.
 - Startup, reboot, upgrade, and timezone reconciliation hooks.
 - Deep-link destination mapping.
 - No exact-alarm permission requirement for v1.
+- Budget identity keys stay opaque to the adapter.
+- A timezone change that keeps the same budget period does not re-deliver a budget reminder.
+- The pre-canonical budget receipt and scheduled-work metadata transition touches only reminder metadata. Preferences and financial state are unchanged.
 
 ## Implementation Sequence
 

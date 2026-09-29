@@ -1,11 +1,11 @@
 # Android Reminder Validation Follow-up
 
-Status: In Progress
+Status: Blocked
 Objective: Close the remaining Android reminder acceptance gaps recorded in issue #56 after PR #55 merged, without reopening merged Settings UI scope unless a concrete defect is found.
-Branch: `fix/android-reminder-data-change-reconciliation` (Defect 1 PR); otherwise `main`
+Branch: `main` (no open branch; Defect 1 PR #62 merged)
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
-Last Updated: `2026-09-28`
+Last Updated: `2026-09-29`
 Issue: `#56`
 Parent: `#43`
 
@@ -43,24 +43,22 @@ Parent: `#43`
   - `adb logcat` (app PID, filtered for exception/error/fatal, plus a global `AndroidRuntime:E *:F` pass) showed nothing — no crash, no exception, during any of the above.
   - `uiautomator dump` of Settings showed switch nodes exposing `checkable=true`/`checked` and combined labels (e.g. `"EMI reminders. Receive upcoming and due loan installment reminders."`), and delivery status as text. Correction: the dump is view-hierarchy order, not TalkBack traversal order, and it listed the `Settings` title after the content, so it is **not** screen-reader-order evidence. TalkBack spoken output was not run.
 - `2026-09-28` delivery/lifecycle pass on `TioLedger_Android11` (API 30, IST). Scenario built only through production UI/use cases: Cash/INR account `Wallet` → EXPENSE category `Food` → Monthly budget `Groceries` INR 100.00 (Food) → expenses INR 85.00 / 15.00 / 5.00. No DB injection; DB inspected read-only (`sqlite3 -readonly` via `run-as`).
-  - Defect 1 (found on `main@8a9c029`): `RELEVANT_DATA_CHANGED` was declared but never enqueued. After the 85.00 expense (budget `Near limit`), no reconciliation/notification for 3+ min while the same process stayed alive; force-stop + relaunch then delivered `Budget warning` immediately. Fixed on branch `fix/android-reminder-data-change-reconciliation` (`ea5c80f`): read-only SQLDelight change listener on `loans`, `emi_schedules`, `budgets`, `transactions`, `transaction_splits`, `ledger_entries` enqueues reconciliation.
+  - Defect 1 (found on `main@8a9c029`): `RELEVANT_DATA_CHANGED` was declared but never enqueued. After the 85.00 expense (budget `Near limit`), no reconciliation/notification for 3+ min while the same process stayed alive; force-stop + relaunch then delivered `Budget warning` immediately. Fixed by PR #62, merged to `main` as `b37376b` on 2026-09-29 (exact-head CI run #418 green; app/shared code identical to validated `ea5c80f`): read-only SQLDelight change listener on `loans`, `emi_schedules`, `budgets`, `transactions`, `transaction_splits`, `ledger_entries` enqueues reconciliation.
   - Revalidated on `ea5c80f`: upgrade-install over `8a9c029` data → process started for `ReminderReconciliationReceiver` broadcast, reconcile SUCCESS, no duplicate WARNING (PASS); cold boot → process started for the same receiver, reconcile SUCCESS, no duplicate (PASS); 15.00 expense in same process → `Budget limit reached` ~2s later, no restart (PASS, fix verified); notification tap → Budgets screen, auto-cancel, DB unchanged (PASS); force-stop + relaunch → no duplicate REACHED, receipts keyed `budget|<id>|<periodStart>|<status>` (PASS); Budget reminders disabled → EXCEEDED transition not delivered (PASS); re-enabled → EXCEEDED delivered once (PASS).
-  - Defect 2 (open, needs spec decision): time-zone change `Asia/Kolkata → America/New_York` reconciled (hook PASS) but re-delivered `Budget limit exceeded` for the same budget/month/state, because `periodStartInclusive` is a time-zone-dependent instant (`1788201000000` IST vs `1788235200000` EDT) inside the stable budget identity. Violates "no recurring reminder while the same state remains active". Fix would change the shared reminder identity rule defined in `docs/emi-budget-reminders-v1.md` → outside this task's constraints; not changed.
+  - Defect 2 (open, tracked by #64, needs spec decision): time-zone change `Asia/Kolkata → America/New_York` reconciled (hook PASS) but re-delivered `Budget limit exceeded` for the same budget/month/state, because `periodStartInclusive` is a time-zone-dependent instant (`1788201000000` IST vs `1788235200000` EDT) inside the stable budget identity. Violates "no recurring reminder while the same state remains active". Fix would change the shared reminder identity rule defined in `docs/emi-budget-reminders-v1.md` → outside this task's constraints; not changed.
   - Final DB: 3 transactions / 6 ledger entries, DEBIT 10500 = CREDIT 10500, all from the three user-entered expenses; no notification, settings, upgrade, reboot, or time-zone action mutated financial rows.
   - Not testable: any EMI delivery/deep link/cancellation (creating an ACTIVE loan needs `LoansScreen`, which no production UI reaches — issue #61); cancellation of *pending* budget work (budget plans deliver immediately, nothing stays pending).
   - Observation (out of #56 scope): the Accounts/Transactions FAB content description is not exposed in the uiautomator tree (only the placeholder glyph text).
 
 ## Remaining Gaps
 
-- Defect 2 (time-zone-dependent budget identity) needs a product/spec decision before any shared-planner change.
+- Defect 2 (time-zone-dependent budget identity): blocked on the #64 spec decision; revalidate the #56 time-zone check after #64 lands.
 - EMI delivery, EMI deep link, EMI disable → cancellation, reboot "restores eligible work" for future-scheduled EMI: blocked by #61 (no production path to create a loan).
-- TalkBack spoken-output, screen-reader order, keyboard/switch access: not run.
+- TalkBack spoken-output, screen-reader order, keyboard/switch access: not run (not blocked).
 - Remaining permission-matrix breadth items in `#56` (denial vs broader financial workflows, full five-state layout, preference-write-error visual state).
-- Manual audit of open issues `#54` and `#57` — not done.
+- Tracker hygiene noted, not acted on: #54 still open although PR #55 merged on 2026-08-12.
 - Separately filed, out of scope: #60 (dark theme), #61 (Loans navigation).
 
 ## Next Action
 
-1. Review/merge the Defect 1 PR from `fix/android-reminder-data-change-reconciliation`.
-2. Get a product decision on Defect 2 (e.g. identity keyed by budget-local period start date instead of an instant) before any shared-planner/spec change.
-3. Decide whether #61 should be unblocked first so EMI delivery/lifecycle checks can run, then resume `#56`.
+Paused behind #64 (primary objective moved to `.ai/tasks/docs/local-20260929-budget-reminder-identity-spec.md`). Resume after #64 is resolved or #61 unblocks EMI checks; TalkBack/screen-reader checks can run on `main` at any time.

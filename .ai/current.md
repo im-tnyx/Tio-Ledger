@@ -1,11 +1,11 @@
 # Active Task
 
 Status: In Progress
-Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `fix/android-reminder-data-change-reconciliation`
-Platform Scope: `android`
-Last Updated: `2026-09-28`
-Next Action: `Review the #56 Defect 1 PR (relevant-data-change reconciliation, validated on API 30); then get a product decision on Defect 2 (time-zone-dependent budget reminder identity duplicates EXCEEDED after a time-zone change). EMI delivery checks stay blocked by #61.`
+Active Task: `.ai/tasks/docs/local-20260929-budget-reminder-identity-spec.md`
+Branch: `docs/budget-reminder-identity-spec`
+Platform Scope: `docs`
+Last Updated: `2026-09-29`
+Next Action: `#64 semantics approved; finish the canonical docs amendment, open and validate the docs-only spec PR, then wait for merge authorization. No production code. #56 stays blocked behind #64 and #61.`
 
 ## Usage
 
