@@ -1,11 +1,13 @@
 # Loans Navigation Entry Implementation
 
-Status: In Progress
+Status: Complete
 Objective: Implement the approved #61 Loans entry (PR #69): an Accounts app-bar `Loans` action to `MainRoute.Loans` and Android system back from Loans to Accounts.
 Branch: `fix/loans-navigation-entry`
 Scope: `shared/ui` Accounts app bar + `apps/android` system-back rule and tests; no financial, route, or bottom-navigation change
 Created: `2026-09-29`
-Last Updated: `2026-09-29`
+Completed: `2026-09-29`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/70`
+Merge Commit: `3a986a0c94759b76d055dc7846e56a0d499366fc`
 Issue: `#61`
 Related: `#56`, `#43`
 
@@ -36,7 +38,7 @@ Related: `#56`, `#43`
 - [x] Tests.
 - [x] Local validation.
 - [x] Device validation.
-- [ ] PR exact-head CI and merge authorization.
+- [x] PR #70 CI run #428 green; squash-merged as `3a986a0` with a clean message; #61 closed.
 
 ## Validation
 
@@ -57,4 +59,4 @@ Related: `#56`, `#43`
 
 ## Next Action
 
-Get exact-head CI green on the #61 PR and wait for explicit merge authorization; after merge, resume #56 EMI validation via production UI (loan-linked account → Loans → Add loan).
+None. EMI validation continues in `.ai/tasks/android/local-20260812-reminder-validation-followup.md`.
