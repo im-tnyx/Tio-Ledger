@@ -1,11 +1,11 @@
 # Active Task
 
 Status: In Progress
-Active Task: `.ai/tasks/docs/local-20260929-loans-navigation-entry.md`
-Branch: `docs/loans-navigation-entry`
-Platform Scope: `docs`
+Active Task: `.ai/tasks/android/local-20260929-loans-navigation-implementation.md`
+Branch: `fix/loans-navigation-entry`
+Platform Scope: `shared-ui + android navigation`
 Last Updated: `2026-09-29`
-Next Action: `Validate and get merge authorization for the docs-only #61 Loans entry-point reference PR; no production navigation until it merges. #56 EMI checks stay blocked by #61.`
+Next Action: `Implement the approved #61 Loans entry (Accounts app-bar action + Loans system back to Accounts), validate, open PR; do not merge without authorization. #56 EMI checks resume only after #61 merges.`
 
 ## Usage
 

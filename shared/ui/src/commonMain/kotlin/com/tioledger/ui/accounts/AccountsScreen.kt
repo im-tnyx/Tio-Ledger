@@ -32,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -82,6 +83,16 @@ fun AccountsScreen(
                 title = "Accounts",
                 actions = {
                     TioIcon(TioIconToken.Analytics, contentDescription = "Account statistics")
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(TioDimensions.minTouchTarget)
+                                .clickable(role = Role.Button) { onNavigate(MainRoute.Loans) }
+                                .semantics { contentDescription = "Loans" },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        TioIcon(TioIconToken.Loan)
+                    }
                     Box(
                         modifier =
                             Modifier

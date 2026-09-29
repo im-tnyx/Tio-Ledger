@@ -135,12 +135,13 @@ internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
                 MainRoute.Categories,
                 MainRoute.Budgets,
                 MainRoute.Reports,
-                MainRoute.Loans,
                 -> null
                 MainRoute.TransactionEntry,
                 MainRoute.SmsTransactionReview,
                 -> RootRoute.Main(MainRoute.Transactions)
                 is MainRoute.LoanDetails -> RootRoute.Main(MainRoute.Loans)
-                MainRoute.Settings -> TioNavigationGraphs.root.mainEntry
+                MainRoute.Loans,
+                MainRoute.Settings,
+                -> TioNavigationGraphs.root.mainEntry
             }
     }
