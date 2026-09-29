@@ -54,12 +54,19 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun systemBackExitsFromTopLevelNonPrimaryRoutes() {
-        listOf(
-            MainRoute.Reports,
-            MainRoute.Loans,
-        ).forEach { route ->
-            assertNull(systemBackTargetOrNull(RootRoute.Main(route)))
-        }
+    fun systemBackFromLoansReturnsAccountsMainEntry() {
+        assertEquals(
+            RootRoute.Main(MainRoute.Accounts),
+            TioNavigationGraphs.root.mainEntry,
+        )
+        assertEquals(
+            TioNavigationGraphs.root.mainEntry,
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.Loans)),
+        )
+    }
+
+    @Test
+    fun systemBackFromReportsKeepsDefaultExit() {
+        assertNull(systemBackTargetOrNull(RootRoute.Main(MainRoute.Reports)))
     }
 }

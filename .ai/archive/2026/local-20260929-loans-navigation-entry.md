@@ -1,11 +1,13 @@
 # Loans Navigation Entry Reference
 
-Status: In Progress
+Status: Complete
 Objective: Define an approved, reference-backed navigation entry to `MainRoute.Loans` for issue #61 before any production navigation change.
 Branch: `docs/loans-navigation-entry`
 Scope: `docs/references/notes/loan.md` and `.ai` continuity only; no production Kotlin
 Created: `2026-09-29`
-Last Updated: `2026-09-29`
+Completed: `2026-09-29`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/69`
+Merge Commit: `ba5fac5c52a0330c6e1c75fdb567eb76b17e5f37`
 Issue: `#61`
 Related: `#56`, `#43` (EMI device checks blocked by #61)
 
@@ -34,7 +36,7 @@ Related: `#56`, `#43` (EMI device checks blocked by #61)
 - Android system back from Loans currently returns `null` (exits), covered by `MainActivityNavigationTest.systemBackExitsFromTopLevelNonPrimaryRoutes`.
 - Reference: Money Manager keeps loans as an Accounts group with no separate Loans destination; there is no Loans entry in its tabs or More/settings; the JADX structure has no loan screen.
 
-## Decisions (proposed in the docs PR)
+## Decisions (approved by merging PR #69)
 
 - Entry: `Loans` icon action (`TioIconToken.Loan`) in the Accounts top app bar, before Settings.
 - System back from Loans → Accounts (main entry), matching Settings; Loan Details → Loans unchanged.
@@ -43,8 +45,8 @@ Related: `#56`, `#43` (EMI device checks blocked by #61)
 
 - [x] Repository and reference audit.
 - [x] `loan.md` Loans Entry Point amendment.
-- [ ] Docs PR merged (needs explicit authorization).
-- [ ] Separate production implementation task after merge.
+- [x] PR #69 CI run #426 green; squash-merged as `ba5fac5` with a clean message.
+- [x] Implementation handed off to `.ai/tasks/android/local-20260929-loans-navigation-implementation.md`.
 
 ## Validation
 
@@ -57,4 +59,4 @@ Related: `#56`, `#43` (EMI device checks blocked by #61)
 
 ## Next Action
 
-Get the #61 reference PR reviewed and merge-authorized; then implement the Accounts app-bar Loans action, the system-back change, and tests in a separate PR.
+None.
