@@ -1,11 +1,13 @@
 # Budget Reminder Time-Zone-Stable Identity
 
-Status: In Progress
+Status: Complete
 Objective: Implement the canonical budget reminder identity `(budgetId, periodType, periodStartDate, status)` approved in PR #65 so a time-zone change within the same local budget period never re-delivers a reminder.
 Branch: `fix/budget-reminder-timezone-identity`
 Scope: `shared/budget-engine`, `shared/application`, `shared/notifications`, Android reconciliation tests; no Android production change
 Created: `2026-09-29`
-Last Updated: `2026-09-29`
+Completed: `2026-09-29`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/67`
+Merge Commit: `743474485b2055d86eccfd90b36eca5d9193db3d`
 Issue: `#64`
 Related: `#56`, `#43`
 
@@ -39,7 +41,7 @@ Related: `#56`, `#43`
 - [x] Documentation (changelog, spec transition note).
 - [x] Full local validation.
 - [x] API 30 time-zone device revalidation.
-- [ ] Implementation PR exact-head CI and merge authorization.
+- [x] PR #67 exact-head CI run #422 green; squash-merged as `7434744`; #64 closed; #56/#43 synced.
 
 ## Validation
 
@@ -59,4 +61,4 @@ Related: `#56`, `#43`
 
 ## Next Action
 
-Get exact-head CI green on the #64 implementation PR and wait for explicit merge authorization; then post-merge sync and update #56 time-zone check.
+None. #56 remaining work continues in the Android reminder validation follow-up task.

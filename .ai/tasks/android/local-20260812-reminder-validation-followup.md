@@ -52,7 +52,7 @@ Parent: `#43`
 
 ## Remaining Gaps
 
-- Defect 2 (time-zone-dependent budget identity): blocked on the #64 spec decision; revalidate the #56 time-zone check after #64 lands.
+- Defect 2 (time-zone-dependent budget identity): resolved by #64 / PR #67 (`7434744`); revalidated on API 30 on 2026-09-29.
 - EMI delivery, EMI deep link, EMI disable → cancellation, reboot "restores eligible work" for future-scheduled EMI: blocked by #61 (no production path to create a loan).
 - TalkBack spoken-output, screen-reader order, keyboard/switch access: not run (not blocked).
 - Remaining permission-matrix breadth items in `#56` (denial vs broader financial workflows, full five-state layout, preference-write-error visual state).
@@ -61,4 +61,4 @@ Parent: `#43`
 
 ## Next Action
 
-Paused behind #64 (spec merged in PR #65; implementation in `.ai/tasks/shared/local-20260929-budget-reminder-timezone-identity.md`). Resume after #64 is resolved or #61 unblocks EMI checks; TalkBack/screen-reader checks can run on `main` at any time.
+Paused while #66 (commit attribution governance) is the primary task. EMI checks stay blocked by #61; TalkBack/screen-reader/keyboard checks can run on `main` at any time.

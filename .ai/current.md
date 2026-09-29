@@ -1,11 +1,11 @@
 # Active Task
 
 Status: In Progress
-Active Task: `.ai/tasks/shared/local-20260929-budget-reminder-timezone-identity.md`
-Branch: `fix/budget-reminder-timezone-identity`
-Platform Scope: `shared`
+Active Task: `.ai/tasks/repo/local-20260929-prevent-ai-coauthor-attribution.md`
+Branch: `chore/prevent-ai-coauthor-attribution`
+Platform Scope: `repo`
 Last Updated: `2026-09-29`
-Next Action: `Implement the approved #64 canonical budget reminder identity (shared layers only, Option A Android transition), validate, revalidate on API 30, open PR; do not merge without authorization.`
+Next Action: `Open and verify the #66 governance PR (AGENTS.md commit-attribution rule, no AI co-author on the branch commit); wait for merge authorization. #56 stays paused (EMI blocked by #61).`
 
 ## Usage
 
