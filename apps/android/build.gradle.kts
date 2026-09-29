@@ -16,6 +16,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.work.runtime)
     implementation(libs.koin.core)
+    implementation(libs.sqldelight.runtime)
 
     testImplementation(libs.junit)
+    testImplementation(libs.sqldelight.sqlite.driver)
 }

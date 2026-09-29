@@ -4,6 +4,12 @@ This changelog records architectural decisions that affect project structure, da
 
 Do not use this file for feature changes or bug fixes.
 
+## 2026-09-28 - Android Reminder Relevant-Data-Change Reconciliation
+
+- `apps/android` now wraps its `DatabaseDriverFactory` with a read-only SQLDelight change listener on the `loans`, `emi_schedules`, `budgets`, `transactions`, `transaction_splits`, and `ledger_entries` table keys, enqueuing the existing unique reminder reconciliation work with `RELEVANT_DATA_CHANGED` after committed writes.
+- This completes the relevant-data-change replanning trigger required by `docs/emi-budget-reminders-v1.md` and issue #43, which was previously declared but never enqueued; eligible budget transitions were only planned on the next app start, preference, permission, boot, time-zone, or package-update trigger.
+- No shared contract, Application use case, repository, SQLDelight schema, planner rule, or financial write path changed; the listener never writes and reminder receipts/preferences remain in platform-local storage outside the observed tables.
+
 ## 2026-08-07 - Android Reminder Settings Presentation Boundary
 
 - Extended the shared `TioAppShell` / `RootNavigationHost` with an optional typed Settings destination-content slot while preserving the existing placeholder default for hosts that do not provide platform content.
