@@ -2,8 +2,10 @@ package com.tioledger.notifications
 
 import com.tioledger.budget.engine.BudgetProgressStatus
 import com.tioledger.core.model.Money
+import com.tioledger.domain.model.BudgetPeriodType
 import com.tioledger.domain.model.LoanInstallmentStatus
 import com.tioledger.domain.model.LoanStatus
+import kotlinx.datetime.LocalDate
 
 enum class ReminderType {
     EMI,
@@ -23,10 +25,11 @@ sealed interface ReminderIdentity {
 
     data class Budget(
         val budgetId: String,
-        val periodStartInclusive: Long,
+        val periodType: BudgetPeriodType,
+        val periodStartDate: LocalDate,
         val status: BudgetProgressStatus,
     ) : ReminderIdentity {
-        override val key: String = "budget|$budgetId|$periodStartInclusive|${status.name}"
+        override val key: String = "budget|$budgetId|${periodType.name}|$periodStartDate|${status.name}"
     }
 }
 
@@ -74,7 +77,8 @@ data class EmiReminderCandidate(
 data class BudgetReminderCandidate(
     val budgetId: String,
     val budgetName: String,
-    val periodStartInclusive: Long,
+    val periodType: BudgetPeriodType,
+    val periodStartDate: LocalDate,
     val status: BudgetProgressStatus,
     val target: Money,
     val spent: Money,

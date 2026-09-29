@@ -295,6 +295,8 @@ Receipts and scheduled-work keys written before the canonical budget identity em
 - That transition may affect only reminder receipt and scheduled-work metadata. It must never clear or change reminder preferences, transactions, budgets, loans, balances, ledger entries, or any other financial state.
 - The transition must not promise to suppress every reminder already delivered under a pre-canonical key unless the implementation can guarantee it.
 
+Android implementation decision (#64): there is no explicit metadata migration, reset, or versioning. The existing reconciliation `Cancel` path cancels each pre-canonical scheduled budget identity's unique work and removes its snapshot record. Pre-canonical receipts no longer match any canonical identity and are removed over time by bounded receipt pruning. A budget state that is still WARNING, REACHED, or EXCEEDED after upgrade may therefore be delivered once more under its canonical identity. After that canonical receipt exists, timezone reconciliation within the same local period does not deliver it again. `tio_reminders_v1` reminder preferences and all financial state are untouched.
+
 ## Rescheduling And Cancellation
 
 Replanning is idempotent.

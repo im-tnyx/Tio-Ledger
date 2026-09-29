@@ -3,6 +3,7 @@ package com.tioledger.notifications
 import com.tioledger.budget.engine.BudgetProgressStatus
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
+import com.tioledger.domain.model.BudgetPeriodType
 import com.tioledger.domain.model.LoanInstallmentStatus
 import com.tioledger.domain.model.LoanStatus
 import kotlinx.datetime.LocalDate
@@ -111,12 +112,12 @@ class ReminderPlannerTest {
 
     @Test
     fun plansBudgetTransitionsOnceAndSuppressesDeliveredIdentity() {
-        val periodStart = utcTimestamp(LocalDate(2026, 8, 1))
+        val periodStart = LocalDate(2026, 8, 1)
         val warning = budgetCandidate(BudgetProgressStatus.WARNING, periodStart)
         val reached = budgetCandidate(BudgetProgressStatus.REACHED, periodStart)
         val exceeded = budgetCandidate(BudgetProgressStatus.EXCEEDED, periodStart)
         val onTrack = budgetCandidate(BudgetProgressStatus.ON_TRACK, periodStart)
-        val delivered = ReminderIdentity.Budget("budget-1", periodStart, BudgetProgressStatus.REACHED).key
+        val delivered = ReminderIdentity.Budget("budget-1", BudgetPeriodType.MONTHLY, periodStart, BudgetProgressStatus.REACHED).key
         val context =
             ReminderPlanningContext(
                 currentTimestamp = utcTimestamp(LocalDate(2026, 8, 6)),
@@ -146,8 +147,8 @@ class ReminderPlannerTest {
         assertEquals(first, second)
         assertEquals(
             listOf(
-                ReminderIdentity.Budget("budget-1", periodStart, BudgetProgressStatus.EXCEEDED),
-                ReminderIdentity.Budget("budget-1", periodStart, BudgetProgressStatus.WARNING),
+                ReminderIdentity.Budget("budget-1", BudgetPeriodType.MONTHLY, periodStart, BudgetProgressStatus.EXCEEDED),
+                ReminderIdentity.Budget("budget-1", BudgetPeriodType.MONTHLY, periodStart, BudgetProgressStatus.WARNING),
             ),
             first.map { it.identity },
         )
@@ -156,11 +157,84 @@ class ReminderPlannerTest {
     }
 
     @Test
+    fun budgetIdentityKeyRendersCanonicalTypeAndIsoCalendarDate() {
+        val identity =
+            ReminderIdentity.Budget(
+                budgetId = "budget-1",
+                periodType = BudgetPeriodType.MONTHLY,
+                periodStartDate = LocalDate(2026, 9, 1),
+                status = BudgetProgressStatus.EXCEEDED,
+            )
+
+        assertEquals("budget|budget-1|MONTHLY|2026-09-01|EXCEEDED", identity.key)
+        assertEquals(
+            "budget|budget-1|WEEKLY|2026-01-05|WARNING",
+            ReminderIdentity.Budget("budget-1", BudgetPeriodType.WEEKLY, LocalDate(2026, 1, 5), BudgetProgressStatus.WARNING).key,
+        )
+        assertEquals(
+            "budget|budget-1|YEARLY|2026-01-01|REACHED",
+            ReminderIdentity.Budget("budget-1", BudgetPeriodType.YEARLY, LocalDate(2026, 1, 1), BudgetProgressStatus.REACHED).key,
+        )
+    }
+
+    @Test
+    fun budgetIdentityDoesNotDependOnPlanningTimeZone() {
+        val candidate = budgetCandidate(BudgetProgressStatus.EXCEEDED, LocalDate(2026, 9, 1))
+        val currentTimestamp = utcTimestamp(LocalDate(2026, 9, 10))
+
+        val kolkata = successPlans(planBudgets(listOf(candidate), ReminderPlanningContext(currentTimestamp, "Asia/Kolkata")))
+        val newYork = successPlans(planBudgets(listOf(candidate), ReminderPlanningContext(currentTimestamp, "America/New_York")))
+
+        assertEquals(kolkata.map { it.identity }, newYork.map { it.identity })
+        assertEquals("budget|budget-1|MONTHLY|2026-09-01|EXCEEDED", newYork.single().identity.key)
+    }
+
+    @Test
+    fun deliveredCanonicalKeySuppressesSameStateAfterTimeZoneChange() {
+        val candidate = budgetCandidate(BudgetProgressStatus.EXCEEDED, LocalDate(2026, 9, 1))
+        val currentTimestamp = utcTimestamp(LocalDate(2026, 9, 10))
+        val delivered = successPlans(planBudgets(listOf(candidate), ReminderPlanningContext(currentTimestamp, "Asia/Kolkata")))
+
+        val afterTimeZoneChange =
+            planBudgets(
+                listOf(candidate),
+                ReminderPlanningContext(
+                    currentTimestamp = currentTimestamp,
+                    timeZoneId = "America/New_York",
+                    deliveredBudgetIdentityKeys = setOf(delivered.single().identity.key),
+                ),
+            )
+
+        assertEquals(emptyList(), successPlans(afterTimeZoneChange))
+    }
+
+    @Test
+    fun periodTypeAndPeriodStartDateDistinguishBudgetIdentities() {
+        val january = LocalDate(2026, 1, 1)
+        val monthly = budgetCandidate(BudgetProgressStatus.WARNING, january, BudgetPeriodType.MONTHLY)
+        val yearly = budgetCandidate(BudgetProgressStatus.WARNING, january, BudgetPeriodType.YEARLY)
+        val nextMonth = budgetCandidate(BudgetProgressStatus.WARNING, LocalDate(2026, 2, 1), BudgetPeriodType.MONTHLY)
+        val context = ReminderPlanningContext(utcTimestamp(LocalDate(2026, 1, 10)), "UTC")
+
+        val keys = successPlans(planBudgets(listOf(monthly, yearly, nextMonth), context)).map { it.identity.key }
+        val suppressedMonthly =
+            successPlans(
+                planBudgets(
+                    listOf(monthly, yearly, nextMonth),
+                    context.copy(deliveredBudgetIdentityKeys = setOf(keys.first())),
+                ),
+            ).map { it.identity.key }
+
+        assertEquals(3, keys.toSet().size)
+        assertEquals(keys.drop(1), suppressedMonthly)
+    }
+
+    @Test
     fun disabledPreferencesReturnNoPlansWithoutValidatingDisabledCandidates() {
         val result =
             planner.plan(
                 emiCandidates = listOf(emiCandidate(loanId = "")),
-                budgetCandidates = listOf(budgetCandidate(BudgetProgressStatus.WARNING, -1L)),
+                budgetCandidates = listOf(budgetCandidate(BudgetProgressStatus.WARNING, LocalDate(2026, 8, 1), budgetId = "")),
                 preferences = ReminderPreferencesSnapshot(false, false),
                 context = ReminderPlanningContext(0L, "UTC"),
             )
@@ -202,16 +276,30 @@ class ReminderPlannerTest {
 
     private fun budgetCandidate(
         status: BudgetProgressStatus,
-        periodStartInclusive: Long,
+        periodStartDate: LocalDate,
+        periodType: BudgetPeriodType = BudgetPeriodType.MONTHLY,
+        budgetId: String = "budget-1",
     ): BudgetReminderCandidate =
         BudgetReminderCandidate(
-            budgetId = "budget-1",
+            budgetId = budgetId,
             budgetName = "Food",
-            periodStartInclusive = periodStartInclusive,
+            periodType = periodType,
+            periodStartDate = periodStartDate,
             status = status,
             target = Money(10_000L, inr),
             spent = Money(8_000L, inr),
             remaining = Money(2_000L, inr),
+        )
+
+    private fun planBudgets(
+        candidates: List<BudgetReminderCandidate>,
+        context: ReminderPlanningContext,
+    ): ReminderPlanningResult =
+        planner.plan(
+            emiCandidates = emptyList(),
+            budgetCandidates = candidates,
+            preferences = ReminderPreferencesSnapshot(false, true),
+            context = context,
         )
 
     private fun successPlans(result: ReminderPlanningResult): List<ReminderPlan> = assertIs<ReminderPlanningResult.Success>(result).plans

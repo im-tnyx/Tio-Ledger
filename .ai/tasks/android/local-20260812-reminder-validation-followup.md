@@ -61,4 +61,4 @@ Parent: `#43`
 
 ## Next Action
 
-Paused behind #64 (primary objective moved to `.ai/tasks/docs/local-20260929-budget-reminder-identity-spec.md`). Resume after #64 is resolved or #61 unblocks EMI checks; TalkBack/screen-reader checks can run on `main` at any time.
+Paused behind #64 (spec merged in PR #65; implementation in `.ai/tasks/shared/local-20260929-budget-reminder-timezone-identity.md`). Resume after #64 is resolved or #61 unblocks EMI checks; TalkBack/screen-reader checks can run on `main` at any time.

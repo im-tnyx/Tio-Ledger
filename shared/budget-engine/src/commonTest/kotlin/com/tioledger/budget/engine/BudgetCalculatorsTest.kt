@@ -10,10 +10,13 @@ import com.tioledger.domain.model.TransactionHistoryRecord
 import com.tioledger.domain.model.TransactionHistorySplit
 import com.tioledger.domain.model.TransactionType
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toInstant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class BudgetCalculatorsTest {
     private val usd = CurrencyCode("USD")
@@ -31,6 +34,7 @@ class BudgetCalculatorsTest {
 
         assertEquals(dateMillis(2026, 7, 1), period.startInclusive)
         assertEquals(dateMillis(2026, 8, 1), period.endExclusive)
+        assertEquals(LocalDate(2026, 7, 1), period.startDate)
     }
 
     @Test
@@ -44,12 +48,69 @@ class BudgetCalculatorsTest {
 
         assertEquals(dateMillis(2026, 7, 13), period.startInclusive)
         assertEquals(dateMillis(2026, 7, 20), period.endExclusive)
+        assertEquals(LocalDate(2026, 7, 13), period.startDate)
+    }
+
+    @Test
+    fun yearlyPeriodStartsOnJanuaryFirst() {
+        val period =
+            periodCalculator.currentPeriod(
+                periodType = BudgetPeriodType.YEARLY,
+                anchorTimestamp = dateMillis(2026, 7, 19),
+                timeZoneId = "UTC",
+            )
+
+        assertEquals(dateMillis(2026, 1, 1), period.startInclusive)
+        assertEquals(dateMillis(2027, 1, 1), period.endExclusive)
+        assertEquals(LocalDate(2026, 1, 1), period.startDate)
+    }
+
+    @Test
+    fun samePeriodStartDateInTimeZonesResolvingTheSameLocalMonthKeepsZoneSpecificInstants() {
+        val anchor = localMillis(LocalDateTime(2026, 8, 6, 8, 0), "UTC")
+
+        val kolkata = periodCalculator.currentPeriod(BudgetPeriodType.MONTHLY, anchor, "Asia/Kolkata")
+        val newYork = periodCalculator.currentPeriod(BudgetPeriodType.MONTHLY, anchor, "America/New_York")
+
+        assertEquals(LocalDate(2026, 8, 1), kolkata.startDate)
+        assertEquals(LocalDate(2026, 8, 1), newYork.startDate)
+        assertEquals(localMillis(LocalDateTime(2026, 8, 1, 0, 0), "Asia/Kolkata"), kolkata.startInclusive)
+        assertEquals(localMillis(LocalDateTime(2026, 9, 1, 0, 0), "Asia/Kolkata"), kolkata.endExclusive)
+        assertEquals(localMillis(LocalDateTime(2026, 8, 1, 0, 0), "America/New_York"), newYork.startInclusive)
+        assertEquals(localMillis(LocalDateTime(2026, 9, 1, 0, 0), "America/New_York"), newYork.endExclusive)
+        assertNotEquals(kolkata.startInclusive, newYork.startInclusive)
+    }
+
+    @Test
+    fun timeZoneThatResolvesADifferentLocalMonthResolvesThatPeriodStartDate() {
+        val anchor = localMillis(LocalDateTime(2026, 9, 1, 0, 30), "Asia/Kolkata")
+
+        val kolkata = periodCalculator.currentPeriod(BudgetPeriodType.MONTHLY, anchor, "Asia/Kolkata")
+        val newYork = periodCalculator.currentPeriod(BudgetPeriodType.MONTHLY, anchor, "America/New_York")
+
+        assertEquals(LocalDate(2026, 9, 1), kolkata.startDate)
+        assertEquals(LocalDate(2026, 8, 1), newYork.startDate)
+    }
+
+    @Test
+    fun daylightSavingTransitionInsidePeriodKeepsCalendarStartDate() {
+        val timeZoneId = "America/New_York"
+        val beforeTransition = localMillis(LocalDateTime(2026, 3, 2, 12, 0), timeZoneId)
+        val afterTransition = localMillis(LocalDateTime(2026, 3, 20, 12, 0), timeZoneId)
+
+        val before = periodCalculator.currentPeriod(BudgetPeriodType.MONTHLY, beforeTransition, timeZoneId)
+        val after = periodCalculator.currentPeriod(BudgetPeriodType.MONTHLY, afterTransition, timeZoneId)
+
+        assertEquals(before, after)
+        assertEquals(LocalDate(2026, 3, 1), after.startDate)
+        assertEquals(localMillis(LocalDateTime(2026, 3, 1, 0, 0), timeZoneId), after.startInclusive)
+        assertEquals(localMillis(LocalDateTime(2026, 4, 1, 0, 0), timeZoneId), after.endExclusive)
     }
 
     @Test
     fun progressAggregatesOnlyMatchingExpenseSplitsInPeriodAndCurrency() {
         val budget = budget(amount = 10_000L, categoryId = "food")
-        val period = BudgetPeriodWindow(dateMillis(2026, 7, 1), dateMillis(2026, 8, 1))
+        val period = BudgetPeriodWindow(dateMillis(2026, 7, 1), dateMillis(2026, 8, 1), LocalDate(2026, 7, 1))
         val transactions =
             listOf(
                 transaction("matching", dateMillis(2026, 7, 5), TransactionType.EXPENSE, "food", 2_500L, usd),
@@ -69,7 +130,7 @@ class BudgetCalculatorsTest {
 
     @Test
     fun progressMarksWarningReachedAndExceededWithoutFloatingPointMath() {
-        val period = BudgetPeriodWindow(dateMillis(2026, 7, 1), dateMillis(2026, 8, 1))
+        val period = BudgetPeriodWindow(dateMillis(2026, 7, 1), dateMillis(2026, 8, 1), LocalDate(2026, 7, 1))
 
         val warning =
             progressCalculator.calculate(
@@ -146,4 +207,9 @@ class BudgetCalculatorsTest {
         month: Int,
         day: Int,
     ): Long = LocalDate(year, month, day).atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+
+    private fun localMillis(
+        dateTime: LocalDateTime,
+        timeZoneId: String,
+    ): Long = dateTime.toInstant(TimeZone.of(timeZoneId)).toEpochMilliseconds()
 }

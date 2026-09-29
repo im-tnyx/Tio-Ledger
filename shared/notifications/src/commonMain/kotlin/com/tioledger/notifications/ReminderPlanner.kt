@@ -146,7 +146,8 @@ class ReminderPlanner {
             identity =
                 ReminderIdentity.Budget(
                     budgetId = budgetId,
-                    periodStartInclusive = periodStartInclusive,
+                    periodType = periodType,
+                    periodStartDate = periodStartDate,
                     status = status,
                 ),
             type = ReminderType.BUDGET,
@@ -195,9 +196,6 @@ class ReminderPlanner {
             when {
                 candidate.budgetId.isBlank() -> return invalidCandidate("budgetCandidates[$index].budgetId")
                 candidate.budgetName.isBlank() -> return invalidCandidate("budgetCandidates[$index].budgetName")
-                candidate.periodStartInclusive < 0L -> {
-                    return invalidCandidate("budgetCandidates[$index].periodStartInclusive")
-                }
             }
         }
         return null
