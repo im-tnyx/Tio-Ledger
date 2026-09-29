@@ -32,20 +32,29 @@ Related: `#56`, `#43`
 
 ## Progress
 
-- [ ] Implementation.
-- [ ] Tests.
-- [ ] Local validation.
-- [ ] Device validation.
-- [ ] PR with exact-head CI.
+- [x] Implementation (commit `6719220`).
+- [x] Tests.
+- [x] Local validation.
+- [x] Device validation.
+- [ ] PR exact-head CI and merge authorization.
 
 ## Validation
 
-- Not run yet.
+- Local on `6719220`: shared metadata compile, critical shared tests, `:apps:android:compileDebugKotlin`/`testDebugUnitTest`/`assembleDebug`, migration verification, `ktlintCheck`, `detekt`, `git diff --check` — all pass (`MainActivityNavigationTest` 7/7, shared navigation tests pass).
+- Device `TioLedger_Android11` (API 30), APK from `6719220`, existing data with 0 loans (no injection), 2026-09-29:
+  - Accounts app bar shows `A` (statistics), `Loans`, `Settings` in that order; Loans clickable node `[805,88][937,220]` (132 px ≈ 48 dp) with content-desc `Loans`; a `Button`-role semantics child.
+  - Tap → Loans screen (`No loans` empty state, `Add loan`), five bottom destinations unchanged, 0 selected (Accounts screen: Accounts selected).
+  - System back → Accounts, app stays foreground; repeated twice. No crash.
+  - DB read-only before/after identical: 0 loans, 0 EMI schedules, 1 account, 3 transactions, 3 splits, 6 ledger entries, DEBIT = CREDIT = 10500.
+  - Accessibility note: Compose 1.7 exposes the label/role as same-bounds children of the clickable node, the same structure as the approved Settings action and Material bottom-navigation items. TalkBack is not installed on this `google_apis` image, so spoken output was not verified.
+  - Loan Details back is covered by `systemBackFromLoanDetailsReturnsLoans`; not exercised on device (no loan exists; none injected).
 
 ## Changed Files
 
-- None yet.
+- `shared/ui/src/commonMain/kotlin/com/tioledger/ui/accounts/AccountsScreen.kt`
+- `apps/android/src/main/kotlin/com/tioledger/apps/android/MainActivity.kt`
+- `apps/android/src/test/kotlin/com/tioledger/apps/android/MainActivityNavigationTest.kt`
 
 ## Next Action
 
-Implement the Accounts Loans action and system-back rule.
+Get exact-head CI green on the #61 PR and wait for explicit merge authorization; after merge, resume #56 EMI validation via production UI (loan-linked account → Loans → Add loan).
