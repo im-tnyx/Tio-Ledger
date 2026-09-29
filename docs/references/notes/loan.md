@@ -14,6 +14,17 @@ Loan Creation and Loan Details v1 with Loan Payoff Analytics v1
 
 The fallback package is sufficient because it fixes the workflow, information hierarchy, component vocabulary, navigation contract, error behavior, payoff metrics, and financial boundaries without inventing a proprietary visual layout.
 
+### Loans Entry-Point References (#61)
+
+- Approved checked-in screenshots, `docs/references/accounts/`:
+  - The primary Accounts screenshot shows loans as a `Loan` account group inside the Accounts screen.
+  - The Accounts top bar carries non-primary actions (statistics and an overflow action).
+  - The four reference tabs (transactions, statistics, accounts, more) contain no separate Loans destination.
+  - The supporting `More` settings and configuration screenshots contain no Loans entry either.
+- Checked-in JADX technical reference (structure only, per `docs/references/README.md`): no dedicated loan screen or loan menu exists. Loan concepts appear only as an account-group concept and in help text. No code, layout, resource, or string was copied.
+- Approved Tio precedent: `docs/references/notes/settings-reminders.md` defines Settings as a non-primary shell destination. Production exposes it as an Accounts app-bar action that routes to the existing typed `MainRoute.Settings`.
+- Conclusion: the reference product keeps loans inside Accounts and never gives them a primary tab. Tio's Loans list is a product extension (`docs/product-requirements.md` → Loans) with no screenshot of its own. The closest reference-consistent entry is therefore a non-primary Accounts app-bar action, following the approved Settings precedent.
+
 ## Workflow Summary
 
 1. Open the typed `MainRoute.Loans` destination.
@@ -108,19 +119,51 @@ The fallback package is sufficient because it fixes the workflow, information hi
 - The details screen omits bottom navigation to preserve a focused nested-destination hierarchy.
 - Loan Payoff Analytics introduces no new destination.
 
+### Loans Entry Point (#61)
+
+- **Source surface:** the Accounts screen top app bar (`MainRoute.Accounts`, the main-graph start route).
+- **Affordance:** one non-primary icon action using `TioIconToken.Loan`.
+  - Place it before the existing Settings action.
+  - Use the same minimum touch target and click pattern as the Settings action.
+  - It is an action button, not a tab, bottom-navigation item, or FAB.
+- **Destination:** exactly `RootRoute.Main(MainRoute.Loans)`. No new route, no loan ID, and no parameters.
+- **Entry behavior:**
+  - Always visible and enabled, including on a clean install with no accounts or loans.
+  - The Loans list keeps its existing empty state and prerequisite guidance for a missing `LOAN_LINKED` account.
+- **Back behavior:**
+  - The Loans list app bar keeps no back arrow; it stays a top-level non-primary destination like Settings.
+  - Android system back from Loans returns to `TioNavigationGraphs.root.mainEntry` (Accounts), matching Settings, instead of leaving the app.
+  - System back from `MainRoute.LoanDetails` still returns to `MainRoute.Loans`.
+- **Bottom navigation:**
+  - The canonical five destinations (Dashboard, Accounts, Transactions, Categories, Budgets) are unchanged.
+  - The Loans list keeps rendering them with no item selected.
+  - Loan Details keeps omitting them.
+- **Accessibility:**
+  - The action exposes the content description `Loans` and a button role.
+  - It is reachable in focus order after the Accounts title and before Settings.
+  - It meets the minimum touch target and its meaning is not conveyed by the icon alone.
+- **Relationship to Loan Details:** unchanged. Loan Details is reached only by selecting a loan card, or by an EMI reminder deep link with a known `loanId`.
+- **No financial behavior change:** the entry only navigates. No loan, account, ledger, schedule, or reminder data is read or written by the affordance, and no engine, Application, repository, or SQLDelight change is involved.
+- **Rejected for this slice:**
+  - A Dashboard entry, because Dashboard is still a placeholder without an approved screenshot.
+  - A sixth bottom-navigation item, which contradicts this note and the five-destination rule.
+  - A new overflow/"more" menu system, because no approved Tio overflow component exists and one route does not justify one.
+  - A tappable `Loan-linked` group row, because it is not reachable from a clean install and Accounts v1 groups are display-only.
+
 ## Intentional Deviations
 
 - No checked-in Loan screenshot exists, so the implementation follows established Tio Ledger production components rather than reconstructing an unknown external layout.
 - Creation uses an ISO date text field rather than a platform date picker because the shared UI has no approved multiplatform picker abstraction yet.
 - Interest entry accepts a percentage with up to two decimals, while persistence uses integer basis points.
 - The schedule uses stacked cards instead of a dense table for phone readability and accessibility.
-- Loans is not added to the primary bottom navigation because the current five destinations are already allocated; the typed route remains available for direct/overflow entry.
+- Loans is not added to the primary bottom navigation because the current five destinations are already allocated. The typed route is reached from a non-primary Accounts app-bar action (see Loans Entry Point). The reference product keeps loans inside Accounts, and this reuses the approved Settings entry pattern instead of inventing a new navigation system.
 - Payoff progress uses accessible text rows instead of a chart because no approved chart reference or interaction model exists.
 - Payment, prepayment, refinance, schedule recast, payoff posting, contractual editing, and closure controls remain absent because posting and reconciliation policies are not part of issue #29.
 - V1 follows persisted installment statuses and does not infer payment completion from dates, balances, or external account activity.
 
 ## Accessibility Considerations
 
+- The Accounts app-bar Loans entry exposes the content description `Loans`, a button role, and a minimum touch target. It is reachable by screen reader, keyboard, and switch access between the Accounts title and the Settings action.
 - Loan cards expose a combined semantic description covering name, status, outstanding principal, EMI, remaining installments, and next due date.
 - Add, back, account-selection, retry, cancel, and create controls have readable labels or content descriptions.
 - All loading, empty, validation, persistence, repository, and calculation failures are conveyed as text.
@@ -142,6 +185,10 @@ The fallback package is sufficient because it fixes the workflow, information hi
 - [ ] Currency mismatch and same-account selections remain visibly rejected.
 - [ ] Valid creation persists the loan and complete schedule atomically.
 - [ ] Successful creation refreshes the list and shows feedback.
+- [ ] The Accounts app bar exposes a `Loans` action that opens `MainRoute.Loans` from a clean install, with no loan ID.
+- [ ] The Loans entry does not change the five primary bottom-navigation destinations; Loans shows them with no item selected.
+- [ ] Android system back from Loans returns to Accounts; system back from Loan Details returns to Loans.
+- [ ] The Loans entry has an accessible name, a button role, and a minimum touch target, and it is reachable in focus order.
 - [ ] Selecting a loan opens typed details navigation.
 - [ ] Details show contractual terms, summaries, account labels, and persisted schedule rows.
 - [ ] Payoff analytics use only persisted loan terms and installment rows.
@@ -170,5 +217,7 @@ The fallback package is sufficient because it fixes the workflow, information hi
 - Verify the projected payoff date and completed-installment row do not overlap at phone widths.
 
 ## Approval Record
+
+The Loans Entry Point section (#61) is a proposed reference decision. It becomes approved when its documentation PR is merged by the repository owner; production navigation is not implemented before that.
 
 Issue #12 milestone execution and the user's earlier `go` approval authorize the Loan Creation and Details fallback package. Issue #29 and the user's explicit `Next go` authorization approve the narrow read-only Loan Payoff Analytics extension documented here. A future approved screenshot may refine visual styling or introduce a separately approved chart, but it must not change the validated financial, persistence, Application, status-classification, or navigation contracts without an explicit follow-up decision.

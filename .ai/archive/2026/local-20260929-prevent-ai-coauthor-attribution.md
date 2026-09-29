@@ -1,11 +1,13 @@
 # Prevent AI Co-Author Attribution
 
-Status: In Progress
+Status: Complete
 Objective: Stop AI-assisted workflows from adding AI provider/model co-author attribution to commits, squash merges, and PR descriptions (issue #66).
 Branch: `chore/prevent-ai-coauthor-attribution`
 Scope: repository governance only (`AGENTS.md`, `.ai` continuity); no product, runtime, financial, CI, or Git identity change
 Created: `2026-09-29`
-Last Updated: `2026-09-29`
+Completed: `2026-09-29`
+Pull Request: `https://github.com/im-tnyx/Tio-Ledger/pull/68`
+Merge Commit: `fb02a1cbbb58a80ce6ea9900e4c37a01c142e866`
 Issue: `#66`
 
 ## Required Context
@@ -35,8 +37,8 @@ Issue: `#66`
 
 - [x] Audit repository vs tool vs GitHub squash behavior.
 - [x] Add the `AGENTS.md` rule.
-- [ ] Governance commit verified on GitHub (no AI co-author).
-- [ ] PR opened; merge awaits explicit authorization.
+- [x] Governance commit `6a23146` verified on GitHub (no trailers; GraphQL authors = `im-tnyx` only).
+- [x] PR #68 CI run #424 green; squash-merged as `fb02a1c` with a clean explicit message (verified: no trailers, author `im-tnyx`); #66 closed.
 
 ## Validation
 
@@ -49,4 +51,4 @@ Issue: `#66`
 
 ## Next Action
 
-Open the #66 PR, verify the branch commit attribution on GitHub, and wait for merge authorization.
+None.

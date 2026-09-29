@@ -61,4 +61,4 @@ Parent: `#43`
 
 ## Next Action
 
-Paused while #66 (commit attribution governance) is the primary task. EMI checks stay blocked by #61; TalkBack/screen-reader/keyboard checks can run on `main` at any time.
+Paused while #61 (Loans navigation entry) is the primary task. EMI checks stay blocked by #61; TalkBack/screen-reader/keyboard checks can run on `main` at any time.
