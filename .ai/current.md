@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Blocked
+Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `docs/emi-validation-readiness`
+Branch: `docs/emi-lifecycle-evidence`
 Platform Scope: `android`
 Last Updated: `2026-09-29`
-Next Action: `#61 resolved; EMI validation is unblocked but needs explicit owner approval of the proposed Loan-linked account + loan fixture before any financial record is created. Then run the planned EMI matrix on API 30.`
+Next Action: `EMI fixture created and lifecycle checks passed on API 30; after 2026-09-30 09:00 IST verify the genuine EMI delivery and the Loan Details deep link, then update #56/#43.`
 
 ## Usage
 
