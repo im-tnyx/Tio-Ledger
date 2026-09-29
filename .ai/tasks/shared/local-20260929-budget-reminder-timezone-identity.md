@@ -34,21 +34,29 @@ Related: `#56`, `#43`
 
 ## Progress
 
-- [ ] Shared identity implementation and tests.
-- [ ] Android Option A reconciliation regression test.
-- [ ] Documentation (changelog, spec transition note).
-- [ ] Full local validation.
-- [ ] API 30 time-zone device revalidation.
-- [ ] Implementation PR with exact-head CI.
+- [x] Shared identity implementation and tests (commit `515c054`).
+- [x] Android Option A reconciliation regression test.
+- [x] Documentation (changelog, spec transition note).
+- [x] Full local validation.
+- [x] API 30 time-zone device revalidation.
+- [ ] Implementation PR exact-head CI and merge authorization.
 
 ## Validation
 
-- Not run yet.
+- Local on `515c054` (production code identical to the tested APK): shared metadata compile, critical shared tests + `:shared:budget-engine:test`, `:apps:android:compileDebugKotlin`/`testDebugUnitTest`/`assembleDebug`, migration verification, `ktlintCheck`, `detekt`, `git diff --check` — all pass.
+- Device `TioLedger_Android11` (API 30), existing production-UI data (budget Groceries MONTHLY INR 100.00, spent INR 105.00, EXCEEDED; no injection), 2026-09-29:
+  - Upgrade-install over pre-canonical build: reconcile SUCCESS, canonical `EXCEEDED` delivered once (accepted Option A transition), receipt `budget|<id>|MONTHLY|2026-09-01|EXCEEDED` recorded; legacy receipts and `budget_enabled` untouched.
+  - `Asia/Kolkata → America/New_York` (same September period): reconcile SUCCESS, no delivery worker, no new receipt — PASS (previously duplicated).
+  - Back to `Asia/Kolkata`: reconcile SUCCESS, no delivery — PASS. Force-stop + relaunch: no delivery — PASS.
+  - DB read-only: 3 transactions / 3 splits / 6 ledger entries / 1 budget / 1 account, DEBIT = CREDIT = 10500, budget `updated_at` unchanged.
+  - Not run on device: period-boundary crossing (needs emulator clock at a month boundary; covered by engine/application tests); legacy scheduled-record cancellation (no scheduled records existed on device; covered by unit test).
 
 ## Changed Files
 
-- None yet.
+- `shared/budget-engine/.../BudgetCalculators.kt`, `shared/application/.../BudgetSummaryUseCases.kt`, `.../PlanRemindersUseCase.kt`, `shared/notifications/.../ReminderModels.kt`, `.../ReminderPlanner.kt`
+- Tests: `BudgetCalculatorsTest`, `BudgetSummaryUseCaseTest`, `PlanRemindersUseCaseTest`, `ReminderPlannerTest`, Android `ReminderReconciliationPlannerTest`
+- Docs: `docs/architecture-changelog.md`, `docs/emi-budget-reminders-v1.md` (Android transition decision)
 
 ## Next Action
 
-Implement the shared identity change and focused tests.
+Get exact-head CI green on the #64 implementation PR and wait for explicit merge authorization; then post-merge sync and update #56 time-zone check.
