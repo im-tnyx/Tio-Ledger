@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
-Active Task: `.ai/tasks/android/local-20260929-loans-navigation-implementation.md`
-Branch: `fix/loans-navigation-entry`
-Platform Scope: `shared-ui + android navigation`
+Status: Blocked
+Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
+Branch: `docs/emi-validation-readiness`
+Platform Scope: `android`
 Last Updated: `2026-09-29`
-Next Action: `Implement the approved #61 Loans entry (Accounts app-bar action + Loans system back to Accounts), validate, open PR; do not merge without authorization. #56 EMI checks resume only after #61 merges.`
+Next Action: `#61 resolved; EMI validation is unblocked but needs explicit owner approval of the proposed Loan-linked account + loan fixture before any financial record is created. Then run the planned EMI matrix on API 30.`
 
 ## Usage
 

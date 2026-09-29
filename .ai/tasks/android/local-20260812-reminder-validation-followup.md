@@ -2,7 +2,7 @@
 
 Status: Blocked
 Objective: Close the remaining Android reminder acceptance gaps recorded in issue #56 after PR #55 merged, without reopening merged Settings UI scope unless a concrete defect is found.
-Branch: `main` (no open branch; Defect 1 PR #62 merged)
+Branch: `docs/emi-validation-readiness` (continuity only); validation runs against `main`
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
 Last Updated: `2026-09-29`
@@ -24,6 +24,7 @@ Parent: `#43`
 - No speculative Android reminder refactor.
 - No GitHub issue edits, closes, or comments unless explicitly requested.
 - No financial, ledger, SQLDelight, or shared reminder-planner rule changes.
+- No financial test data (accounts, loans) may be created without explicit owner approval of the exact fixture; never inject DB rows.
 - No new branch until a real defect or scoped implementation change is confirmed.
 - Treat device validation as authoritative over stale local continuity notes.
 
@@ -50,15 +51,21 @@ Parent: `#43`
   - Not testable: any EMI delivery/deep link/cancellation (creating an ACTIVE loan needs `LoansScreen`, which no production UI reaches — issue #61); cancellation of *pending* budget work (budget plans deliver immediately, nothing stays pending).
   - Observation (out of #56 scope): the Accounts/Transactions FAB content description is not exposed in the uiautomator tree (only the placeholder glyph text).
 
+## EMI Validation Readiness (2026-09-29, read-only)
+
+- #61 closed (#69 `ba5fac5`, #70 `3a986a0`): Accounts app bar → Loans is reachable from production UI; EMI checks are no longer blocked by navigation. No EMI validation performed yet.
+- Eligibility (source): loan `ACTIVE` + installment `PENDING` (both set by `CreateLoanUseCase`, which posts no ledger entries); linked account active `LOAN_LINKED`; disbursement a different active non-loan ASSET account with the same currency; EMI preference enabled; delivery at local 09:00 on due-3 and due-day; past delivery instants skipped; first due = start date + 1 month (clamped).
+- Device `TioLedger_Android11` (API 30, `Asia/Calcutta`), app code = `main@3a986a0`: `emi_enabled=false`, `budget_enabled=true`; only account Wallet (CASH, INR, active); 0 loans / 0 EMI schedules; no enqueued WorkManager work; 3 transactions / 3 splits / 6 ledger entries, DEBIT = CREDIT = 10500.
+- Proposed fixture (awaiting owner approval; see #56): new `LOAN_LINKED` INR account "Device Validation Loan Account"; loan "Device Validation EMI Loan", INR 1,000.00, 0.00%, 1 month, start 2026-09-03, linked → new account, disbursed → Wallet; expected single installment due 2026-10-03, EMI INR 1,000.00; reminders 2026-09-30 09:00 IST (lead 3) and 2026-10-03 09:00 IST (due day); plus enabling EMI reminders in Settings.
+
 ## Remaining Gaps
 
-- Defect 2 (time-zone-dependent budget identity): resolved by #64 / PR #67 (`7434744`); revalidated on API 30 on 2026-09-29.
-- EMI delivery, EMI deep link, EMI disable → cancellation, reboot "restores eligible work" for future-scheduled EMI: blocked by #61 (no production path to create a loan).
+- EMI delivery, deep link, disable → cancellation, restart/reboot restore, time-zone rescheduling: ready; awaiting explicit owner approval of the test fixture.
 - TalkBack spoken-output, screen-reader order, keyboard/switch access: not run (not blocked).
 - Remaining permission-matrix breadth items in `#56` (denial vs broader financial workflows, full five-state layout, preference-write-error visual state).
 - Tracker hygiene noted, not acted on: #54 still open although PR #55 merged on 2026-08-12.
-- Separately filed, out of scope: #60 (dark theme), #61 (Loans navigation).
+- Separately filed, out of scope: #60 (dark theme).
 
 ## Next Action
 
-Paused while #61 (Loans navigation entry) is the primary task. EMI checks stay blocked by #61; TalkBack/screen-reader/keyboard checks can run on `main` at any time.
+Wait for explicit owner approval of the exact EMI fixture; only then create it through production UI and run the planned EMI matrix.
