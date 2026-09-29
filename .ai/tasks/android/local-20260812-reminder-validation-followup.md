@@ -1,8 +1,8 @@
 # Android Reminder Validation Follow-up
 
-Status: Blocked
+Status: In Progress
 Objective: Close the remaining Android reminder acceptance gaps recorded in issue #56 after PR #55 merged, without reopening merged Settings UI scope unless a concrete defect is found.
-Branch: `docs/emi-validation-readiness` (continuity only); validation runs against `main`
+Branch: `docs/emi-lifecycle-evidence` (continuity only); validation runs against `main`
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
 Last Updated: `2026-09-29`
@@ -56,11 +56,19 @@ Parent: `#43`
 - #61 closed (#69 `ba5fac5`, #70 `3a986a0`): Accounts app bar → Loans is reachable from production UI; EMI checks are no longer blocked by navigation. No EMI validation performed yet.
 - Eligibility (source): loan `ACTIVE` + installment `PENDING` (both set by `CreateLoanUseCase`, which posts no ledger entries); linked account active `LOAN_LINKED`; disbursement a different active non-loan ASSET account with the same currency; EMI preference enabled; delivery at local 09:00 on due-3 and due-day; past delivery instants skipped; first due = start date + 1 month (clamped).
 - Device `TioLedger_Android11` (API 30, `Asia/Calcutta`), app code = `main@3a986a0`: `emi_enabled=false`, `budget_enabled=true`; only account Wallet (CASH, INR, active); 0 loans / 0 EMI schedules; no enqueued WorkManager work; 3 transactions / 3 splits / 6 ledger entries, DEBIT = CREDIT = 10500.
-- Proposed fixture (awaiting owner approval; see #56): new `LOAN_LINKED` INR account "Device Validation Loan Account"; loan "Device Validation EMI Loan", INR 1,000.00, 0.00%, 1 month, start 2026-09-03, linked → new account, disbursed → Wallet; expected single installment due 2026-10-03, EMI INR 1,000.00; reminders 2026-09-30 09:00 IST (lead 3) and 2026-10-03 09:00 IST (due day); plus enabling EMI reminders in Settings.
+- Fixture (owner-approved 2026-09-29, created through production UI): new `LOAN_LINKED` INR account "Device Validation Loan Account"; loan "Device Validation EMI Loan", INR 1,000.00, 0.00%, 1 month, start 2026-09-03, linked → new account, disbursed → Wallet; expected single installment due 2026-10-03, EMI INR 1,000.00; reminders 2026-09-30 09:00 IST (lead 3) and 2026-10-03 09:00 IST (due day); plus enabling EMI reminders in Settings.
+
+## EMI Lifecycle Pass (2026-09-29, API 30)
+
+- Created at 22:41–22:43 IST: account `Device Validation Loan Account` (LOAN_LINKED, INR); loan `Device Validation EMI Loan` ACTIVE, one PENDING installment due 2026-10-03 (`1790985600000`), EMI/principal 100000, interest 0; EMI reminders ON. No ledger posting.
+- Scheduled: `emi|<loan>|<inst>|3` → `1790739000000` (2026-09-30 09:00 IST), `…|0` → `1790998200000` (2026-10-03 09:00 IST).
+- PASS: restart (same work IDs), disable → both CANCELLED + records removed, relaunch while off (none recreated), re-enable (same identities once), reboot (restored, 2 jobs), IST → New York (`1790773200000`/`1791032400000`, same identities) → IST (restored), no early delivery.
+- Financial: accounts 1 → 2, loans 0 → 1, EMI schedules 0 → 1 (authorized); transactions 3, splits 3, ledger 6, DEBIT = CREDIT = 10500 unchanged throughout.
+- Pending: genuine 2026-09-30 09:00 IST delivery, notification tap → Loan Details, optional 2026-10-03 due-day delivery. Emulator must stay running in `Asia/Kolkata` with EMI ON.
 
 ## Remaining Gaps
 
-- EMI delivery, deep link, disable → cancellation, restart/reboot restore, time-zone rescheduling: ready; awaiting explicit owner approval of the test fixture.
+- EMI delivery and Loan Details deep link: pending the genuine 2026-09-30 09:00 IST delivery.
 - TalkBack spoken-output, screen-reader order, keyboard/switch access: not run (not blocked).
 - Remaining permission-matrix breadth items in `#56` (denial vs broader financial workflows, full five-state layout, preference-write-error visual state).
 - Tracker hygiene noted, not acted on: #54 still open although PR #55 merged on 2026-08-12.
@@ -68,4 +76,4 @@ Parent: `#43`
 
 ## Next Action
 
-Wait for explicit owner approval of the exact EMI fixture; only then create it through production UI and run the planned EMI matrix.
+After 2026-09-30 09:00 IST, verify the genuine EMI delivery (content, single delivery), tap it to confirm Loan Details for `Device Validation EMI Loan`, compare read-only financial state, then update #56/#43.
