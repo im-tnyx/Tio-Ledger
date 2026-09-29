@@ -83,6 +83,14 @@ For Pull Requests, follow `.github/PULL_REQUEST_TEMPLATE.md`.
 
 After a PR merge, follow `.github/POST_MERGE_SYNC.md` before starting the next branch.
 
+## Commit Attribution
+
+- AI assistance does not imply Git co-authorship.
+- Do not add AI provider or model identities, such as Claude, ChatGPT, Codex, Copilot, or Gemini, as `Co-Authored-By` trailers, "Generated with" footers, or equivalent attribution. This applies to commit messages, squash-merge messages, and pull request descriptions. The only exception is when the repository owner explicitly requests it for that change.
+- When squash-merging, pass an explicit subject and body instead of relying on generated text that copies trailers from branch commits.
+- Keep the intended human account as the Git author and committer.
+- Do not rewrite published history solely to remove historical AI trailers without separate explicit approval.
+
 ## Never Commit
 
 Never commit generated/cache/secrets or local machine state, including:
