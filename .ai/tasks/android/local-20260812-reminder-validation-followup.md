@@ -2,7 +2,7 @@
 
 Status: In Progress
 Objective: Close the remaining Android reminder acceptance gaps recorded in issue #56 after PR #55 merged, without reopening merged Settings UI scope unless a concrete defect is found.
-Branch: `docs/emi-delivery-evidence` (continuity only); validation runs against `main`
+Branch: `docs/reminder-accessibility-followup` (docs-only continuity); subsequent device validation must pin current runtime-equivalent source
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
 Last Updated: `2026-09-30`
@@ -86,4 +86,26 @@ Parent: `#43`
 
 ## Next Action
 
-Continue #56 with TalkBack/screen-reader order, keyboard/switch-access, formal contrast and remaining permission breadth; decide how to treat the production-unreachable preference-write-error visual state under the Definition of Done. Keep #43 open. Optional 2026-10-03 due-day delivery remains future evidence; no production code change is authorized by this evidence pass.
+Continue #56 with TalkBack/screen-reader order, keyboard/switch-access, formal contrast and remaining permission breadth; decide how to treat the production-unreachable preference-write-error visual state under the Definition of Done. Keep #56/#43 open. Optional 2026-10-03 due-day delivery remains future evidence; do not trigger it or modify the financial fixture. This continuation is docs/issue hygiene only; no fresh device evidence or production change is claimed.
+
+## Remaining-Work Audit (2026-09-30, after #75)
+
+Read current #56/#43 and production permission/settings paths; no emulator, ADB, device, clock, preference, or financial-record action was performed. Existing evidence above is unchanged. No unchecked acceptance item was marked complete.
+
+| Remaining item | Classification | Boundary / next evidence |
+| --- | --- | --- |
+| TalkBack EMI switch name/state | Device-observable now | Production row exposes switch role, name and state; spoken output remains unverified. Observe current state without changing the approved EMI preference. |
+| TalkBack Budget switch name/state | Device-observable now | Same semantic row contract; spoken output remains unverified. Preserve the existing preference. |
+| Allow notifications focus/description | Device-observable now, conditional | Requires a representative Android 13+ NOT_REQUESTED state; API 30 cannot expose this action. Do not reset the approved fixture to manufacture the state. |
+| Open notification settings focus/reachability | Device-observable now, conditional | Requires DENIED/REVOKED on a representative separate target; visible/actionable evidence exists, formal TalkBack evidence does not. |
+| Screen-reader order | Device-observable now | Verify title -> reminder controls -> delivery status -> contextual action; uiautomator hierarchy alone is not traversal evidence. |
+| Keyboard/switch access and touch-target breadth | Device-observable now | Formal traversal/activation review is still open; use read-only navigation and preserve reminder preferences. |
+| Full five-state layout breadth | Device-observable now, multi-target | NOT_REQUIRED requires pre-13; NOT_REQUESTED/GRANTED/DENIED/REVOKED need appropriate Android 13+ histories. Partial prior coverage is not full acceptance. |
+| Formal light-theme contrast/layout | Device-observable now | Phone-width/large-text layout has prior evidence; measured contrast and full state/layout breadth remain open. No dark-theme acceptance or #60 work is implied. |
+| Denial versus broader financial workflows | Device-observable now, read-only scope | No automatic re-prompt and Accounts reachability have prior evidence. Verify broader navigation/forms without saving or changing financial records; write-path acceptance needs a separately approved safe scenario. |
+| Preference-write-error visual state | Blocked by current production reachability | Code handles a failed preference write, but there is no production-safe deterministic failure trigger; do not corrupt storage or add a failure hook in this slice. |
+| Preference-write-error DoD disposition | Documentation/product decision | Owner must decide whether existing rollback tests plus preview evidence suffice, or authorize a separate focused visual-test approach. This item remains open. |
+
+Already sufficiently covered in recorded evidence, not newly revalidated here: explicit status text (not color-only), phone-width/large-text baseline, canonical navigation, API 30 late-boot EMI delivery/deep link/restart dedup and unchanged financial state. Pending-budget cancellation observation remains separately constrained by immediately delivered budget plans; no acceptance closure is inferred.
+
+Separate source-confirmed follow-up: #77 tracks Accounts same-type cross-currency aggregation. Do not implement it or mix it with this reminder-validation continuation.
