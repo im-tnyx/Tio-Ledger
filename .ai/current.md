@@ -2,10 +2,10 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `docs/emi-lifecycle-evidence`
+Branch: `docs/emi-delivery-evidence`
 Platform Scope: `android`
-Last Updated: `2026-09-29`
-Next Action: `EMI fixture created and lifecycle checks passed on API 30; after 2026-09-30 09:00 IST verify the genuine EMI delivery and the Loan Details deep link, then update #56/#43.`
+Last Updated: `2026-09-30`
+Next Action: `API 30 late-boot EMI delivery, Loan Details tap, restart dedup, and unchanged financial state are recorded in #56/#43. Continue #56 accessibility review, remaining permission breadth, and the preference-write-error Definition-of-Done decision; keep #43 open.`
 
 ## Usage
 
