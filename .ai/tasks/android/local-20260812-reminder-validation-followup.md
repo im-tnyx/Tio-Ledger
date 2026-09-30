@@ -2,10 +2,10 @@
 
 Status: In Progress
 Objective: Close the remaining Android reminder acceptance gaps recorded in issue #56 after PR #55 merged, without reopening merged Settings UI scope unless a concrete defect is found.
-Branch: `docs/emi-lifecycle-evidence` (continuity only); validation runs against `main`
+Branch: `docs/emi-delivery-evidence` (continuity only); validation runs against `main`
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
-Last Updated: `2026-09-29`
+Last Updated: `2026-09-30`
 Issue: `#56`
 Parent: `#43`
 
@@ -66,9 +66,19 @@ Parent: `#43`
 - Financial: accounts 1 → 2, loans 0 → 1, EMI schedules 0 → 1 (authorized); transactions 3, splits 3, ledger 6, DEBIT = CREDIT = 10500 unchanged throughout.
 - Pending: genuine 2026-09-30 09:00 IST delivery, notification tap → Loan Details, optional 2026-10-03 due-day delivery. Emulator must stay running in `Asia/Kolkata` with EMI ON.
 
+## EMI Delivery And Loan Details Pass (2026-09-30, API 30)
+
+- Device `TioLedger_Android11` / `emulator-5554`, Android 11 / API 30, UTC+05:30. Device reports `Asia/Calcutta`, the `Asia/Kolkata` alias; neither clock nor timezone was changed. The existing APK used for this validation came from the PR #70 implementation validation lineage. The original local pre-squash SHA is outside current `main` history after squash merge, so reproducible runtime-equivalent repository source is anchored to reachable `main@3a986a0c94759b76d055dc7846e56a0d499366fc`. GitHub comparison from `3a986a0` through validation target `f34ead9` shows no `apps/` or `shared/` changes, only `.ai` continuity changes. This does not assert that the APK binary was built from the squash commit. No APK install or app-data reset occurred.
+- The emulator was off at the nominal 2026-09-30 09:00 IST delivery instant. After boot at 09:24, persisted lead-3 identity `emi|96e82100-b6d6-4b37-a667-674ebf0935ca|c43695fa-7008-4c3c-b6d5-3cc29e93f986|3` ran as unique work `tio-reminder-8eecdb7b482512973bb34f9b1a1a76301e3b6d671875e64c61514578e487f342` / WorkSpec `5145915c-4feb-43db-91ec-a79aa18339eb`. WorkManager state `SUCCEEDED`, attempt count 1; logcat started `ReminderDeliveryWorker` at 09:25:08.883 and reported `SUCCESS` at 09:25:09.006. This is approximately 25m09s after nominal schedule due to the device being off, not evidence of on-time execution.
+- One active EMI notification was observed before tap: title `EMI reminder`, body `Device Validation EMI Loan payment of INR 1000.00 is due Oct 3, 2026.`, channel `tio_emi_reminders_v1`, ID `250403707`, null tag, posted at 09:25:08.949 IST by `com.tioledger.apps.android`. Its `PendingIntent` was a `MainActivity` start with `OPEN_REMINDER` and extras. One tap opened the correct `Device Validation EMI Loan` Details; system Back returned to Loans; notification auto-cancelled.
+- Read-only pre-tap, post-tap, and post-restart SQLite snapshots matched across all rows of `accounts`, `loans`, `emi_schedules`, `transactions`, `transaction_splits`, and `ledger_entries` (table hashes unchanged). Counts remained 2/1/1/3/3/6, loan `ACTIVE`, installment `PENDING`, `DEBIT = CREDIT = 10500` minor. No financial action was used.
+- After force-stop and normal relaunch, reconciliation `SUCCESS`; lead-3 WorkSpec kept the same ID and `SUCCEEDED` state, its scheduled-store record stayed absent, and no duplicate EMI notification appeared. The runtime has no EMI-specific delivery receipt; this dedup observation rests on completed work, removed scheduled metadata, current plan window, and notification state.
+- Due-day identity `emi|96e82100-b6d6-4b37-a667-674ebf0935ca|c43695fa-7008-4c3c-b6d5-3cc29e93f986|0` remained `ENQUEUED` as WorkSpec `cad0d0fd-b8c7-42bd-abaf-29173312e8d6`, with scheduled metadata for 2026-10-03 09:00 IST (`1790998200000`). No manual worker trigger or SQL injection occurred.
+- #56: only the eligible EMI delivery and typed destination checklist items changed to checked, with the late-boot limitation recorded. #43: status comment added; issue remains open. Optional Oct 3 due-day delivery was not observed.
+
 ## Remaining Gaps
 
-- EMI delivery and Loan Details deep link: pending the genuine 2026-09-30 09:00 IST delivery.
+- EMI lead-3 delivery and Loan Details deep link: passed after late boot on 2026-09-30; on-time execution was not observed. Optional Oct 3 due-day delivery remains future evidence.
 - TalkBack spoken-output, screen-reader order, keyboard/switch access: not run (not blocked).
 - Remaining permission-matrix breadth items in `#56` (denial vs broader financial workflows, full five-state layout, preference-write-error visual state).
 - Tracker hygiene noted, not acted on: #54 still open although PR #55 merged on 2026-08-12.
@@ -76,4 +86,4 @@ Parent: `#43`
 
 ## Next Action
 
-After 2026-09-30 09:00 IST, verify the genuine EMI delivery (content, single delivery), tap it to confirm Loan Details for `Device Validation EMI Loan`, compare read-only financial state, then update #56/#43.
+Continue #56 with TalkBack/screen-reader order, keyboard/switch-access, formal contrast and remaining permission breadth; decide how to treat the production-unreachable preference-write-error visual state under the Definition of Done. Keep #43 open. Optional 2026-10-03 due-day delivery remains future evidence; no production code change is authorized by this evidence pass.
