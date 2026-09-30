@@ -50,14 +50,15 @@ Issue: `#74`
 - [x] Record unresolved financial semantics and implementation gate.
 - [x] Open docs-only PR #75 and verify CI #434 succeeded on head `b3d1344b3883dc67c44d5fb8a3e813b2a18fe8c8`.
 - [x] Complete the ledger, Application, and SQLDelight architecture audit for #74.
-- [ ] Obtain a separate owner authorization before merging refreshed PR #75.
+- [x] Owner-authorized PR #75 squash merged on 2026-09-30 as `508f70e5ca6974fca268de648f8326cc925bf6e2`.
 - [ ] Obtain the owner/product financial-semantics decision before any production implementation.
 
 ## Validation
 
 - GitHub Actions CI #434 succeeded on PR #75 head `b3d1344b3883dc67c44d5fb8a3e813b2a18fe8c8`; reverify CI on any later head.
 - Architecture audit completed from current Domain, Application, finance-engine, and SQLDelight source without device validation.
-- Refreshed scope preserves both merged #56 continuity files unchanged; exact-head CI must be reverified after the refresh.
+- Refreshed PR #75 preserved both merged #56 continuity files unchanged; exact-head CI #439 was reverified before merge.
+- Refreshed PR head `9bc66fab5dcd095add9b23030434645bbc60d21f` passed CI #439 before merge; post-merge main passed CI #440. No runtime change was included.
 
 ## Changed Files
 
@@ -66,4 +67,4 @@ Issue: `#74`
 
 ## Next Action
 
-Await separate owner authorization before merging refreshed PR #75 and an owner/product decision on ledger-first financial semantics before any implementation. Reference-boundary work and the architecture audit are complete. Keep Accounts v1 generic and #56 as the active repository objective; do not archive this task while #74 remains open.
+PR #75 is merged. Await an owner/product decision on ledger-first financial semantics before any implementation. Reference-boundary work and the architecture audit are complete. Keep Accounts v1 generic and #56 as the active repository objective; do not archive this task while #74 remains open.

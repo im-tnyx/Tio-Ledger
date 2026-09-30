@@ -2,10 +2,10 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `docs/emi-delivery-evidence`
+Branch: `docs/reminder-accessibility-followup`
 Platform Scope: `android`
 Last Updated: `2026-09-30`
-Next Action: `API 30 late-boot EMI delivery, Loan Details tap, restart dedup, and unchanged financial state are recorded in #56/#43. Continue #56 accessibility review, remaining permission breadth, and the preference-write-error Definition-of-Done decision; keep #43 open.`
+Next Action: `Continue #56 TalkBack spoken-output and screen-reader order, keyboard/switch access, remaining permission breadth, formal light-theme contrast/layout review, and the preference-write-error Definition-of-Done decision. Genuine late-boot EMI delivery and Loan Details evidence remain recorded; keep #56/#43 open and preserve the fixture.`
 
 ## Usage
 
