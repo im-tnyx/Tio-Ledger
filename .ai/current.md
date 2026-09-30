@@ -2,10 +2,10 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `docs/reminder-accessibility-followup`
+Branch: `docs/reminder-accessibility-evidence`
 Platform Scope: `android`
 Last Updated: `2026-09-30`
-Next Action: `Continue #56 TalkBack spoken-output and screen-reader order, keyboard/switch access, remaining permission breadth, formal light-theme contrast/layout review, and the preference-write-error Definition-of-Done decision. Genuine late-boot EMI delivery and Loan Details evidence remain recorded; keep #56/#43 open and preserve the fixture.`
+Next Action: `Resolve the current API 30 installed-APK provenance drift and absent TalkBack service before resuming #56 accessibility navigation. Read-only inventory and financial snapshots are recorded; no accessibility acceptance changed. Keep #56/#43 open, preserve the fixture, and obtain the owner's preference-write-error DoD decision.`
 
 ## Usage
 

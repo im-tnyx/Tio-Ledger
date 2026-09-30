@@ -2,7 +2,7 @@
 
 Status: In Progress
 Objective: Close the remaining Android reminder acceptance gaps recorded in issue #56 after PR #55 merged, without reopening merged Settings UI scope unless a concrete defect is found.
-Branch: `docs/reminder-accessibility-followup` (docs-only continuity); subsequent device validation must pin current runtime-equivalent source
+Branch: `docs/reminder-accessibility-evidence` (docs-only evidence); subsequent device validation must pin the currently installed APK source
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
 Last Updated: `2026-09-30`
@@ -86,7 +86,9 @@ Parent: `#43`
 
 ## Next Action
 
-Continue #56 with TalkBack/screen-reader order, keyboard/switch-access, formal contrast and remaining permission breadth; decide how to treat the production-unreachable preference-write-error visual state under the Definition of Done. Keep #56/#43 open. Optional 2026-10-03 due-day delivery remains future evidence; do not trigger it or modify the financial fixture. This continuation is docs/issue hygiene only; no fresh device evidence or production change is claimed.
+Continue #56 with TalkBack/screen-reader order, keyboard/switch-access, formal contrast and remaining permission breadth; decide how to treat the production-unreachable preference-write-error visual state under the Definition of Done. Keep #56/#43 open. Optional 2026-10-03 due-day delivery remains future evidence; do not trigger it or modify the financial fixture. The current pass records read-only inventory below, not fresh accessibility acceptance or a production change.
+
+Current prerequisite: the read-only inventory below found installed-APK provenance drift and no TalkBack service on API 30. Resolve these before accessibility navigation; do not infer current binary provenance from the historical equivalent-source anchor or install a replacement silently.
 
 ## Remaining-Work Audit (2026-09-30, after #75)
 
@@ -107,3 +109,16 @@ Read current #56/#43 and production permission/settings paths; no emulator, ADB,
 | Preference-write-error DoD disposition | Documentation/product decision | Owner must decide whether existing rollback tests plus preview evidence suffice, or authorize a separate focused visual-test approach. This item remains open. |
 
 Already sufficiently covered in recorded evidence, not newly revalidated here: explicit status text (not color-only), phone-width/large-text baseline, canonical navigation, API 30 late-boot EMI delivery/deep link/restart dedup and unchanged financial state. Pending-budget cancellation observation remains separately constrained by immediately delivered budget plans; no acceptance closure is inferred.
+
+## Post-Merge Inventory And Validation Stop (2026-09-30)
+
+- Owner-authorized PR #78 squash merged as `d7728edbc919e9865a5552c81bcd93fbe25a19a2`; exact-head main CI #443 succeeded (Targeted KMP validation and SQLDelight migration verification). Human author `Santosh Jangid`, GitHub squash committer `GitHub`; no AI attribution. Local main was fast-forwarded and the merged local/remote branch deleted normally.
+- Historical installed-APK lineage has reachable equivalent source `3a986a0c94759b76d055dc7846e56a0d499366fc`; `apps/` and `shared/` trees are identical through merged main `d7728ed`. This establishes repository-source equivalence only, not the provenance of the currently installed binary.
+- Fresh inventory: only `emulator-5554` connected, AVD `TioLedger_Android11`, Android 11/API 30, timezone `Asia/Calcutta`; existing emulator/QEMU processes use `-no-window`. AVD list also includes `Pixel_9_API35` (Android 35 Google APIs Play Store phone image, stopped) and `Wear_OS_Large_Round`. No AVD was started, rebooted, created or reset.
+- Runtime drift: package `com.tioledger.apps.android` changed its `codePath` between read-only inspections, from the `~~yQuQo5IIIh5MJyA2FWbSLQ==` installation directory to `~~wIsCAanh_Mk0Kiy8NeceTw==`. Package metadata then reported `lastUpdateTime=2026-09-30 20:37:59`. This pass issued no install/reinstall command; the actor/cause was not established. Current installed APK SHA-256 `91d142092e3f63d7410798eb3d2b0c68114f803569cbed8b60845989161160d8` matches the existing local debug APK whose filesystem timestamp is 2026-09-29 15:05:41, but neither hash equality nor timestamp proves its build-source commit. Stop before app navigation until provenance is settled.
+- API 30 accessibility availability: package scan found no TalkBack package; `dumpsys accessibility` reported `installedServiceCount=0`, no enabled/bound services and touch exploration disabled. Google TTS is installed, but is not TalkBack. No service was installed or enabled. Historical TalkBack-package evidence for a different target does not establish availability here.
+- No fresh TalkBack EMI/Budget speech, actual screen-reader traversal, keyboard/switch focus/traversal, or light-theme layout/contrast review was performed. No accessibility acceptance checkbox changed; activation remains deferred. Normal-scale Settings was not opened. The launcher hierarchy is not app accessibility evidence.
+- Inventory-only pre/post read-only SQLite snapshots matched all rows of `accounts`, `loans`, `emi_schedules`, `transactions`, `transaction_splits`, and `ledger_entries` (deterministic row hashes identical). Counts 2/1/1/3/3/6; DEBIT=CREDIT=10500 minor; fixture loan `ACTIVE`, installment `PENDING`, due date unchanged. Reminder prefs XML also matched exactly: EMI/Budget both enabled and Oct 3 due-day scheduled metadata preserved. This is an inventory no-mutation guard, not evidence of a completed accessibility-navigation pass.
+- Separate Android 13+ target: `Pixel_9_API35` exists but is not connected/running. Its current app install, disposable status, permission histories and TalkBack availability were not verified. NOT_REQUESTED/GRANTED/DENIED/REVOKED and contextual-action accessibility therefore remain unobserved; no state was manufactured.
+- Preference-write-error evidence audit: existing `failedPreferenceWriteRestoresPersistedSnapshotAndShowsFeedback` tests the supplied persisted snapshot/error mapping, not a real storage failure or rendered UI. `ReminderSettingsLargeTextPreview` supplies an error message in source; no preview was rendered in this pass. No production-safe deterministic commit-failure trigger exists. Owner decision remains: A, accept behavioral tests plus preview/static evidence; or B, authorize a separate test-only visual mechanism/specification. Neither option was selected, and no failure hook/storage corruption was introduced.
+- #56/#43 stay open. No parent completion/acceptance advance is claimed. No financial write, preference toggle, permission transition, app force-stop, APK replacement, clock/timezone manipulation, manual reminder trigger or Oct 3 delivery observation occurred in this pass. No new product defect was established; runtime provenance and TalkBack availability block further device evidence.
