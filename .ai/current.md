@@ -2,10 +2,10 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `docs/reminder-accessibility-evidence`
+Branch: `docs/reminder-accessibility-api35-evidence`
 Platform Scope: `android`
 Last Updated: `2026-09-30`
-Next Action: `Resolve the current API 30 installed-APK provenance drift and absent TalkBack service before resuming #56 accessibility navigation. Read-only inventory and financial snapshots are recorded; no accessibility acceptance changed. Keep #56/#43 open, preserve the fixture, and obtain the owner's preference-write-error DoD decision.`
+Next Action: `PR #79 is merged; a clean main@ee19eb0a source-pinned APK was built, but Pixel_9_API35 ADB remains unauthorized, so no install or TalkBack acceptance occurred. Restore normal ADB authorization on API35, re-audit its state, then install and hash-verify only there before #56 accessibility navigation. Keep API30/Oct 3 fixture untouched and #56/#43 open; rendered preference-error preview and owner DoD acceptance remain pending.`
 
 ## Usage
 
