@@ -5,7 +5,7 @@ Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
 Branch: `docs/reminder-accessibility-api35-evidence`
 Platform Scope: `android`
 Last Updated: `2026-10-04`
-Next Action: `Rebuild the debug APK from exact clean main@ee19eb0a75695dbb073fd9c53e46e59ae9a75f73 before any API35 installation, calculate its fresh hash, then install and hash-verify that rebuilt artifact only on Pixel_9_API35 after normal ADB authorization and a fresh target inventory. The ignored September 30 APK/hash is historical build evidence, not a repository-persisted binary. The October 3 due-day instant has passed without a recorded observation; do not boot protected API30 solely for evidence or trigger work manually. Keep #56/#43 open; TalkBack and rendered preference-error evidence remain pending.`
+Next Action: `The clean main@ee19eb0a75695dbb073fd9c53e46e59ae9a75f73 APK was freshly rebuilt on October 4 and installed only on Pixel_9_API35 after AVD/API verification; installed SHA-256 equals the rebuilt artifact. TalkBack is packaged but currently disabled. After its normal user-visible service authorization, collect real TalkBack/focus and app-visible permission evidence without activating reminder controls or requesting notification permission. The ignored September 30 artifact/hash remains historical evidence only; rebuild again if the current ignored APK is unavailable in a later session. The October 3 due-day instant passed without a recorded observation; do not boot API30 solely for evidence or trigger work. Keep #56/#43 open; rendered preference-error evidence and owner DoD acceptance remain pending.`
 
 ## Usage
 
