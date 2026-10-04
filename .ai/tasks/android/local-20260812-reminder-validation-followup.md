@@ -5,7 +5,7 @@ Objective: Close the remaining Android reminder acceptance gaps recorded in issu
 Branch: `docs/reminder-accessibility-api35-evidence` (docs-only evidence); API35 installation and device validation must use the freshly source-pinned APK
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
-Last Updated: `2026-09-30`
+Last Updated: `2026-10-04`
 Issue: `#56`
 Parent: `#43`
 
@@ -25,7 +25,7 @@ Parent: `#43`
 - No GitHub issue edits, closes, or comments unless explicitly requested.
 - No financial, ledger, SQLDelight, or shared reminder-planner rule changes.
 - No financial test data (accounts, loans) may be created without explicit owner approval of the exact fixture; never inject DB rows.
-- No new branch until a real defect or scoped implementation change is confirmed.
+- No new implementation/fix branch until a real defect or scoped implementation change is confirmed. The owner explicitly authorized the existing `docs/reminder-accessibility-api35-evidence` branch for this #56 docs-only validation slice; this is not permission for another branch or speculative production changes.
 - Treat device validation as authoritative over stale local continuity notes.
 
 ## Current Evidence
@@ -78,15 +78,15 @@ Parent: `#43`
 
 ## Remaining Gaps
 
-- EMI lead-3 delivery and Loan Details deep link: passed after late boot on 2026-09-30; on-time execution was not observed. Optional Oct 3 due-day delivery remains future evidence.
-- TalkBack spoken-output, screen-reader order, keyboard/switch access: not run (not blocked).
+- EMI lead-3 delivery and Loan Details deep link: passed after late boot on 2026-09-30; on-time execution was not observed. The 2026-10-03 09:00 IST due-day instant has passed, but repository evidence records no due-day observation or outcome.
+- TalkBack spoken-output, screen-reader order, keyboard/switch access: not run; fresh API35 evidence is blocked until normal ADB authorization and installed-APK hash verification.
 - Remaining permission-matrix breadth items in `#56` (denial vs broader financial workflows, full five-state layout, preference-write-error visual state).
 - Tracker hygiene noted, not acted on: #54 still open although PR #55 merged on 2026-08-12.
 - Separately filed, out of scope: #60 (dark theme).
 
 ## Next Action
 
-Continue #56 with TalkBack/screen-reader order, keyboard/switch-access, formal contrast and remaining permission breadth; decide how to treat the production-unreachable preference-write-error visual state under the Definition of Done. Keep #56/#43 open. Optional 2026-10-03 due-day delivery remains future evidence; do not trigger it or modify the financial fixture. The current pass records read-only inventory below, not fresh accessibility acceptance or a production change.
+Continue #56 with TalkBack/screen-reader order, keyboard/switch-access, formal contrast and remaining permission breadth; decide how to treat the production-unreachable preference-write-error visual state under the Definition of Done. Keep #56/#43 open. The 2026-10-03 09:00 IST due-day instant has passed without a recorded observation; do not trigger work manually or modify the financial fixture. Inspect API30 read-only only if it is already running naturally; do not boot it solely for late delivery evidence. The current pass records read-only inventory below, not fresh accessibility acceptance or a production change.
 
 Current prerequisite: the read-only inventory below found installed-APK provenance drift and no TalkBack service on API 30. Resolve these before accessibility navigation; do not infer current binary provenance from the historical equivalent-source anchor or install a replacement silently.
 
@@ -138,4 +138,8 @@ Already sufficiently covered in recorded evidence, not newly revalidated here: e
 - Fresh build command: `.\gradlew.bat :apps:android:assembleDebug --rerun-tasks --no-daemon --console=plain --stacktrace`. Initial sandbox attempt could not access the Gradle cache lock; the identical command with permitted cache access succeeded (`BUILD SUCCESSFUL`, 287 tasks executed). APK: `apps/android/build/outputs/apk/debug/android-debug.apk`, SHA-256 `e93a724888037cbe12710545d8160f06cb8474cb80db14ab6a64163ef9b96292`, versionName `0.1.0`, versionCode `1`, min SDK 26, target SDK 35, debug signing certificate SHA-256 `8e4eaa1bc1cc53bd5d33ead3345db8d060b20e84601e4b10ea1267eb1fb7b273`. Artifact is ignored and uncommitted. This pins the local build to the recorded clean source, not to any installed package yet.
 - Live ADB initially showed only `emulator-5554`, resolved read-only as protected `TioLedger_Android11`. Existing `Pixel_9_API35` AVD configuration identifies an API 35 Google Play phone image with pre-existing userdata. It was started by normal hidden boot, without wipe/reset; emulator console resolved `emulator-5556` as `Pixel_9_API35`, but ADB remained `unauthorized` even after a non-destructive reconnect and ADB-server restart using the existing host key. No API35 package/data/permission/TalkBack pre-install inventory could be completed, and the new APK was **not installed**. No app was launched, no TalkBack service enabled, and no accessibility result or permission transition was observed. Do not substitute API30 for this blocked pass.
 - Existing focused test `:apps:android:testDebugUnitTest --tests 'com.tioledger.apps.android.reminders.ReminderPlatformRulesTest.failedPreferenceWriteRestoresPersistedSnapshotAndShowsFeedback'` passed. `ReminderSettingsLargeTextPreview` supplies an error message in source, but was not rendered/captured; it is not visual or accessibility acceptance. Real storage failure was not forced; owner DoD acceptance remains pending.
-- #56 checkboxes and #43 were not changed. No financial data, reminder preferences, notification permission, clock/timezone, API30 package/app state, or Oct 3 due-day work was changed. Next: restore normal ADB authorization for API35, re-audit the target, install only the recorded source-pinned APK, require installed hash equality, then collect real TalkBack spoken evidence. If authorization cannot be restored safely, keep device acceptance blocked.
+- #56 checkboxes and #43 were not changed. No financial data, reminder preferences, notification permission, clock/timezone, API30 package/app state, or Oct 3 due-day work was changed. The ignored APK/hash above records only the September 30 local build; it is not repository-persisted and must not be reused as a future prerequisite. Next: rebuild from exact clean `main@ee19eb0a75695dbb073fd9c53e46e59ae9a75f73`, calculate a fresh artifact hash, restore normal API35 ADB authorization, re-audit the target, install only that rebuilt APK, require installed hash equality, then collect real TalkBack evidence. If authorization cannot be restored safely, keep device acceptance blocked.
+
+## October 4 Temporal And Target Check
+
+- The October 3 due-day scheduled instant has passed; no due-day delivery or failure is established by repository evidence. Host/ADB inventory on 2026-10-04 found no running/connected emulator, so protected `TioLedger_Android11` was not booted and no API30 device state was inspected or changed. Any later due-day conclusion requires natural, read-only evidence; elapsed time alone is not proof.
