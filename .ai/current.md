@@ -2,10 +2,10 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `docs/reminder-accessibility-evidence`
+Branch: `docs/reminder-accessibility-api35-evidence`
 Platform Scope: `android`
-Last Updated: `2026-09-30`
-Next Action: `Resolve the current API 30 installed-APK provenance drift and absent TalkBack service before resuming #56 accessibility navigation. Read-only inventory and financial snapshots are recorded; no accessibility acceptance changed. Keep #56/#43 open, preserve the fixture, and obtain the owner's preference-write-error DoD decision.`
+Last Updated: `2026-10-05`
+Next Action: `The clean main@ee19eb0a75695dbb073fd9c53e46e59ae9a75f73 APK was freshly rebuilt on October 4 and installed only on Pixel_9_API35 after AVD/API verification; installed SHA-256 equals the rebuilt artifact. TalkBack is packaged but still disabled at the October 5 read. After its normal user-visible service authorization, collect real TalkBack/focus and app-visible permission evidence without activating reminder controls or requesting notification permission. The ignored September 30 artifact/hash remains historical evidence only; rebuild again if the current ignored APK is unavailable in a later session. The October 3 due-day instant passed without a recorded observation; do not boot API30 solely for evidence or trigger work. Keep #56/#43 open; Android Studio preview rendering failed, so preference-error visual evidence and owner DoD acceptance remain pending.`
 
 ## Usage
 
