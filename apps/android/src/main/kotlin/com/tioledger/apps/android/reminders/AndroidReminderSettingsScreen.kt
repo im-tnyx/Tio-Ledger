@@ -21,6 +21,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -310,6 +311,11 @@ private fun reminderToggleRow(
             checked = checked,
             onCheckedChange = null,
             modifier = Modifier.clearAndSetSemantics { },
+            colors =
+                SwitchDefaults.colors(
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
+                    uncheckedBorderColor = MaterialTheme.colorScheme.onSurface,
+                ),
         )
     }
 }
