@@ -2,10 +2,10 @@
 
 Status: In Progress
 Objective: Close the remaining Android reminder acceptance gaps recorded in issue #56 after PR #55 merged, without reopening merged Settings UI scope unless a concrete defect is found.
-Branch: `docs/reminder-accessibility-evidence` (docs-only evidence); subsequent device validation must pin the currently installed APK source
+Branch: `docs/reminder-accessibility-api35-evidence` (docs-only evidence); API35 installation and device validation must use the freshly source-pinned APK
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
-Last Updated: `2026-09-30`
+Last Updated: `2026-10-12`
 Issue: `#56`
 Parent: `#43`
 
@@ -25,7 +25,7 @@ Parent: `#43`
 - No GitHub issue edits, closes, or comments unless explicitly requested.
 - No financial, ledger, SQLDelight, or shared reminder-planner rule changes.
 - No financial test data (accounts, loans) may be created without explicit owner approval of the exact fixture; never inject DB rows.
-- No new branch until a real defect or scoped implementation change is confirmed.
+- No new implementation/fix branch until a real defect or scoped implementation change is confirmed. The owner explicitly authorized the existing `docs/reminder-accessibility-api35-evidence` branch for this #56 docs-only validation slice; this is not permission for another branch or speculative production changes.
 - Treat device validation as authoritative over stale local continuity notes.
 
 ## Current Evidence
@@ -78,17 +78,17 @@ Parent: `#43`
 
 ## Remaining Gaps
 
-- EMI lead-3 delivery and Loan Details deep link: passed after late boot on 2026-09-30; on-time execution was not observed. Optional Oct 3 due-day delivery remains future evidence.
-- TalkBack spoken-output, screen-reader order, keyboard/switch access: not run (not blocked).
+- EMI lead-3 delivery and Loan Details deep link: passed after late boot on 2026-09-30; on-time execution was not observed. The 2026-10-03 09:00 IST due-day instant has passed, but repository evidence records no due-day observation or outcome.
+- API35 TalkBack speech-display, direct focus traversal, keyboard focus, and normal-scale light-theme measurements were observed on 2026-10-11; see the dated evidence below. Audible speech was not recorded. Active OFF switch visuals and the observed focus outline measured below the 3:1 non-text threshold, so full contrast acceptance remains open. Switch activation, permission-state breadth, and preference-error visual evidence also remain open.
 - Remaining permission-matrix breadth items in `#56` (denial vs broader financial workflows, full five-state layout, preference-write-error visual state).
 - Tracker hygiene noted, not acted on: #54 still open although PR #55 merged on 2026-08-12.
 - Separately filed, out of scope: #60 (dark theme).
 
 ## Next Action
 
-Continue #56 with TalkBack/screen-reader order, keyboard/switch-access, formal contrast and remaining permission breadth; decide how to treat the production-unreachable preference-write-error visual state under the Definition of Done. Keep #56/#43 open. Optional 2026-10-03 due-day delivery remains future evidence; do not trigger it or modify the financial fixture. The current pass records read-only inventory below, not fresh accessibility acceptance or a production change.
+Continue #56 using the October 11 API35 TalkBack speech-display/traversal evidence below; clarify the user-facing `Disabled` state wording and repeated caption segments without assuming a product defect from the overlay alone. Review/remediate measured non-text contrast; safe switch activation requires separate authorization. Permission-state breadth and owner disposition of preference-write-error visual evidence remain open. Keep #56/#43 open. The 2026-10-03 09:00 IST due-day instant has passed without a recorded observation; do not trigger work manually or modify the financial fixture. Inspect API30 read-only only if it is already running naturally; do not boot it solely for late delivery evidence.
 
-Current prerequisite: the read-only inventory below found installed-APK provenance drift and no TalkBack service on API 30. Resolve these before accessibility navigation; do not infer current binary provenance from the historical equivalent-source anchor or install a replacement silently.
+Historical September 30 prerequisite: the inventory below found installed-APK provenance drift and no TalkBack service on API 30. Do not infer that historical binary's provenance from repository-source equivalence or replace the protected API30 install. The separate API35 target and its October 4 source-pinned install are recorded at the end of this task.
 
 ## Remaining-Work Audit (2026-09-30, after #75)
 
@@ -130,3 +130,24 @@ Already sufficiently covered in recorded evidence, not newly revalidated here: e
 - The installed single APK and the local debug output have SHA-256 `91d142092e3f63d7410798eb3d2b0c68114f803569cbed8b60845989161160d8`, version `0.1.0`/code 1, min SDK 26, target SDK 35, and Android debug certificate SHA-256 `8e4eaa1bc1cc53bd5d33ead3345db8d060b20e84601e4b10ea1267eb1fb7b273`. The local APK write time is 2026-09-29 15:05:41. Embedded Gradle metadata records AGP 8.7.3; output metadata records variant/version, not a Git SHA. The Git reflog places HEAD at `ba5fac5c` shortly before that write and records `67192205` at 15:06:43, but uncommitted source/build inputs cannot be recovered from these timestamps. Classification: binary identity established; exact source/build and runtime-equivalent tree not proven for this currently installed APK.
 - `Pixel_9_API35` is now connected as `emulator-5556` (it was stopped during the previous inventory); this audit did not start it. It uses an API 35 Google Play phone image. TalkBack 15.0.0 is packaged as `com.google.android.marvin.talkback` and exposes a spoken-feedback accessibility service, but no service is enabled/bound. Tio Ledger was first installed at 20:37:57 via `com.android.shell`, with the same APK hash. Package state is stopped/not launched; no app database or SharedPreferences directory exists. `POST_NOTIFICATIONS` is not granted and has no user-set denial flag; the app's visible permission state has not been observed. Existing AVD userdata predates this install, so the target is not assumed disposable.
 - #56 requires real TalkBack output/traversal and a source-pinned test binary; it does not explicitly require the original historical build SHA. Repository `apps/`/`shared/` equality from the historical anchor to current main does not establish the source tree of the newly installed APK. API 35 is the safer TalkBack/Android 13+ target after a source-equivalent binary is established; no TalkBack service was enabled and no accessibility acceptance test was performed here. #56 checkboxes and #43 are unchanged.
+
+## Source-Pinned API35 Preparation And Authorization Stop (2026-09-30)
+
+- PR #79 merged as clean `main@ee19eb0a75695dbb073fd9c53e46e59ae9a75f73` (CI passed). Recorded source trees: `apps=a563bc40ff9d4ab211a426222602f536d4777cbe`, `shared=1e7b0056b45dd1a8af2ca493233c0b95cc0efba4`. `:apps:android:assembleDebug --rerun-tasks` passed (287 tasks); ignored APK SHA-256 `e93a724888037cbe12710545d8160f06cb8474cb80db14ab6a64163ef9b96292`, version `0.1.0`/code 1, min/target SDK 26/35, debug certificate SHA-256 `8e4eaa1bc1cc53bd5d33ead3345db8d060b20e84601e4b10ea1267eb1fb7b273`.
+- API35 ADB was then unauthorized, so that pass did not install or launch the APK or enable TalkBack. The focused `failedPreferenceWriteRestoresPersistedSnapshotAndShowsFeedback` test passed; the error preview did not render (`ClassNotFoundException`). No #56/#43 acceptance or protected data changed. The build artifact alone was not installed-binary proof.
+
+## October 4 Temporal And Target Check
+
+- The October 3 due-day instant passed without a recorded natural delivery/failure. API30 was not booted or changed. The APK was rebuilt from the same clean main and source trees with the same command, hash, version and signing evidence above.
+- Serial `emulator-5554` was positively resolved as `Pixel_9_API35`/API 35, not API30. Before replacement it had old APK hash `91d142092e3f63d7410798eb3d2b0c68114f803569cbed8b60845989161160d8`, no app database/SharedPreferences, ungranted `POST_NOTIFICATIONS` without user-set denial, and TalkBack packaged but disabled. The fresh APK was installed only there via explicit `adb -s emulator-5554 install -r`; installed single-APK hash matched `e93a724888037cbe12710545d8160f06cb8474cb80db14ab6a64163ef9b96292`, version `0.1.0`/code 1, `lastUpdateTime=2026-10-04 22:33:53`. No app launch, preference/permission transition or financial write occurred in that pass.
+- Studio `ReminderSettingsLargeTextPreview` still showed `Render problem` after sync; no error-state visual acceptance was obtained. This was not TalkBack or #56 acceptance.
+
+## October 11 API35 TalkBack Evidence
+
+- `Pixel_9_API35` normally booted without reset; `emulator-5554` resolved to API 35. The installed APK hash remained the source-pinned `e93a724888037cbe12710545d8160f06cb8474cb80db14ab6a64163ef9b96292`; no new build/install. TalkBack `15.0.0.639625893` service was enabled. Its `Advanced settings > Developer settings > Display speech output` diagnostic was temporarily enabled and restored Off. These are TalkBack-displayed speech captions, not an audible recording.
+- EMI caption components in order: `Disabled` → `EMI reminders` → `Receive upcoming and due loan installment reminders` → `Switch`. Budget: `Disabled` → `Budget reminders` → `Receive budget warning and limit reminders` → `Switch`. Repeated label/support fragments were visible, but exact utterance boundaries/punctuation were not retained. Source maps `Disabled` to `checked=false` on an enabled `.toggleable` `Role.Switch`; live nodes were `checkable=true`, `checked=false`, `enabled=true`, `focusable=true`, visible switches Off, and no stored preference XML existed. Thus this caption denotes OFF in implementation, not an inaccessible control, but is linguistically ambiguous; do not claim an unambiguous spoken OFF state. A single duplicated utterance was not isolated: the overlay may retain successive segments, while source supplies explicit `contentDescription` plus merged child text. No reproducible app defect is established.
+- Direct TalkBack green-focus order: `Settings` → `Reminders` → explanatory text → EMI row → Budget row → `Notification delivery` → `Permission not requested` status/support → `Allow notifications` → bottom navigation. This matches `docs/references/notes/settings-reminders.md`; `uiautomator` corroborates properties only, not traversal. The NOT_REQUESTED action was visible, enabled and focused; its exact displayed caption was `Allow notifications. Button`. It was not activated; no OS dialog appeared. `POST_NOTIFICATIONS` remained ungranted without user-set denial. GRANTED/DENIED/REVOKED remain untested.
+- Keyboard `Tab` reached EMI → Budget → action → bottom navigation with visible focus and no activation; Switch Access and activation remain untested. At 420 dpi, observed EMI/Budget/action heights were about 93/73/48 dp. At font scale 1.0, the light-theme NOT_REQUESTED layout had no observed clipping, overlap or unstable wrapping; other states/scales remain open.
+- Contrast method: in-memory lossless `adb exec-out screencap -p`, solid rendered colors, WCAG sRGB relative luminance `(Lmax+0.05)/(Lmin+0.05)`; normal text needs 4.5:1 and meaningful non-text visuals 3:1. Text: `#111827/#FFFFFF` 17.74:1; `#0F172A/#F8FAFC` 17.06:1; supporting/status `#49454F/#F8FAFC` 8.93:1; action label `#2563EB/#F8FAFC` 4.94:1. Active OFF switch thumb/track `#CBD5E1/#E6E0E9` 1.15:1, track/background `#E6E0E9/#F8FAFC` 1.24:1, outline/background `#CBD5E1/#F8FAFC` 1.42:1; observed green focus ring `#6BC840/#F8FAFC` 2.02:1 (platform/app ownership unproven). Text passes, but overall non-text contrast does not; no production style change or dark-theme/#60 work.
+- Preference error remains visual-OPEN: the rollback unit test passed previously, but the static `ReminderSettingsLargeTextPreview` could not render in Studio Quail 4 2026.1.4 Patch 1 after import. Exact blocker at 2026-10-11 22:29:35: `java.lang.ClassNotFoundException: androidx.compose.ui.tooling.ComposeViewAdapter` in bundled Android Design Tools/layoutlib; not proof of a production failure. Error visibility, unobscured controls, stable layout, semantics and persisted-state depiction were not captured. Owner Option A/B is undecided; no failure hook or screenshot framework was added.
+- Next: review `Disabled` wording and non-text contrast; seek separate owner authorization for an isolated Android 13+ AVD to source-pin an APK and test GRANTED/DENIED/REVOKED through normal flows. Do not transition permissions on existing API35 or alter API30. No switch/permission action, financial data, clock/timezone, Oct 3 work, #56 checkbox or #43 issue was changed in this pass; #56 remains active.

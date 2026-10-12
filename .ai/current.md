@@ -2,10 +2,10 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `docs/reminder-accessibility-evidence`
+Branch: `docs/reminder-accessibility-api35-evidence`
 Platform Scope: `android`
-Last Updated: `2026-09-30`
-Next Action: `Resolve the current API 30 installed-APK provenance drift and absent TalkBack service before resuming #56 accessibility navigation. Read-only inventory and financial snapshots are recorded; no accessibility acceptance changed. Keep #56/#43 open, preserve the fixture, and obtain the owner's preference-write-error DoD decision.`
+Last Updated: `2026-10-12`
+Next Action: `PR #80 records the source-pinned API35 October 11 TalkBack displayed-speech/focus evidence, not an audible recording. Disabled maps to OFF in source but is linguistically ambiguous; repeated fragments remain inconclusive. NOT_REQUESTED action was reached without activation. Measured text contrast passes, active OFF switch/focus non-text contrast does not; Studio error preview remains blocked by ComposeViewAdapter ClassNotFoundException. Keep #56/#43 open. Next: owner decisions on error visual and isolated permission/activation pass, plus non-text contrast review. Preserve API30 and the unobserved Oct 3 outcome.`
 
 ## Usage
 
