@@ -5,7 +5,7 @@ Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
 Branch: `tnyx/fix-reminder-switch-accessibility`
 Platform Scope: `android`
 Last Updated: `2026-10-12`
-Next Action: `Publish the focused On/Off and screen-local OFF-switch contrast fix; require exact-head CI. Source-pinned TalkBack, rendered contrast and keyboard-focus acceptance need an explicitly approved isolated target. Keep #56/#43 open and preserve API30, existing API35 state, and the unobserved Oct 3 outcome.`
+Next Action: `Review PR #81 at its exact-head CI and address applicable findings without merging. Source-pinned TalkBack, rendered contrast and keyboard-focus acceptance need an explicitly approved isolated target. Keep #56/#43 open and preserve API30, existing API35 state, and the unobserved Oct 3 outcome.`
 
 ## Usage
 
