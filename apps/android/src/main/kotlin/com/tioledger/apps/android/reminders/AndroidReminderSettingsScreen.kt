@@ -2,6 +2,7 @@
 
 package com.tioledger.apps.android.reminders
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -31,12 +33,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.dp
 import com.tioledger.apps.android.R
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
@@ -229,7 +236,8 @@ internal fun androidReminderSettingsScreen(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = TioSpacing.lg),
+                                .padding(horizontal = TioSpacing.lg)
+                                .reminderFocusOutline(shape = ButtonDefaults.outlinedShape),
                     )
                 }
                 ReminderSettingsPermissionAction.OPEN_NOTIFICATION_SETTINGS -> {
@@ -239,7 +247,8 @@ internal fun androidReminderSettingsScreen(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = TioSpacing.lg),
+                                .padding(horizontal = TioSpacing.lg)
+                                .reminderFocusOutline(shape = ButtonDefaults.outlinedShape),
                     )
                 }
             }
@@ -280,13 +289,13 @@ private fun reminderToggleRow(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = TioDimensions.minTouchTarget)
+                .reminderFocusOutline()
                 .toggleable(
                     value = checked,
                     onValueChange = onCheckedChange,
                     role = Role.Switch,
                 )
                 .semantics(mergeDescendants = true) {
-                    contentDescription = "$title. $supportingText"
                     this.stateDescription = stateDescription
                 }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
@@ -318,6 +327,17 @@ private fun reminderToggleRow(
                 ),
         )
     }
+}
+
+@Composable
+private fun Modifier.reminderFocusOutline(shape: Shape = RectangleShape): Modifier {
+    var isFocused by remember { mutableStateOf(false) }
+    val outlineColor = if (isFocused) MaterialTheme.colorScheme.onSurface else Color.Transparent
+
+    // Observe the existing toggleable/button focus target without adding another one.
+    return this
+        .onFocusChanged { isFocused = it.isFocused }
+        .border(width = 2.dp, color = outlineColor, shape = shape)
 }
 
 @Composable

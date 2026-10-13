@@ -4,8 +4,8 @@ Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
 Branch: `tnyx/fix-reminder-switch-accessibility`
 Platform Scope: `android`
-Last Updated: `2026-10-12`
-Next Action: `Review PR #81 at its exact-head CI and address applicable findings without merging. Source-pinned TalkBack, rendered contrast and keyboard-focus acceptance need an explicitly approved isolated target. Keep #56/#43 open and preserve API30, existing API35 state, and the unobserved Oct 3 outcome.`
+Last Updated: `2026-10-13`
+Next Action: `Review PR #81 follow-up at its published exact-head CI and review state after the authorized three-file commit/push. Reminder rows now rely on merged text instead of redundant contentDescription, with a 2 dp input-focus outline on toggles/contextual actions. Local Android compile, 30 JVM tests, ktlint and detekt passed; shared tests were UP-TO-DATE and metadata/migration tasks SKIPPED. This patch is not installed or device-accepted. Preserve October 13 evidence and the unresolved Accessibility Suite permission grant. Device changes and merge remain unauthorized; keep #56/#43 open and API30/existing API35 untouched.`
 
 ## Usage
 
