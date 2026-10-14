@@ -4,8 +4,8 @@ Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
 Branch: `tnyx/fix-reminder-switch-accessibility`
 Platform Scope: `android`
-Last Updated: `2026-10-13`
-Next Action: `Review PR #81 follow-up at its published exact-head CI and review state after the authorized three-file commit/push. Reminder rows now rely on merged text instead of redundant contentDescription, with a 2 dp input-focus outline on toggles/contextual actions. Local Android compile, 30 JVM tests, ktlint and detekt passed; shared tests were UP-TO-DATE and metadata/migration tasks SKIPPED. This patch is not installed or device-accepted. Preserve October 13 evidence and the unresolved Accessibility Suite permission grant. Device changes and merge remain unauthorized; keep #56/#43 open and API30/existing API35 untouched.`
+Last Updated: `2026-10-14`
+Next Action: `Review/publish the uncommitted October 14 device evidence for PR #81 head 88c0c15: isolated source-pinned row On/Off/name/role, traversal and rendered app-focus contrast passed. Both preferences, font scale and speech-display diagnostic were restored; permission flags and empty financial snapshots matched the pre-pass baseline. Status-caption repetition, large-font focus synchronization, broader permission/Switch Access and error-visual gaps remain. Preserve the historical Suite grant limitation; keep #56/#43 open and protected targets untouched. #77 read-only audit is complete; per-currency presentation and separate implementation need owner approval. No merge is authorized.`
 
 ## Usage
 
