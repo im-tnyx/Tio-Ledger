@@ -61,7 +61,7 @@ The screenshot does **not** establish a dedicated Credit Card Details screen, ac
 Current Accounts v1 groups `AccountType.CREDIT_CARD` correctly, but its Application/UI read path exposes only one generic ledger-derived account balance:
 
 - `ListAccountSummariesUseCase` returns `AccountBalanceSummary(account, balance)`.
-- `AccountsViewModel` maps that single balance into both group aggregation and each generic account row.
+- Application groups those generic balances by type/currency; `AccountsViewModel` formats the supplied group subtotals and each generic account row, without payable/outstanding specialization.
 - `AccountsScreen` has no credit-card-specific two-value row/header contract.
 - No typed `AccountDetails` or `CreditCardDetails` route exists.
 
