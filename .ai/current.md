@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Ready for Review
+Status: In Progress
 Active Task: `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`
 Branch: `tnyx/fix-accounts-currency-groups`
 Platform Scope: `shared Application/UI`
 Last Updated: `2026-10-15`
-Next Action: `PR #82 is open for the owner-authorized #77 fix; code commit 0c56eb3 has human author/committer. Verify the latest PR head's CI and reviews after this publication-note update; no merge or issue edits. Application 59 and UI 75 tests passed in debug/release; metadata/migration were SKIPPED and shared detekt NO-SOURCE, not fresh coverage. Rendered theme/large-font/TalkBack review and the separate first-currency top-summary limitation remain open. Keep Money/ledger/schema and protected devices untouched. #56/#43 remain open in their reminder task.`
+Next Action: `Owner authorized commit/push of the bounded header, previews, test-only harness and evidence follow-up to existing PR #82. Require new exact-head CI/review after publication; old CI #462 covers only 7f758d2. Actual Cash/credit-header TalkBack speech output/traversal remains pending: latest owner confirmation instead captured Customize gestures with no caption. Changed-header light/dark rendered review includes scrolled Credit Card at 320dp/2x; font scale restored to 1.0 and harness DB listing empty. Final committed-source device pinning remains separate. No merge/issue edits or existing-target/physical-phone mutation.`
 
 ## Usage
 

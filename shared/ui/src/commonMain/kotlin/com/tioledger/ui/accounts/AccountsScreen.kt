@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -32,10 +33,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import com.tioledger.domain.model.AccountType
 import com.tioledger.ui.components.TioAmountText
 import com.tioledger.ui.components.TioAmountTone
@@ -263,32 +267,54 @@ private fun AccountsGroupedList(groups: List<AccountGroupUiModel>) {
 
 @Composable
 private fun AccountGroupHeader(group: AccountGroupUiModel) {
-    Row(
+    BoxWithConstraints(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .semantics(mergeDescendants = true) { }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = group.title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Column(horizontalAlignment = Alignment.End) {
-            group.totals.forEach { total ->
-                TioAmountText(
-                    amount = total,
-                    tone =
-                        if (group.type == AccountType.CREDIT_CARD || group.type == AccountType.LOAN_LINKED) {
-                            TioAmountTone.Negative
-                        } else {
-                            TioAmountTone.Neutral
-                        },
-                )
+        val measurer = rememberTextMeasurer()
+        val titleStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+        val amountStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+        val titleWidth = measurer.measure(group.title, style = titleStyle, softWrap = false).size.width
+        val amountWidth = group.totals.maxOfOrNull { measurer.measure(it, style = amountStyle, softWrap = false).size.width } ?: 0
+        val gap = with(LocalDensity.current) { TioSpacing.md.roundToPx() }
+        if (titleWidth + amountWidth + gap <= constraints.maxWidth) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(text = group.title, modifier = Modifier.weight(1f), style = titleStyle)
+                AccountGroupTotals(group)
             }
+        } else {
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
+                Text(text = group.title, style = titleStyle)
+                AccountGroupTotals(group, modifier = Modifier.align(Alignment.End))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccountGroupTotals(
+    group: AccountGroupUiModel,
+    modifier: Modifier = Modifier,
+) {
+    val color =
+        if (group.type == AccountType.CREDIT_CARD || group.type == AccountType.LOAN_LINKED) {
+            MaterialTheme.colorScheme.error
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
+    Column(modifier = modifier, horizontalAlignment = Alignment.End) {
+        group.totals.forEach { total ->
+            // Header totals may wrap at large font sizes; keep the complete sign/currency/amount.
+            Text(
+                text = total,
+                color = color,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.End,
+            )
         }
     }
 }

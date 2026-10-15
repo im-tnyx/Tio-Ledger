@@ -38,6 +38,7 @@ Owner approved on 2026-10-15: preserve one heading per AccountType and show one 
 - Existing `includeArchived` behavior is preserved. Global `accounts` and per-currency `totals` in the overview remain unfiltered, separate from the search-filtered group projection. Do not use global currency totals as type subtotals.
 - Accounts ViewModel only maps/formats the supplied totals; Compose only renders them. There is no monetary folding in presentation, persisted subtotal, currency selection fallback, weakened Money guard, ledger write or schema change.
 - Each displayed amount includes its currency code; header semantics merge the title and all subtotal text. Rendered normal/large-font, theme and real screen-reader review remain required before claiming visual/accessibility acceptance.
+- Owner-approved responsive follow-up on 2026-10-15: measure the heading and widest subtotal using the active text styles/density. Keep the original inline heading when both fit with spacing; otherwise place the complete heading above right-aligned subtotals. Header amounts may wrap rather than elide their sign/currency/value. Preserve one merged header and existing list keys. Account rows and the top summary are outside this bounded layout change.
 - Separate existing limitation: the top summary maps the first global currency total, with a `Multiple currencies` model label that its row does not render. This narrow type-subtotal fix does not redesign that summary or claim full multi-currency summary acceptance.
 
 ## Credit Card Specialization Reference Decision (#74)
