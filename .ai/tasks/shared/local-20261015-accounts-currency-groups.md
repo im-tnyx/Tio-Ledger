@@ -7,6 +7,7 @@ Base: `main@d937437be9c481ad48c2d0bc8e366a2c6230d015` (CI #459 SUCCESS)
 Created: `2026-10-15`
 Last Updated: `2026-10-15`
 Issue: `#77`
+Pull Request: `#82` (https://github.com/im-tnyx/Tio-Ledger/pull/82)
 
 ## Required Context
 
@@ -38,6 +39,7 @@ Issue: `#77`
 - Regression matrix covers same-type INR/USD zero and nonzero balances, same-currency summing, negative asset/liability balances, distinct type versus global totals, case-insensitive/no-match/blank/cleared search, deterministic currency/type order, archived-account eligibility, strict Money mismatch rejection, same-type currency selection on creation and in-memory read-path no-mutation snapshots.
 - Canonical `account.md` records the approved contract and the separate top-summary first-currency limitation. Reminder task now records PR #81 merge/main CI and hands off without closing/archiving #56/#43. `git diff --check` PASS; no commit/push/PR/device/issue operation occurred.
 - Publication preflight on October 15: remote main still `d937437`, no existing PR/remote branch for this change, human Git identity verified. Repository-required selections plus Android compile/tests succeeded in 21s (480 tasks: 13 executed, 467 up-to-date). Test tasks and ktlint were UP-TO-DATE; metadata/migration SKIPPED and shared detekt NO-SOURCE. These are command results, not fresh test executions or device acceptance. Owner authorized repository-native publication after the optional ship checklist proved unavailable.
+- Published code commit `0c56eb380d906db57e0905c03f209e259a9816a0` and opened PR #82 against main on October 15. Raw author/committer: `Santosh Jangid <im-tnyx@users.noreply.github.com>`, no AI trailer/footer. Initial CI #460 belongs exactly to that code commit and was still running at the first snapshot; review threads were zero. This publication-note update requires a new exact-head CI/review check, not reuse of the earlier snapshot. No merge/device/issue operation occurred.
 
 ## Changed Files
 
@@ -52,4 +54,4 @@ Issue: `#77`
 
 ## Next Action
 
-Publish the reviewed eleven-file patch (seven code/test files plus four documentation/continuity files) on the existing branch using the owner's October 15 commit/push/new PR authorization. Follow repository push/PR templates directly; the optional ship skill was stopped because its review checklist is absent, and the owner authorized the repository-native workflow instead. Inspect exact-head CI/review after publication; no merge is authorized. Rendered phone-width/large-font, theme and accessibility review remain pending on a separately approved safe path; do not manufacture device financial fixtures or silently broaden this fix into the top-summary/#74 workflows.
+Review PR #82 at its latest exact head: require configured CI gates and inspect all review findings before any separate owner merge decision. Repository-native publication was explicitly authorized after the optional ship checklist was unavailable. No merge or issue edits are authorized. Rendered phone-width/large-font, theme and accessibility review remain pending on a separately approved safe path; do not manufacture device financial fixtures or silently broaden this fix into the top-summary/#74 workflows.
