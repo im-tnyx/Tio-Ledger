@@ -2,10 +2,10 @@
 
 Status: In Progress
 Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `docs/reminder-accessibility-api35-evidence`
+Branch: `tnyx/fix-reminder-switch-accessibility`
 Platform Scope: `android`
-Last Updated: `2026-10-12`
-Next Action: `PR #80 records the source-pinned API35 October 11 TalkBack displayed-speech/focus evidence, not an audible recording. Disabled maps to OFF in source but is linguistically ambiguous; repeated fragments remain inconclusive. NOT_REQUESTED action was reached without activation. Measured text contrast passes, active OFF switch/focus non-text contrast does not; Studio error preview remains blocked by ComposeViewAdapter ClassNotFoundException. Keep #56/#43 open. Next: owner decisions on error visual and isolated permission/activation pass, plus non-text contrast review. Preserve API30 and the unobserved Oct 3 outcome.`
+Last Updated: `2026-10-14`
+Next Action: `Review PR #81 at its latest exact-head CI/review state before a separate owner merge decision. October 14 device evidence was published at 1b3d713 (CI #457 SUCCESS, two resolved/zero unresolved threads); publication wording is reconciled here. Device acceptance is pinned to 88c0c15; apps/shared trees are unchanged by docs commits. Status-caption repetition, large-font focus synchronization, broader permission/Switch Access and error-visual gaps remain. Preserve the historical Suite grant limitation; keep #56/#43 open and protected targets untouched. #77 per-currency presentation and implementation need separate owner approval. No merge or device change is authorized.`
 
 ## Usage
 
