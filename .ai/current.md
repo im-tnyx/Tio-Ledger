@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
-Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `tnyx/fix-reminder-switch-accessibility`
-Platform Scope: `android`
-Last Updated: `2026-10-14`
-Next Action: `Review PR #81 at its latest exact-head CI/review state before a separate owner merge decision. October 14 device evidence was published at 1b3d713 (CI #457 SUCCESS, two resolved/zero unresolved threads); publication wording is reconciled here. Device acceptance is pinned to 88c0c15; apps/shared trees are unchanged by docs commits. Status-caption repetition, large-font focus synchronization, broader permission/Switch Access and error-visual gaps remain. Preserve the historical Suite grant limitation; keep #56/#43 open and protected targets untouched. #77 per-currency presentation and implementation need separate owner approval. No merge or device change is authorized.`
+Status: Ready for Review
+Active Task: `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`
+Branch: `tnyx/fix-accounts-currency-groups`
+Platform Scope: `shared Application/UI`
+Last Updated: `2026-10-15`
+Next Action: `Owner authorized commit/push/new PR for the focused #77 fix on October 15. Publish this branch after final validation, then review exact-head CI and findings; no merge or issue edits. Application 59 and UI 75 tests passed in debug/release; metadata/migration were SKIPPED and shared detekt NO-SOURCE, not fresh coverage. Rendered theme/large-font/TalkBack review and the separate first-currency top-summary limitation remain open. Keep Money/ledger/schema and protected devices untouched. #56/#43 remain open in their reminder task.`
 
 ## Usage
 

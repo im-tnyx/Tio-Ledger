@@ -18,7 +18,7 @@ object AccountsPreviewData {
                     AccountGroupUiModel(
                         type = AccountType.CASH,
                         title = "Cash",
-                        total = "INR 12,500.00",
+                        totals = listOf("INR 12,500.00"),
                         accounts =
                             listOf(
                                 AccountRowUiModel(
@@ -43,7 +43,7 @@ object AccountsPreviewData {
                     AccountGroupUiModel(
                         type = AccountType.CASH,
                         title = "Cash",
-                        total = "INR 5,500.00",
+                        totals = listOf("INR 5,500.00"),
                         accounts =
                             listOf(
                                 AccountRowUiModel("cash", "Cash", "Cash", "INR 5,500.00", "INR", false),
@@ -52,7 +52,7 @@ object AccountsPreviewData {
                     AccountGroupUiModel(
                         type = AccountType.BANK,
                         title = "Accounts",
-                        total = "INR 1,36,800.00",
+                        totals = listOf("INR 1,36,800.00"),
                         accounts =
                             listOf(
                                 AccountRowUiModel("sbi", "SBI", "Accounts", "INR 82,400.00", "INR", false),
@@ -62,7 +62,7 @@ object AccountsPreviewData {
                     AccountGroupUiModel(
                         type = AccountType.CREDIT_CARD,
                         title = "Credit Card",
-                        total = "INR 18,450.00",
+                        totals = listOf("INR 18,450.00"),
                         accounts =
                             listOf(
                                 AccountRowUiModel("card", "HDFC Card", "Credit Card", "INR 18,450.00", "INR", true),

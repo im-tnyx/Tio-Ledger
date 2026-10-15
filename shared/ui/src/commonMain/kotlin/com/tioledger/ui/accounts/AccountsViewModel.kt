@@ -7,7 +7,6 @@ import com.tioledger.application.usecase.account.AccountsBalanceOverview
 import com.tioledger.application.usecase.account.CreateAccountCommand
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
-import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.AccountType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,7 +74,7 @@ class AccountsViewModel(
 
     private fun loadAccounts() {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-        when (val result = listAccountSummariesUseCase()) {
+        when (val result = listAccountSummariesUseCase(searchQuery = _uiState.value.searchQuery)) {
             is ApplicationResult.Success -> {
                 _uiState.value = result.outcome.value.toUiState(_uiState.value.searchQuery)
             }
@@ -91,11 +90,6 @@ class AccountsViewModel(
 }
 
 private fun AccountsBalanceOverview.toUiState(searchQuery: String): AccountsUiState {
-    val filteredAccounts =
-        accounts.filter { summary ->
-            searchQuery.isBlank() || summary.account.name.contains(searchQuery, ignoreCase = true)
-        }
-
     return AccountsUiState(
         isLoading = false,
         searchQuery = searchQuery,
@@ -109,26 +103,15 @@ private fun AccountsBalanceOverview.toUiState(searchQuery: String): AccountsUiSt
                 )
             } ?: AccountsSummaryUiModel.Empty,
         groups =
-            AccountType.entries.mapNotNull { type ->
-                val items = filteredAccounts.filter { it.account.type == type }
-                if (items.isEmpty()) {
-                    null
-                } else {
-                    AccountGroupUiModel(
-                        type = type,
-                        title = type.toGroupTitle(),
-                        total = items.totalBalanceFor(type).toDisplayAmount(),
-                        accounts = items.map { it.toRow() },
-                    )
-                }
+            groups.map { group ->
+                AccountGroupUiModel(
+                    type = group.type,
+                    title = group.type.toGroupTitle(),
+                    totals = group.totals.map { it.toDisplayAmount() },
+                    accounts = group.accounts.map { it.toRow() },
+                )
             },
     )
-}
-
-private fun List<AccountBalanceSummary>.totalBalanceFor(type: AccountType): Money {
-    val first = first()
-    return filter { it.account.type == type }
-        .fold(Money.zero(first.balance.currency)) { total, summary -> total + summary.balance }
 }
 
 private fun AccountBalanceSummary.toRow(): AccountRowUiModel =

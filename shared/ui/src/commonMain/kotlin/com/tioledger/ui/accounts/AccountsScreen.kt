@@ -267,6 +267,7 @@ private fun AccountGroupHeader(group: AccountGroupUiModel) {
         modifier =
             Modifier
                 .fillMaxWidth()
+                .semantics(mergeDescendants = true) { }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -276,15 +277,19 @@ private fun AccountGroupHeader(group: AccountGroupUiModel) {
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
-        TioAmountText(
-            amount = group.total,
-            tone =
-                if (group.type == AccountType.CREDIT_CARD || group.type == AccountType.LOAN_LINKED) {
-                    TioAmountTone.Negative
-                } else {
-                    TioAmountTone.Neutral
-                },
-        )
+        Column(horizontalAlignment = Alignment.End) {
+            group.totals.forEach { total ->
+                TioAmountText(
+                    amount = total,
+                    tone =
+                        if (group.type == AccountType.CREDIT_CARD || group.type == AccountType.LOAN_LINKED) {
+                            TioAmountTone.Negative
+                        } else {
+                            TioAmountTone.Neutral
+                        },
+                )
+            }
+        }
     }
 }
 

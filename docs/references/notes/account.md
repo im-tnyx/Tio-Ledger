@@ -29,6 +29,17 @@ Accounts Screen v1 presents the user's accounts with a total balance summary, se
 5. Account rows with icon, account name, type/currency context, and current balance.
 6. Empty, loading, and error states when applicable.
 
+## Per-Currency Type Subtotals (#77)
+
+Owner approved on 2026-10-15: preserve one heading per AccountType and show one explicitly currency-labeled subtotal per currency, stacked in the heading's amount area. Single-currency groups retain one amount. Keep existing account rows, type order and `header-<type>` list keys; do not split one type into competing headers or combine currencies.
+
+- `ListAccountSummariesUseCase` owns the immutable type-group projection and reuses its existing per-currency aggregation. It returns ledger-derived balances with their currency and existing asset/liability sign conventions, not FX conversions or credit-card payable/outstanding values.
+- Case-insensitive name search changes group membership/subtotals to the matching visible accounts. Blank search restores all eligible groups; no matches means no group. Currency subtotals sort by currency code; account order remains the repository order within each type.
+- Existing `includeArchived` behavior is preserved. Global `accounts` and per-currency `totals` in the overview remain unfiltered, separate from the search-filtered group projection. Do not use global currency totals as type subtotals.
+- Accounts ViewModel only maps/formats the supplied totals; Compose only renders them. There is no monetary folding in presentation, persisted subtotal, currency selection fallback, weakened Money guard, ledger write or schema change.
+- Each displayed amount includes its currency code; header semantics merge the title and all subtotal text. Rendered normal/large-font, theme and real screen-reader review remain required before claiming visual/accessibility acceptance.
+- Separate existing limitation: the top summary maps the first global currency total, with a `Multiple currencies` model label that its row does not render. This narrow type-subtotal fix does not redesign that summary or claim full multi-currency summary acceptance.
+
 ## Credit Card Specialization Reference Decision (#74)
 
 ### What the approved screenshot establishes
