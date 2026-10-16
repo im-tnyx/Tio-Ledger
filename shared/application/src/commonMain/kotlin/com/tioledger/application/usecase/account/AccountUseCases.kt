@@ -44,6 +44,10 @@ data class AccountTypeBalanceGroup(
     val totals: List<Money>,
 )
 
+/** Reproject a loaded snapshot without reading accounts or ledger history again. */
+fun AccountsBalanceOverview.withSearchQuery(searchQuery: String): AccountsBalanceOverview =
+    copy(groups = accounts.toTypeGroups(searchQuery))
+
 class ListAccountSummariesUseCase(
     private val accountRepository: AccountRepository,
     private val ledgerRepository: LedgerRepository,

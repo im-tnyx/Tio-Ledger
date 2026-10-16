@@ -7,6 +7,7 @@ import com.tioledger.application.usecase.account.AccountsBalanceOverview
 import com.tioledger.application.usecase.account.CreateAccountCommand
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.account.withSearchQuery
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.AccountType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ class AccountsViewModel(
 ) {
     private val _uiState = MutableStateFlow(AccountsUiState())
     val uiState: StateFlow<AccountsUiState> = _uiState.asStateFlow()
+    private var loadedOverview: AccountsBalanceOverview? = null
 
     init {
         onAction(AccountsAction.Load)
@@ -32,7 +34,10 @@ class AccountsViewModel(
             AccountsAction.Load, AccountsAction.Retry -> loadAccounts()
             is AccountsAction.SearchChanged -> {
                 _uiState.value = _uiState.value.copy(searchQuery = action.query)
-                loadAccounts()
+                loadedOverview?.let { overview ->
+                    val projected = overview.withSearchQuery(action.query).toUiState(action.query)
+                    _uiState.value = _uiState.value.copy(groups = projected.groups)
+                }
             }
             AccountsAction.AddClicked ->
                 _uiState.value = _uiState.value.copy(isCreateDialogVisible = true, createErrorMessage = null)
@@ -74,9 +79,10 @@ class AccountsViewModel(
 
     private fun loadAccounts() {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-        when (val result = listAccountSummariesUseCase(searchQuery = _uiState.value.searchQuery)) {
+        when (val result = listAccountSummariesUseCase()) {
             is ApplicationResult.Success -> {
-                _uiState.value = result.outcome.value.toUiState(_uiState.value.searchQuery)
+                loadedOverview = result.outcome.value
+                _uiState.value = result.outcome.value.withSearchQuery(_uiState.value.searchQuery).toUiState(_uiState.value.searchQuery)
             }
             is ApplicationResult.Failure -> {
                 _uiState.value =

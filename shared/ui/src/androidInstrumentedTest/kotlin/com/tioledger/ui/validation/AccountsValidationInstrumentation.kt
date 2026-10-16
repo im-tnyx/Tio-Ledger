@@ -69,7 +69,12 @@ class AccountsValidationInstrumentation : Instrumentation() {
         val header =
             nodes.firstOrNull { node ->
                 val childTexts = (0 until node.childCount).mapNotNull { node.getChild(it)?.text?.toString() }
-                title in childTexts && childTexts.any { it.startsWith("USD ") }
+                val ownText = listOfNotNull(node.text?.toString(), node.contentDescription?.toString()).joinToString(" ")
+                !node.isClickable && !node.isScrollable &&
+                    (
+                        (ownText.trim().startsWith(title) && ownText.contains("USD ")) ||
+                            (title in childTexts && childTexts.any { it.startsWith("USD ") })
+                    )
             }
         result.putBoolean("headerFocusAction", header?.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS) == true)
         SystemClock.sleep(1_000)

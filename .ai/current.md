@@ -4,8 +4,8 @@ Status: In Progress
 Active Task: `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`
 Branch: `tnyx/fix-accounts-currency-groups`
 Platform Scope: `shared Application/UI`
-Last Updated: `2026-10-15`
-Next Action: `Owner authorized commit/push of the bounded header, previews, test-only harness and evidence follow-up to existing PR #82. Require new exact-head CI/review after publication; old CI #462 covers only 7f758d2. Actual Cash/credit-header TalkBack speech output/traversal remains pending: latest owner confirmation instead captured Customize gestures with no caption. Changed-header light/dark rendered review includes scrolled Credit Card at 320dp/2x; font scale restored to 1.0 and harness DB listing empty. Final committed-source device pinning remains separate. No merge/issue edits or existing-target/physical-phone mutation.`
+Last Updated: `2026-10-16`
+Next Action: `Owner authorized publication and review closure of the PR #82 P2 remediation on October 16. Search reprojects cached summaries in Application instead of rereading ledger per keystroke; test probe matches merged-node text/description. Focused tests/compile/ktlint passed; require new exact-head CI and verify review-thread state after push, not reuse of CI #463 at 5aca88f. Probe device behavior, actual TalkBack speech/traversal and final committed-source device pinning remain pending. No merge/issue edits/device changes.`
 
 ## Usage
 

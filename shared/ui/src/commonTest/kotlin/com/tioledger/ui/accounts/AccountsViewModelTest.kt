@@ -23,6 +23,28 @@ import kotlin.test.assertTrue
 
 class AccountsViewModelTest {
     @Test
+    fun searchUsesLoadedSnapshotAndExplicitLoadRefreshesLedgerBalances() {
+        val cash = account("cash", "Travel Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[cash.id] = listOf(entry("initial", cash, 100L))
+        val viewModel = testViewModel(accounts, ledger)
+        ledger.entriesByAccount[cash.id] = listOf(entry("updated", cash, 200L))
+
+        listOf("T", "Tr", "missing", "", "   ").forEach { query ->
+            viewModel.onAction(AccountsAction.SearchChanged(query))
+        }
+        assertEquals(1, accounts.readCount)
+        assertEquals(1, ledger.readCount)
+        assertEquals(listOf("USD 1.00"), viewModel.uiState.value.groups.single().totals)
+
+        viewModel.onAction(AccountsAction.Load)
+        assertEquals(2, accounts.readCount)
+        assertEquals(2, ledger.readCount)
+        assertEquals(listOf("USD 2.00"), viewModel.uiState.value.groups.single().totals)
+    }
+
+    @Test
     fun sameTypeMixedCurrencyAccountsLoadWithoutCrashing() {
         val usdCash = account("usd-cash", "US Cash", AccountType.CASH)
         val inrCash = account("inr-cash", "India Cash", AccountType.CASH).copy(currencyCode = "INR")
@@ -458,14 +480,17 @@ private class FixedIdGenerator(private val id: String) : IdGenerator {
 }
 
 private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRepository {
+    var readCount = 0
     private val accounts = initialAccounts.toMutableList()
     private val createdAccounts = mutableListOf<Account>()
     val created: List<Account> get() = createdAccounts
     var beforeCreate: (() -> Unit)? = null
     var createResult: ((Account) -> LedgerResult<Account>)? = null
 
-    override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> =
-        LedgerResult.Success(accounts.filter { includeArchived || !it.isArchived })
+    override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> {
+        readCount++
+        return LedgerResult.Success(accounts.filter { includeArchived || !it.isArchived })
+    }
 
     override fun findById(accountId: String): LedgerResult<Account> =
         accounts.firstOrNull { it.id == accountId }?.let { LedgerResult.Success(it) }
@@ -485,10 +510,13 @@ private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRep
 }
 
 private class FakeLedgerRepository : LedgerRepository {
+    var readCount = 0
     val entriesByAccount: MutableMap<String, List<LedgerEntry>> = mutableMapOf()
 
-    override fun findEntriesByAccount(accountId: String): LedgerResult<List<LedgerEntry>> =
-        LedgerResult.Success(entriesByAccount[accountId].orEmpty())
+    override fun findEntriesByAccount(accountId: String): LedgerResult<List<LedgerEntry>> {
+        readCount++
+        return LedgerResult.Success(entriesByAccount[accountId].orEmpty())
+    }
 
     override fun findEntriesByTransaction(transactionId: String): LedgerResult<List<LedgerEntry>> =
         LedgerResult.Success(

@@ -5,7 +5,7 @@ Objective: Prevent same-type mixed-currency Accounts aggregation crashes without
 Branch: `tnyx/fix-accounts-currency-groups`
 Base: `main@d937437be9c481ad48c2d0bc8e366a2c6230d015` (CI #459 SUCCESS)
 Created: `2026-10-15`
-Last Updated: `2026-10-15`
+Last Updated: `2026-10-16`
 Issue: `#77`
 Pull Request: `#82` (https://github.com/im-tnyx/Tio-Ledger/pull/82)
 
@@ -79,7 +79,16 @@ Pull Request: `#82` (https://github.com/im-tnyx/Tio-Ledger/pull/82)
 - Owner's latest Cash-focus confirmation was not corroborated: `owner-caption-now.png` showed TalkBack Customize gestures with Back focused and no speech caption. Earlier missing captions remain unresolved; no actual speech or traversal PASS.
 - Explicit `am instrument --user 0` without a whitespace-bearing header argument succeeded in both light/dark 320dp/font_scale=2.0 runs: DB-free startup=true, scrollAction=true. Earlier `Invalid userId -2` invocations were rejected, not acceptance evidence; exact parsing cause is unproven. `credit-scrolled-light.png` and `credit-scrolled-dark.png` now show the complete Credit Card heading and INR 180.00 / USD 80.00 subtotals without header clipping/overlap. Native scroll/node inspection is not TalkBack traversal; overlay text remained empty. Font scale restored to 1.0. Existing top-summary/row/bottom-nav limitations remain out of scope.
 
-## Changed Files
+## October 16 Review Remediation (Local)
+
+- Owner subsequently authorized commit/push and checking both review threads. Only the seven scoped source/test/canonical/continuity files are included; no APK/binary/device operation or merge. New exact-head CI is required after push. Probe matching correction has compile/static evidence only; real service speech/traversal remains pending.
+- Publication recheck succeeded: full PUSH_TEMPLATE metadata/critical-test/migration/ktlint/detekt selections plus Android compile/test-APK assembly, 45s, 564 tasks (24 executed/540 up-to-date). UI debug/release XML each has 79 tests/zero failures/errors. Metadata/migration SKIPPED and shared detekt NO-SOURCE remain coverage limits; cached checks are not fresh executions.
+- Fresh main remains `d937437`; PR #82 head `5aca88f3ba637057522a7321ab591d64082728c6`, OPEN; exact-head CI #463 has both configured jobs SUCCESS. Codex COMMENTED review has two unresolved P2 threads; no CHANGES_REQUESTED review was returned.
+- Verified synchronous per-keystroke repository reads in SearchChanged. Added Application-owned `AccountsBalanceOverview.withSearchQuery`; ViewModel retains the loaded overview and reprojects only groups on search, preserving global summary and draft/error state. Load/Retry/successful creation refresh the snapshot. Regression counts account/ledger reads across typing/no-match/blank search and verifies explicit reload sees a changed in-memory balance. No financial rule/schema/ledger mutation.
+- Probe now checks merged node text/contentDescription plus child-text fallback, excluding clickable rows/scroll containers. Compiled source correction does not establish device focus or TalkBack speech; no device operation/reinstallation occurred in this remediation pass.
+- Initial focused validation failed at probe ktlint newline formatting. Scoped UI formatter corrected it. Rerun Application debug tests, UI debug/release tests, test-APK assembly, Android compile and Application/UI ktlint succeeded in 1m21s (448 tasks: 48 executed, 1 from cache, 399 up-to-date). Existing unrelated Budgets/SMS/Gradle warnings remain. Local changes are not published; no review reply/resolution, issue edit or merge occurred. Full PUSH_TEMPLATE checks must be rerun before publication.
+
+## Changed Files (Cumulative)
 
 - `shared/application/src/commonMain/kotlin/com/tioledger/application/usecase/account/AccountUseCases.kt`
 - `shared/application/src/commonTest/kotlin/com/tioledger/application/usecase/ApplicationUseCaseTest.kt`
