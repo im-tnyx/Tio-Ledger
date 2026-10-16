@@ -7,7 +7,7 @@ import com.tioledger.application.usecase.account.AccountsBalanceOverview
 import com.tioledger.application.usecase.account.CreateAccountCommand
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
-import com.tioledger.core.model.Money
+import com.tioledger.application.usecase.account.withSearchQuery
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.AccountType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +23,7 @@ class AccountsViewModel(
 ) {
     private val _uiState = MutableStateFlow(AccountsUiState())
     val uiState: StateFlow<AccountsUiState> = _uiState.asStateFlow()
+    private var loadedOverview: AccountsBalanceOverview? = null
 
     init {
         onAction(AccountsAction.Load)
@@ -33,7 +34,10 @@ class AccountsViewModel(
             AccountsAction.Load, AccountsAction.Retry -> loadAccounts()
             is AccountsAction.SearchChanged -> {
                 _uiState.value = _uiState.value.copy(searchQuery = action.query)
-                loadAccounts()
+                loadedOverview?.let { overview ->
+                    val projected = overview.withSearchQuery(action.query).toUiState(action.query)
+                    _uiState.value = _uiState.value.copy(groups = projected.groups)
+                }
             }
             AccountsAction.AddClicked ->
                 _uiState.value = _uiState.value.copy(isCreateDialogVisible = true, createErrorMessage = null)
@@ -77,7 +81,8 @@ class AccountsViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         when (val result = listAccountSummariesUseCase()) {
             is ApplicationResult.Success -> {
-                _uiState.value = result.outcome.value.toUiState(_uiState.value.searchQuery)
+                loadedOverview = result.outcome.value
+                _uiState.value = result.outcome.value.withSearchQuery(_uiState.value.searchQuery).toUiState(_uiState.value.searchQuery)
             }
             is ApplicationResult.Failure -> {
                 _uiState.value =
@@ -91,11 +96,6 @@ class AccountsViewModel(
 }
 
 private fun AccountsBalanceOverview.toUiState(searchQuery: String): AccountsUiState {
-    val filteredAccounts =
-        accounts.filter { summary ->
-            searchQuery.isBlank() || summary.account.name.contains(searchQuery, ignoreCase = true)
-        }
-
     return AccountsUiState(
         isLoading = false,
         searchQuery = searchQuery,
@@ -109,26 +109,15 @@ private fun AccountsBalanceOverview.toUiState(searchQuery: String): AccountsUiSt
                 )
             } ?: AccountsSummaryUiModel.Empty,
         groups =
-            AccountType.entries.mapNotNull { type ->
-                val items = filteredAccounts.filter { it.account.type == type }
-                if (items.isEmpty()) {
-                    null
-                } else {
-                    AccountGroupUiModel(
-                        type = type,
-                        title = type.toGroupTitle(),
-                        total = items.totalBalanceFor(type).toDisplayAmount(),
-                        accounts = items.map { it.toRow() },
-                    )
-                }
+            groups.map { group ->
+                AccountGroupUiModel(
+                    type = group.type,
+                    title = group.type.toGroupTitle(),
+                    totals = group.totals.map { it.toDisplayAmount() },
+                    accounts = group.accounts.map { it.toRow() },
+                )
             },
     )
-}
-
-private fun List<AccountBalanceSummary>.totalBalanceFor(type: AccountType): Money {
-    val first = first()
-    return filter { it.account.type == type }
-        .fold(Money.zero(first.balance.currency)) { total, summary -> total + summary.balance }
 }
 
 private fun AccountBalanceSummary.toRow(): AccountRowUiModel =

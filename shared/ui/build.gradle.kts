@@ -2,6 +2,15 @@
     id("tio.compose.multiplatform.library")
 }
 
+android {
+    defaultConfig {
+        testInstrumentationRunner = "com.tioledger.ui.validation.AccountsValidationInstrumentation"
+    }
+    testOptions {
+        targetSdk = 35
+    }
+}
+
 kotlin {
     sourceSets {
         commonMain.dependencies {

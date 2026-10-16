@@ -23,6 +23,103 @@ import kotlin.test.assertTrue
 
 class AccountsViewModelTest {
     @Test
+    fun searchUsesLoadedSnapshotAndExplicitLoadRefreshesLedgerBalances() {
+        val cash = account("cash", "Travel Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[cash.id] = listOf(entry("initial", cash, 100L))
+        val viewModel = testViewModel(accounts, ledger)
+        ledger.entriesByAccount[cash.id] = listOf(entry("updated", cash, 200L))
+
+        listOf("T", "Tr", "missing", "", "   ").forEach { query ->
+            viewModel.onAction(AccountsAction.SearchChanged(query))
+        }
+        assertEquals(1, accounts.readCount)
+        assertEquals(1, ledger.readCount)
+        assertEquals(listOf("USD 1.00"), viewModel.uiState.value.groups.single().totals)
+
+        viewModel.onAction(AccountsAction.Load)
+        assertEquals(2, accounts.readCount)
+        assertEquals(2, ledger.readCount)
+        assertEquals(listOf("USD 2.00"), viewModel.uiState.value.groups.single().totals)
+    }
+
+    @Test
+    fun sameTypeMixedCurrencyAccountsLoadWithoutCrashing() {
+        val usdCash = account("usd-cash", "US Cash", AccountType.CASH)
+        val inrCash = account("inr-cash", "India Cash", AccountType.CASH).copy(currencyCode = "INR")
+        val accounts = FakeAccountRepository(listOf(usdCash, inrCash))
+
+        val state = testViewModel(accounts, FakeLedgerRepository()).uiState.value
+
+        assertFalse(state.isLoading)
+        assertEquals(AccountType.CASH, state.groups.single().type)
+        assertEquals(listOf("INR 0.00", "USD 0.00"), state.groups.single().totals)
+        assertEquals(listOf("usd-cash", "inr-cash"), state.groups.single().accounts.map { it.id })
+        assertTrue(accounts.created.isEmpty())
+    }
+
+    @Test
+    fun mixedCurrencyGroupFormatsSeparateSignedSubtotals() {
+        val usdCash = account("usd", "US Cash", AccountType.CASH)
+        val inrCash = account("inr", "India Cash", AccountType.CASH).copy(currencyCode = "INR")
+        val extraUsdCash = account("extra-usd", "Travel Cash", AccountType.CASH)
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[usdCash.id] = listOf(entry("usd-entry", usdCash, 1_000L))
+        ledger.entriesByAccount[inrCash.id] = listOf(entry("inr-entry", inrCash, 500L, LedgerEntryType.CREDIT))
+        ledger.entriesByAccount[extraUsdCash.id] = listOf(entry("extra-entry", extraUsdCash, 250L))
+        val before = ledger.entriesByAccount.toMap()
+        val accounts = FakeAccountRepository(listOf(usdCash, inrCash, extraUsdCash))
+
+        val group = testViewModel(accounts, ledger).uiState.value.groups.single()
+
+        assertEquals("Cash", group.title)
+        assertEquals(listOf("-INR 5.00", "USD 12.50"), group.totals)
+        assertEquals(listOf("USD 10.00", "-INR 5.00", "USD 2.50"), group.accounts.map { it.balance })
+        assertEquals(before, ledger.entriesByAccount)
+        assertTrue(accounts.created.isEmpty())
+    }
+
+    @Test
+    fun liabilityGroupsPreserveBalancesWithoutNetAssetSignConversion() {
+        val usdCard = account("usd-card", "US Card", AccountType.CREDIT_CARD)
+        val inrCard = account("inr-card", "India Card", AccountType.CREDIT_CARD).copy(currencyCode = "INR")
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[usdCard.id] = listOf(entry("usd-entry", usdCard, 1_000L, LedgerEntryType.CREDIT))
+        ledger.entriesByAccount[inrCard.id] = listOf(entry("inr-entry", inrCard, 250L))
+
+        val state = testViewModel(FakeAccountRepository(listOf(usdCard, inrCard)), ledger).uiState.value
+
+        assertEquals(AccountType.CREDIT_CARD, state.groups.single().type)
+        assertEquals(listOf("-INR 2.50", "USD 10.00"), state.groups.single().totals)
+    }
+
+    @Test
+    fun searchChangesVisibleCurrencySubtotalsWithoutChangingGlobalSummary() {
+        val usdCash = account("usd", "Travel Dollar", AccountType.CASH)
+        val inrCash = account("inr", "India Cash", AccountType.CASH).copy(currencyCode = "INR")
+        val extraInrCash = account("extra-inr", "India Reserve", AccountType.CASH).copy(currencyCode = "INR")
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[usdCash.id] = listOf(entry("usd-entry", usdCash, 1_000L))
+        ledger.entriesByAccount[inrCash.id] = listOf(entry("inr-entry", inrCash, 250L))
+        ledger.entriesByAccount[extraInrCash.id] = listOf(entry("extra-entry", extraInrCash, 500L))
+        val viewModel = testViewModel(FakeAccountRepository(listOf(usdCash, inrCash, extraInrCash)), ledger)
+        val initial = viewModel.uiState.value
+
+        viewModel.onAction(AccountsAction.SearchChanged("iNdIa"))
+        assertEquals(listOf("INR 7.50"), viewModel.uiState.value.groups.single().totals)
+        viewModel.onAction(AccountsAction.SearchChanged("Reserve"))
+        assertEquals(listOf("INR 5.00"), viewModel.uiState.value.groups.single().totals)
+        viewModel.onAction(AccountsAction.SearchChanged("missing"))
+        assertTrue(viewModel.uiState.value.isEmpty)
+        assertEquals(initial.summary, viewModel.uiState.value.summary)
+        viewModel.onAction(AccountsAction.SearchChanged(""))
+        assertEquals(initial.groups, viewModel.uiState.value.groups)
+        viewModel.onAction(AccountsAction.SearchChanged("   "))
+        assertEquals(initial.groups, viewModel.uiState.value.groups)
+    }
+
+    @Test
     fun loadAccountsBuildsGroupedUiState() {
         val cash = account("cash", "Cash", AccountType.CASH)
         val bank = account("bank", "SBI", AccountType.BANK)
@@ -180,13 +277,14 @@ class AccountsViewModelTest {
         val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("inr-id"))
 
         viewModel.onAction(AccountsAction.AddClicked)
-        viewModel.onAction(AccountsAction.NameChanged("Mumbai Bank"))
-        viewModel.onAction(AccountsAction.TypeChanged(AccountType.BANK))
+        viewModel.onAction(AccountsAction.NameChanged("Mumbai Cash"))
+        viewModel.onAction(AccountsAction.TypeChanged(AccountType.CASH))
         viewModel.onAction(AccountsAction.CurrencyChanged("INR"))
         viewModel.onAction(AccountsAction.SaveClicked)
 
         val created = accounts.created.single()
         assertEquals("INR", created.currencyCode)
+        assertEquals(listOf("INR 0.00", "USD 10.00"), viewModel.uiState.value.groups.single().totals)
     }
 
     @Test
@@ -365,13 +463,14 @@ private fun entry(
     id: String,
     account: Account,
     amount: Long,
+    entryType: LedgerEntryType = LedgerEntryType.DEBIT,
 ): LedgerEntry =
     LedgerEntry(
         id = id,
         transactionId = "txn-$id",
         target = PostingTarget.Account(account.id, account.type.ledgerClass),
-        amount = Money(amount, CurrencyCode("USD")),
-        entryType = LedgerEntryType.DEBIT,
+        amount = Money(amount, CurrencyCode(account.currencyCode)),
+        entryType = entryType,
         sourceType = LedgerSourceType.TRANSACTION,
         createdAt = 1L,
     )
@@ -381,14 +480,17 @@ private class FixedIdGenerator(private val id: String) : IdGenerator {
 }
 
 private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRepository {
+    var readCount = 0
     private val accounts = initialAccounts.toMutableList()
     private val createdAccounts = mutableListOf<Account>()
     val created: List<Account> get() = createdAccounts
     var beforeCreate: (() -> Unit)? = null
     var createResult: ((Account) -> LedgerResult<Account>)? = null
 
-    override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> =
-        LedgerResult.Success(accounts.filter { includeArchived || !it.isArchived })
+    override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> {
+        readCount++
+        return LedgerResult.Success(accounts.filter { includeArchived || !it.isArchived })
+    }
 
     override fun findById(accountId: String): LedgerResult<Account> =
         accounts.firstOrNull { it.id == accountId }?.let { LedgerResult.Success(it) }
@@ -408,10 +510,13 @@ private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRep
 }
 
 private class FakeLedgerRepository : LedgerRepository {
+    var readCount = 0
     val entriesByAccount: MutableMap<String, List<LedgerEntry>> = mutableMapOf()
 
-    override fun findEntriesByAccount(accountId: String): LedgerResult<List<LedgerEntry>> =
-        LedgerResult.Success(entriesByAccount[accountId].orEmpty())
+    override fun findEntriesByAccount(accountId: String): LedgerResult<List<LedgerEntry>> {
+        readCount++
+        return LedgerResult.Success(entriesByAccount[accountId].orEmpty())
+    }
 
     override fun findEntriesByTransaction(transactionId: String): LedgerResult<List<LedgerEntry>> =
         LedgerResult.Success(

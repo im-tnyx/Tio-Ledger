@@ -38,7 +38,7 @@ data class AccountsSummaryUiModel(
 data class AccountGroupUiModel(
     val type: AccountType,
     val title: String,
-    val total: String,
+    val totals: List<String>,
     val accounts: List<AccountRowUiModel>,
 )
 
