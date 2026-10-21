@@ -5,7 +5,7 @@ Active Task: `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`
 Branch: `tnyx/fix-accounts-currency-groups`
 Platform Scope: `shared Application/UI`
 Last Updated: `2026-10-21`
-Next Action: `PR #82 current HEAD 7675747 is pushed; exact-head CI run 39643880373 is in progress. Historical runtime validation is pinned to 0b601efa, including the isolated API35 device/APK evidence and historical CI provenance run 38877987148. That historical evidence does not validate current HEAD 7675747. TalkBack speech was captured for Cash and Credit Card headers, but actual swipe traversal was not demonstrated. The approved isolated AVD attempt is currently blocked by emulator lock error 5. No merge, issue edit, or further device change.`
+Next Action: `PR #82 current HEAD and current exact-head CI must be read from GitHub PR #82 at handoff time; this pointer is not authoritative for either value. Historical runtime validation is pinned to 0b601efa, including the isolated API35 device/APK evidence and historical CI provenance run 38877987148. That historical evidence does not validate any later PR HEAD. TalkBack speech was captured for Cash and Credit Card headers, but actual swipe traversal was not demonstrated. The approved isolated AVD attempt is currently blocked by emulator lock error 5. No merge, issue edit, or further device change.`
 
 ## Usage
 
