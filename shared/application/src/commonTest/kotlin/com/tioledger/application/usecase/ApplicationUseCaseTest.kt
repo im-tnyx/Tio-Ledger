@@ -51,6 +51,7 @@ import com.tioledger.finance.engine.BalanceCalculator
 import com.tioledger.finance.engine.PostingEngine
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -177,6 +178,94 @@ class ApplicationUseCaseTest {
         assertEquals(10_000L, overview.totals.single().assets.amount)
         assertEquals(2_500L, overview.totals.single().liabilities.amount)
         assertEquals(7_500L, overview.totals.single().total.amount)
+        assertEquals(listOf(10_000L, 2_500L), overview.groups.map { it.totals.single().amount })
+    }
+
+    @Test
+    fun accountTypeGroupsSeparateCurrenciesAndDoNotUseGlobalTotals() {
+        val usdCash = account("usd-cash", AccountType.CASH)
+        val inrCash = account("inr-cash", AccountType.CASH).copy(currencyCode = "INR")
+        val inrBank = account("inr-bank", AccountType.BANK).copy(currencyCode = "INR")
+        val usdCard = account("usd-card", AccountType.CREDIT_CARD)
+        val accounts = FakeAccountRepository(listOf(usdCard, inrBank, usdCash, inrCash))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[usdCash.id] = listOf(ledgerEntry("cash-usd", usdCash, 1_000L, LedgerEntryType.DEBIT))
+        ledger.entriesByAccount[inrCash.id] = listOf(ledgerEntry("cash-inr", inrCash, 2_000L, LedgerEntryType.DEBIT))
+        ledger.entriesByAccount[inrBank.id] = listOf(ledgerEntry("bank-inr", inrBank, 3_000L, LedgerEntryType.DEBIT))
+        ledger.entriesByAccount[usdCard.id] = listOf(ledgerEntry("card-usd", usdCard, 400L, LedgerEntryType.CREDIT))
+        val beforeAccounts = accounts.accounts.toMap()
+        val beforeLedger = ledger.entriesByAccount.toMap()
+
+        val overview = assertSuccess(ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator())()).value
+
+        assertEquals(listOf(AccountType.CASH, AccountType.BANK, AccountType.CREDIT_CARD), overview.groups.map { it.type })
+        assertEquals(listOf("INR", "USD"), overview.groups.first().totals.map { it.currency.normalized })
+        assertEquals(listOf(2_000L, 1_000L), overview.groups.first().totals.map { it.amount })
+        assertEquals(3_000L, overview.groups[1].totals.single().amount)
+        assertEquals(400L, overview.groups[2].totals.single().amount)
+        assertEquals(listOf(5_000L, 600L), overview.totals.map { it.total.amount })
+        assertEquals(beforeAccounts, accounts.accounts)
+        assertEquals(beforeLedger, ledger.entriesByAccount)
+    }
+
+    @Test
+    fun accountSearchFiltersGroupSubtotalsButPreservesUnfilteredOverview() {
+        val first = account("first", AccountType.CASH).copy(name = "India Cash", currencyCode = "INR")
+        val second = account("second", AccountType.CASH).copy(name = "India Reserve", currencyCode = "INR")
+        val usdCash = account("usd", AccountType.CASH).copy(name = "Travel Dollar")
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[first.id] = listOf(ledgerEntry("first-entry", first, 250L, LedgerEntryType.DEBIT))
+        ledger.entriesByAccount[second.id] = listOf(ledgerEntry("second-entry", second, 500L, LedgerEntryType.DEBIT))
+        val useCase = ListAccountSummariesUseCase(FakeAccountRepository(listOf(first, second, usdCash)), ledger, BalanceCalculator())
+        val initial = assertSuccess(useCase()).value
+
+        assertEquals(750L, assertSuccess(useCase(searchQuery = "iNdIa")).value.groups.single().totals.single().amount)
+        val reserve = assertSuccess(useCase(searchQuery = "Reserve")).value
+        assertEquals(listOf(second.id), reserve.groups.single().accounts.map { it.account.id })
+        assertEquals(500L, reserve.groups.single().totals.single().amount)
+        assertEquals(initial.accounts, reserve.accounts)
+        assertEquals(initial.totals, reserve.totals)
+        assertTrue(assertSuccess(useCase(searchQuery = "missing")).value.groups.isEmpty())
+        assertEquals(initial.groups, assertSuccess(useCase(searchQuery = "")).value.groups)
+        assertEquals(initial.groups, assertSuccess(useCase(searchQuery = "   ")).value.groups)
+    }
+
+    @Test
+    fun accountGroupsKeepZeroNegativeAndLiabilityBalancesByCurrency() {
+        val inrCash = account("inr-cash", AccountType.CASH).copy(currencyCode = "INR")
+        val usdCash = account("usd-cash", AccountType.CASH)
+        val usdCard = account("usd-card", AccountType.CREDIT_CARD)
+        val inrCard = account("inr-card", AccountType.CREDIT_CARD).copy(currencyCode = "INR")
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[usdCash.id] = listOf(ledgerEntry("cash-entry", usdCash, 500L, LedgerEntryType.CREDIT))
+        ledger.entriesByAccount[usdCard.id] = listOf(ledgerEntry("card-entry", usdCard, 250L, LedgerEntryType.DEBIT))
+        val accounts = FakeAccountRepository(listOf(usdCard, usdCash, inrCash, inrCard))
+        val useCase = ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator())
+
+        val groups = assertSuccess(useCase()).value.groups
+
+        assertEquals(listOf(0L, -500L), groups.first().totals.map { it.amount })
+        assertEquals(listOf(0L, -250L), groups.last().totals.map { it.amount })
+        accounts.accounts.clear()
+        listOf(inrCard, inrCash, usdCash, usdCard).forEach { accounts.accounts[it.id] = it }
+        assertEquals(groups.map { it.type to it.totals }, assertSuccess(useCase()).value.groups.map { it.type to it.totals })
+    }
+
+    @Test
+    fun archivedAccountsOnlyContributeWhenRequestedAndMoneyGuardRemainsStrict() {
+        val cash = account("cash", AccountType.CASH)
+        val archived = account("archived", AccountType.CASH, isArchived = true).copy(currencyCode = "INR")
+        val useCase =
+            ListAccountSummariesUseCase(FakeAccountRepository(listOf(cash, archived)), FakeLedgerRepository(), BalanceCalculator())
+
+        assertEquals(listOf("USD"), assertSuccess(useCase()).value.groups.single().totals.map { it.currency.normalized })
+        assertEquals(
+            listOf("INR", "USD"),
+            assertSuccess(useCase(includeArchived = true)).value.groups.single().totals.map {
+                it.currency.normalized
+            },
+        )
+        assertFailsWith<IllegalArgumentException> { Money.zero(usd) + Money.zero(CurrencyCode("INR")) }
     }
 
     @Test
@@ -384,7 +473,7 @@ class ApplicationUseCaseTest {
             id = id,
             transactionId = "txn-$id",
             target = PostingTarget.Account(account.id, account.type.ledgerClass),
-            amount = Money(amount, usd),
+            amount = Money(amount, CurrencyCode(account.currencyCode)),
             entryType = entryType,
             sourceType = LedgerSourceType.TRANSACTION,
             createdAt = 1L,

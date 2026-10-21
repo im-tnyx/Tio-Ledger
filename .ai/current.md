@@ -1,11 +1,11 @@
 # Active Task
 
 Status: In Progress
-Active Task: `.ai/tasks/android/local-20260812-reminder-validation-followup.md`
-Branch: `tnyx/fix-reminder-switch-accessibility`
-Platform Scope: `android`
-Last Updated: `2026-10-14`
-Next Action: `Review PR #81 at its latest exact-head CI/review state before a separate owner merge decision. October 14 device evidence was published at 1b3d713 (CI #457 SUCCESS, two resolved/zero unresolved threads); publication wording is reconciled here. Device acceptance is pinned to 88c0c15; apps/shared trees are unchanged by docs commits. Status-caption repetition, large-font focus synchronization, broader permission/Switch Access and error-visual gaps remain. Preserve the historical Suite grant limitation; keep #56/#43 open and protected targets untouched. #77 per-currency presentation and implementation need separate owner approval. No merge or device change is authorized.`
+Active Task: `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`
+Branch: `tnyx/fix-accounts-currency-groups`
+Platform Scope: `shared Application/UI`
+Last Updated: `2026-10-21`
+Next Action: `PR #82 current HEAD and current exact-head CI must be read from GitHub PR #82 at handoff time; this pointer is not authoritative for either value. Historical runtime validation is pinned to 0b601efa, including the isolated API35 device/APK evidence and historical CI provenance run 38877987148. That historical evidence does not validate any later PR HEAD. TalkBack speech was captured for Cash and Credit Card headers, but actual swipe traversal was not demonstrated. The approved isolated AVD attempt is currently blocked by emulator lock error 5. No merge, issue edit, or further device change.`
 
 ## Usage
 

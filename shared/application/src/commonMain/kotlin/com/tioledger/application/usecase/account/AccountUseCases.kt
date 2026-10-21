@@ -35,14 +35,28 @@ data class AccountCurrencyTotals(
 data class AccountsBalanceOverview(
     val accounts: List<AccountBalanceSummary>,
     val totals: List<AccountCurrencyTotals>,
+    val groups: List<AccountTypeBalanceGroup>,
 )
+
+data class AccountTypeBalanceGroup(
+    val type: AccountType,
+    val accounts: List<AccountBalanceSummary>,
+    val totals: List<Money>,
+)
+
+/** Reproject a loaded snapshot without reading accounts or ledger history again. */
+fun AccountsBalanceOverview.withSearchQuery(searchQuery: String): AccountsBalanceOverview =
+    copy(groups = accounts.toTypeGroups(searchQuery))
 
 class ListAccountSummariesUseCase(
     private val accountRepository: AccountRepository,
     private val ledgerRepository: LedgerRepository,
     private val balanceCalculator: BalanceCalculator,
 ) {
-    operator fun invoke(includeArchived: Boolean = false): ApplicationResult<AccountsBalanceOverview> {
+    operator fun invoke(
+        includeArchived: Boolean = false,
+        searchQuery: String = "",
+    ): ApplicationResult<AccountsBalanceOverview> {
         val accounts =
             when (val result = accountRepository.findAll(includeArchived)) {
                 is LedgerResult.Success -> result.value
@@ -79,9 +93,34 @@ class ListAccountSummariesUseCase(
                     AccountsBalanceOverview(
                         accounts = summaries,
                         totals = summaries.toCurrencyTotals(),
+                        groups = summaries.toTypeGroups(searchQuery),
                     ),
             ),
         )
+    }
+}
+
+private fun List<AccountBalanceSummary>.toTypeGroups(searchQuery: String): List<AccountTypeBalanceGroup> {
+    val visible = filter { searchQuery.isBlank() || it.account.name.contains(searchQuery, ignoreCase = true) }
+    return AccountType.entries.mapNotNull { type ->
+        val accounts = visible.filter { it.account.type == type }
+        if (accounts.isEmpty()) {
+            null
+        } else {
+            AccountTypeBalanceGroup(
+                type = type,
+                accounts = accounts,
+                totals =
+                    accounts.toCurrencyTotals().map { currencyTotals ->
+                        // A type group contains one ledger class; retain liability balances, not net assets.
+                        if (type.ledgerClass == com.tioledger.domain.model.LedgerClass.ASSET) {
+                            currencyTotals.assets
+                        } else {
+                            currencyTotals.liabilities
+                        }
+                    },
+            )
+        }
     }
 }
 

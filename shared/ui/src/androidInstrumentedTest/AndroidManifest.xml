@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:name="android.app.Application"
+        android:allowBackup="false"
+        android:label="Tio Accounts UI Validation"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity
+            android:name="com.tioledger.ui.validation.AccountsValidationActivity"
+            android:exported="true"
+            android:launchMode="singleTop" />
+    </application>
+</manifest>

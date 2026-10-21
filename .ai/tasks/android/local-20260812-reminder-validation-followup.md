@@ -2,10 +2,10 @@
 
 Status: In Progress
 Objective: Close the remaining Android reminder acceptance gaps recorded in issue #56 after PR #55 merged, without reopening merged Settings UI scope unless a concrete defect is found.
-Branch: `tnyx/fix-reminder-switch-accessibility` (focused Android accessibility fix); device validation requires a freshly source-pinned APK on an explicitly approved isolated target
+Branch: `none` (PR #81 merged; reminder follow-up remains open); future device validation requires a freshly source-pinned APK on an explicitly approved isolated target
 Scope: `apps/android` validation follow-up, issue hygiene, and only defect-driven Android reminder fixes
 Created: `2026-08-12`
-Last Updated: `2026-10-14`
+Last Updated: `2026-10-15`
 Issue: `#56`
 Parent: `#43`
 
@@ -86,7 +86,7 @@ Parent: `#43`
 
 ## Next Action
 
-The October 14 device evidence is published at `1b3d71343515cb20f41836f6f25f7bb266a79ae6`, with exact-head CI #457 SUCCESS and two resolved/zero unresolved review threads. Publication wording is reconciled below; review the latest exact-head CI/review state before a separate owner merge decision. No merge, device change or issue edit is authorized. Reminder-row name/state/role, normal TalkBack traversal and measured app-focus contrast have direct evidence pinned to `88c0c15`; docs commits leave both runtime trees unchanged. Keep broader #56 permission/Switch Access/error-visual gaps and status-verbosity/large-font focus follow-up open. Do not silently revert the historical Suite permission grant. #77 requires an approved per-currency presentation before separate implementation. Preserve API30, existing API35 and the unobserved Oct 3 outcome.
+PR #81 was owner-authorized squash merged as `d937437be9c481ad48c2d0bc8e366a2c6230d015` on October 15; exact-main CI #459 SUCCESS, three review threads resolved. Local main synchronized and merged feature refs removed safely. Reminder evidence remains pinned to `88c0c15`, whose apps/shared trees match merged main. #56/#43 stay open: broader permission/Switch Access/error-visual gaps and status-verbosity/large-font focus follow-up remain. Do not silently revert the historical Suite permission grant or infer an Oct 3 outcome. The owner approved the separate #77 account-type hierarchy with per-currency subtotals; its implementation is now tracked by `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`. Resume this reminder task only in a separately authorized slice; protected API30/existing API35 remain untouched.
 
 Historical September 30 prerequisite: the inventory below found installed-APK provenance drift and no TalkBack service on API 30. Do not infer that historical binary's provenance from repository-source equivalence or replace the protected API30 install. The separate API35 target and its October 4 source-pinned install are recorded at the end of this task.
 
