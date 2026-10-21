@@ -4,8 +4,8 @@ Status: In Progress
 Active Task: `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`
 Branch: `tnyx/fix-accounts-currency-groups`
 Platform Scope: `shared Application/UI`
-Last Updated: `2026-10-16`
-Next Action: `Owner authorized publication and review closure of the PR #82 P2 remediation on October 16. Search reprojects cached summaries in Application instead of rereading ledger per keystroke; test probe matches merged-node text/description. Focused tests/compile/ktlint passed; require new exact-head CI and verify review-thread state after push, not reuse of CI #463 at 5aca88f. Probe device behavior, actual TalkBack speech/traversal and final committed-source device pinning remain pending. No merge/issue edits/device changes.`
+Last Updated: `2026-10-21`
+Next Action: `PR #82 head 0b601efa is pushed; exact-head CI run 38877987148 SUCCESS and both P2 threads are resolved. October 21 isolated AVD pass pinned that head's test APK and captured TalkBack speech for the Cash and Credit Card headers. Swipe traversal was not demonstrated. No merge, issue edit, or further device change.`
 
 ## Usage
 

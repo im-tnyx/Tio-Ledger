@@ -5,7 +5,7 @@ Objective: Prevent same-type mixed-currency Accounts aggregation crashes without
 Branch: `tnyx/fix-accounts-currency-groups`
 Base: `main@d937437be9c481ad48c2d0bc8e366a2c6230d015` (CI #459 SUCCESS)
 Created: `2026-10-15`
-Last Updated: `2026-10-16`
+Last Updated: `2026-10-21`
 Issue: `#77`
 Pull Request: `#82` (https://github.com/im-tnyx/Tio-Ledger/pull/82)
 
@@ -102,6 +102,14 @@ Pull Request: `#82` (https://github.com/im-tnyx/Tio-Ledger/pull/82)
 - `shared/ui/build.gradle.kts`, `shared/ui/src/androidInstrumentedTest/AndroidManifest.xml`, `shared/ui/src/androidInstrumentedTest/kotlin/com/tioledger/ui/validation/AccountsValidationActivity.kt`, `shared/ui/src/androidInstrumentedTest/kotlin/com/tioledger/ui/validation/AccountsValidationInstrumentation.kt` (authorized test-only harness)
 - `docs/references/notes/account.md`, `.ai/current.md`, this task and `.ai/tasks/android/local-20260812-reminder-validation-followup.md` (handoff metadata only).
 
+## October 21 Committed-Source Speech Pass
+
+- Owner authorized only the isolated AVD pass. Clean tree at `0b601efa07f4487d0b5be620d6dc10ff787e1e27`. `:shared:ui:assembleDebugAndroidTest` was UP-TO-DATE against that tree. Local and installed `base.apk` SHA-256 both `69247c307c5faeef6436a0cca2c563bcad3d697fcb667894286c762a430bd898`.
+- Booted `TioLedger_PR82_UI_API35_Isolated` and rechecked the name before install. Serial was `emulator-5554`, not the earlier 5556. No other device was attached. Production `com.tioledger.apps.android` was absent. Package `com.tioledger.shared.ui.test` only. Each probe returned `displayOnlyStartup=true` and `isolatedPackage=true`. Font scale stayed 1.0.
+- TalkBack `15.0.0.639625893` stayed enabled. Display speech output was turned on only for capture, then verified off. Log level was raised to VERBOSE for the capture and restored to ERROR. Touch exploration was restored to on. TalkBack remains enabled.
+- Cash focus rectangle enclosed `Cash`, `INR 1,250.00`, and `USD 250.00`. The speech caption was `Cash, INR 1,250.00, USD 250.00, In list`. Credit Card focus rectangle enclosed `Credit Card`, `INR 180.00`, and `USD 80.00`. The speech caption was `Credit Card, INR 180.00, USD 80.00, In list`. Captures are local ignored files `shared/ui/build/pr82-validation/20261021-live1.png`, `20261021-live2.png`, `20261021-card1.png`, and `20261021-card2.png`.
+- `headerFocusAction=true` for both titles. `talkBackOverlayNodes` stayed empty and `accessibilityFocus` text stayed null, so the probe bundle is not the speech evidence. Injected swipe and Alt+Right did not move TalkBack focus, so linear traversal order is not demonstrated. No merge or issue edit.
+
 ## Next Action
 
-Owner explicitly authorized commit/push of this bounded follow-up on October 15. Publish only the reviewed header/previews/test-only harness/canonical and continuity changes to existing PR #82 after push checks; require new exact-head CI/review, not reuse of #462. Rendered changed-header review is complete for the captured cases, not the whole screen. Obtain directly visible Cash/credit-header TalkBack speech output and actual service traversal; owner confirmations without matching capture are insufficient. Restore temporary Display speech output OFF while keeping TalkBack enabled after capture. Native node/focus probes are not real speech/navigation. Final committed-source device pinning remains separate; previous local artifact hashes do not become exact-commit provenance retrospectively. No existing-target/physical-phone mutation, merge, issue edits or expansion into row/top-summary/#74 behavior is authorized.
+Record this speech evidence with the owner before any merge decision. Swipe traversal is still unproven. Merge, issue #77 closure, and further device changes need a separate authorization. No existing-target or physical-phone mutation, and no expansion into row, top-summary, or #74 behavior.
