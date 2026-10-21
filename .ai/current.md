@@ -5,7 +5,7 @@ Active Task: `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`
 Branch: `tnyx/fix-accounts-currency-groups`
 Platform Scope: `shared Application/UI`
 Last Updated: `2026-10-21`
-Next Action: `PR #82 head 0b601efa is pushed; exact-head CI run 38877987148 SUCCESS and both P2 threads are resolved. October 21 isolated AVD pass pinned that head's test APK and captured TalkBack speech for the Cash and Credit Card headers. Swipe traversal was not demonstrated. No merge, issue edit, or further device change.`
+Next Action: `PR #82 current HEAD 88b35fe is pushed; current exact-head CI #465 is SUCCESS. Historical runtime validation is pinned to 0b601efa, including the isolated API35 device/APK evidence and historical CI provenance run 38877987148. That historical evidence does not validate current HEAD 88b35fe. TalkBack speech was captured for Cash and Credit Card headers, but actual swipe traversal was not demonstrated. No merge, issue edit, or further device change.`
 
 ## Usage
 
