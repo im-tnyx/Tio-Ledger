@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.mutableStateOf
 import com.tioledger.apps.android.reminders.AndroidNotificationPermissionStatus
 import com.tioledger.apps.android.reminders.AndroidReminderSettingsService
@@ -54,7 +55,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             TioAppShell(
                 diagnostics = diagnostics,
-                darkTheme = false,
+                darkTheme = isSystemInDarkTheme(),
                 currentRoute = currentRoute.value,
                 onNavigate = ::navigateTo,
                 settingsContent = { onNavigate ->
