@@ -147,7 +147,8 @@ if [ -n "$commit_list" ]; then
       exit 2
     fi
 
-    # Also inspect free-form self-credit even if no parsed Git trailers exist.
+    # Parsed co-author/signature identities are checked precisely. Free-form
+    # self-credit footers are checked separately below.
 
     while IFS= read -r trailer_line; do
       [ -z "$trailer_line" ] && continue
@@ -192,7 +193,10 @@ if [ -n "$commit_list" ]; then
         reason="known AI display identity (${name})"
       fi
 
-      if [ "$violation" -eq 0 ] && [[ "$key_lc" == assisted-by || "$key_lc" == generated-by || "$key_lc" == generated-with ]] && has_ai_words "$value"; then
+      # Only use broad tool-name matching for unstructured, email-free values.
+      # A real person such as Claude Dupont <claude.dupont@example.com>
+      # must not be rejected merely for having a provider-like first name.
+      if [ "$violation" -eq 0 ] && [ -z "$email" ] && [[ "$key_lc" == assisted-by || "$key_lc" == generated-by || "$key_lc" == generated-with ]] && has_ai_words "$value"; then
         violation=1
         reason="AI self-credit trailer"
       fi
@@ -207,7 +211,9 @@ if [ -n "$commit_list" ]; then
     # Free-form generated/assisted footers are not Git trailers.
     while IFS= read -r raw_line; do
       lc_line="$(to_lower "$raw_line")"
-      if [[ "$lc_line" =~ ^[[:space:]]*(generated[[:space:]]+(with|by)|assisted[[:space:]]+by)[[:space:]:-]+ ]] && has_ai_words "$lc_line"; then
+      # Cosmetic bot/emoji prefixes and markdown links are common in AI
+      # footer templates. Match only clear attribution lines, not normal prose.
+      if [[ "$lc_line" =~ ^[^[:alnum:]]*(generated[[:space:]]+(with|by)|assisted[[:space:]-]+by|ai[[:space:]-]*assisted([[:space:]]+with)?)[[:space:]:-]+ ]] && has_ai_words "$lc_line"; then
         found_violation=1
         echo "PROHIBITED AI ATTRIBUTION: commit $(git rev-parse --short "$sha") -- $raw_line"
       fi
