@@ -30,6 +30,14 @@ context system itself.
 
 Runtime source/config wins for actual behavior. Product docs and ADRs win for intended architecture and product rules. If docs and runtime disagree, call out the stale doc clearly.
 
+## Agent Permissions And Review Roles
+
+- **Read-only audit vs implementation:** Agents may inspect the repository, review source/docs, and perform read-only preflight at any time. Any implementation or file modification requires an explicit, owner-selected task scope.
+- **Review roles:** Distinguish between implementation owner (the agent/author modifying files), independent reviewer (an agent or human evaluating the changes without having authored them), and self-review. Self-review or automated tool checks cannot replace independent review.
+- **Authorization boundaries:** File edits, Git commit, branch push, GitHub issue creation/commenting, and PR creation or publication require explicit owner authorization for that specific scope.
+- **Restricted operations:** Merging PRs, force-pushing, rewriting history, deleting branches, changing repository/branch-protection settings, or performing destructive operations require separate, explicit repository-owner authorization.
+- **No implicit approval:** A green CI status, issue assignment, or bot/chat recommendation does not constitute owner authorization or an approved merge decision.
+
 ## Repo Ownership
 
 - `apps/android` owns the Android app shell.
