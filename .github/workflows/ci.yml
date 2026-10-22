@@ -109,3 +109,15 @@ jobs:
           GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
           JAVA_TOOL_OPTIONS: -Dorg.sqlite.tmpdir=${{ runner.temp }} -Djava.io.tmpdir=${{ runner.temp }}
         run: ./gradlew :shared:database:verifyCommonMainTioLedgerDatabaseMigration --no-daemon --no-parallel --max-workers=1 --console=plain --stacktrace
+
+  attribution-guard-fixtures:
+    name: Commit attribution fixture tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@v4
+      - name: Run attribution checker regression fixtures
+        run: bash scripts/check_commit_attribution_test.sh
