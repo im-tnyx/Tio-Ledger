@@ -116,7 +116,22 @@ is_ai_name() {
   if [[ "$name_lc" =~ ^claude[[:space:]]+(code|opus|sonnet|haiku)([[:space:]].*)?$ ]]; then
     return 0
   fi
+  # GPT-4o / GPT-5.6 / GPT-6 are model identities even when their trailer
+  # emails are on generic or GitHub noreply domains. Match the WHOLE name;
+  # an ordinary human called GPT Johnson is not an AI identity.
+  if [[ "$name_lc" =~ ^gpt-[[:digit:]]+[[:alnum:]._-]*$ ]]; then
+    return 0
+  fi
   return 1
+}
+
+# An AI-vendor employer domain alone does not prove a human co-author is a
+# bot. Use explicit AI display identities or a known automation mailbox on a
+# provider domain; preserve Jane Developer <jane@openai.com>, for example.
+is_known_ai_bot_mailbox() {
+  local address_lc="$1" mailbox
+  mailbox="${address_lc%@*}"
+  [[ "$mailbox" =~ (^|[.+_-])(noreply|no-reply|bot|automation|automated|assistant|agent|model)([.+_-]|$) ]]
 }
 
 has_ai_words() {
@@ -190,12 +205,12 @@ if [ -n "$commit_list" ]; then
 
       violation=0
       reason=""
-      if [ -n "$domain" ] && is_ai_domain "$(to_lower "$domain")"; then
-        violation=1
-        reason="provider-domain identity (${domain})"
-      elif [ -n "$name" ] && is_ai_name "$(to_lower "$name")"; then
+      if [ -n "$name" ] && is_ai_name "$(to_lower "$name")"; then
         violation=1
         reason="known AI display identity (${name})"
+      elif [ -n "$domain" ] && is_ai_domain "$(to_lower "$domain")" && is_known_ai_bot_mailbox "$(to_lower "$email")"; then
+        violation=1
+        reason="known automation mailbox at AI provider (${email})"
       fi
 
       # Only use broad tool-name matching for unstructured, email-free values.
@@ -218,7 +233,12 @@ if [ -n "$commit_list" ]; then
       lc_line="$(to_lower "$raw_line")"
       # Cosmetic bot/emoji prefixes and markdown links are common in AI
       # footer templates. Match only clear attribution lines, not normal prose.
-      if [[ "$lc_line" =~ ^[^[:alnum:]]*(generated[[:space:]]+(with|by)|assisted[[:space:]]+by|ai[[:space:]-]*assisted([[:space:]]+with)?)[[:space:]:-]+ ]] && has_ai_words "$lc_line"; then
+      # "AI-assisted" alone (optionally bot/emoji-prefixed) is a complete
+      # attribution footer; it need not have a trailing colon or tool name.
+      if [[ "$lc_line" =~ ^[^[:alnum:]]*ai[[:space:]-]*assisted[[:space:]:-]*$ ]] || {
+        [[ "$lc_line" =~ ^[^[:alnum:]]*(generated[[:space:]]+(with|by)|assisted[[:space:]]+by|ai[[:space:]-]*assisted([[:space:]]+with)?)[[:space:]:-]+ ]] &&
+          has_ai_words "$lc_line"
+      }; then
         found_violation=1
         echo "PROHIBITED AI ATTRIBUTION: commit $(git rev-parse --short "$sha") -- $raw_line"
       fi
