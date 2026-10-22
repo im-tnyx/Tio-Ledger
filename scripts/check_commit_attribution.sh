@@ -213,7 +213,7 @@ if [ -n "$commit_list" ]; then
       lc_line="$(to_lower "$raw_line")"
       # Cosmetic bot/emoji prefixes and markdown links are common in AI
       # footer templates. Match only clear attribution lines, not normal prose.
-      if [[ "$lc_line" =~ ^[^[:alnum:]]*(generated[[:space:]]+(with|by)|assisted[[:space:]-]+by|ai[[:space:]-]*assisted([[:space:]]+with)?)[[:space:]:-]+ ]] && has_ai_words "$lc_line"; then
+      if [[ "$lc_line" =~ ^[^[:alnum:]]*(generated[[:space:]]+(with|by)|assisted[[:space:]]+by|ai[[:space:]-]*assisted([[:space:]]+with)?)[[:space:]:-]+ ]] && has_ai_words "$lc_line"; then
         found_violation=1
         echo "PROHIBITED AI ATTRIBUTION: commit $(git rev-parse --short "$sha") -- $raw_line"
       fi
