@@ -31,3 +31,16 @@ Every pull request should explain:
 - Whether ledger, financial, UI, or architecture behavior is affected.
 
 No feature should be merged until applicable Definition of Done items are complete.
+
+## Commit attribution protection
+
+AI assistance is not Git co-authorship. Do not add AI agent/provider/model
+`Co-Authored-By`, `Signed-off-by`, `Assisted-by`, `Generated with/by`,
+`AI-assisted`, or equivalent self-credit in commit or squash messages unless
+the repository owner explicitly requests it for the exact change. Legitimate
+human co-authors and human compliance signatures remain allowed.
+
+The [Commit Attribution Guard](../docs/commit-attribution-guard.md) explains
+local verification, remediation and owner-only GitHub App/branch-protection
+activation. A clean CI check alone does not mean the required merge gate is
+active.
