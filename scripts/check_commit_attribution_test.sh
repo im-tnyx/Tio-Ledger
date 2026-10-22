@@ -363,6 +363,54 @@ run_case fail "markdown linked generated with Claude Code still prohibited" \
   "$(printf 'feat: x\n\n🤖 Generated with [Claude Code](https://claude.ai/code)')"
 
 
+# Trusted main / PR-head freshness regression cases.
+# Use a disposable bare origin: never touch any real repository or main.
+freshness_checker="$script_dir/check_attribution_base_freshness.sh"
+if [ ! -f "$freshness_checker" ]; then
+  echo "check_commit_attribution_test: missing freshness checker" >&2
+  exit 2
+fi
+
+bare_origin="$workdir/origin.git"
+git init -q --bare "$bare_origin"
+git -C "$repo" remote add origin "$bare_origin"
+git -C "$repo" push -q origin "$base_sha:refs/heads/main"
+
+# Start with a PR head that incorporates the current protected main.
+git -C "$repo" reset -q --hard "$base_sha"
+git -C "$repo" commit -q --allow-empty -m "feat: disposable PR head"
+fresh_head="$(git -C "$repo" rev-parse HEAD)"
+
+output="$(cd "$repo" && bash "$freshness_checker" "$base_sha" "$fresh_head" 2>&1)"
+report "pass" 0 0 "fresh PR head contains current main" "$output"
+
+# Advance main independently, while the PR head stays unchanged.
+git -C "$repo" reset -q --hard "$base_sha"
+git -C "$repo" commit -q --allow-empty -m "chore: advance trusted main"
+advanced_main="$(git -C "$repo" rev-parse HEAD)"
+git -C "$repo" push -q origin "$advanced_main:refs/heads/main"
+
+rc=0
+output="$(cd "$repo" && bash "$freshness_checker" "$base_sha" "$fresh_head" 2>&1)" || rc=$?
+report "fail" 1 "$rc" "main advanced after previous PR check; event base must be stale" "$output"
+
+rc=0
+output="$(cd "$repo" && bash "$freshness_checker" "$advanced_main" "$fresh_head" 2>&1)" || rc=$?
+report "fail" 1 "$rc" "current main is not an ancestor of outdated PR head" "$output"
+
+# Once the feature incorporates updated main, freshness becomes valid again.
+git -C "$repo" reset -q --hard "$advanced_main"
+git -C "$repo" commit -q --allow-empty -m "feat: updated PR head"
+updated_head="$(git -C "$repo" rev-parse HEAD)"
+rc=0
+output="$(cd "$repo" && bash "$freshness_checker" "$advanced_main" "$updated_head" 2>&1)" || rc=$?
+report "pass" 0 "$rc" "PR updated to current main is accepted" "$output"
+
+rc=0
+output="$(cd "$repo" && bash "$freshness_checker" "$advanced_main" "not-a-commit" 2>&1)" || rc=$?
+report "error" 2 "$rc" "invalid PR head fails closed even with correct base" "$output"
+
+
 echo
 echo "check_commit_attribution_test: ${pass_count} passed, ${fail_count} failed"
 
