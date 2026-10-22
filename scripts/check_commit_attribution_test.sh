@@ -277,6 +277,44 @@ run_multi_commit_case pass "human trailer in earlier commit and clean final HEAD
   "$(printf 'feat: first\n\nCo-Authored-By: Claude Dupont <claude.dupont@example.com>')" \
   "$(printf 'fix: clean final commit\n\nNo attribution here.')"
 
+
+# New Copilot review (2026-10-22): structured GPT model identities.
+run_case fail "GPT-4o co-author with a generic email domain" \
+  "$(printf 'feat: x\n\nCo-Authored-By: GPT-4o <bot@example.com>')"
+
+run_case fail "GPT-6 signed-off-by on GitHub noreply" \
+  "$(printf 'feat: x\n\nSigned-off-by: GPT-6 <model@users.noreply.github.com>')"
+
+run_case fail "GPT-5.6 decimal model name with personal-domain email" \
+  "$(printf 'feat: x\n\nCo-Authored-By: GPT-5.6 <assistant@example.com>')"
+
+run_case pass "human GPT Johnson is not a GPT model identity" \
+  "$(printf 'feat: x\n\nCo-Authored-By: GPT Johnson <gpt.johnson@example.com>')"
+
+# Preserve legitimate human attribution at an AI provider's employer domain.
+run_case pass "human OpenAI employee signed-off-by" \
+  "$(printf 'feat: x\n\nSigned-off-by: Jane Developer <jane@openai.com>')"
+
+run_case pass "human OpenAI employee co-authored-by" \
+  "$(printf 'feat: x\n\nCo-Authored-By: Jane Developer <jane@openai.com>')"
+
+run_case pass "human Anthropic employee with Claude first name" \
+  "$(printf 'feat: x\n\nCo-Authored-By: Claude Dupont <claude.dupont@anthropic.com>')"
+
+run_case fail "provider-domain noreply bot remains prohibited" \
+  "$(printf 'feat: x\n\nCo-Authored-By: Claude <noreply@anthropic.com>')"
+
+run_case fail "provider-domain explicit automation mailbox remains prohibited" \
+  "$(printf 'feat: x\n\nSigned-off-by: Automation <ci-bot@openai.com>')"
+
+# Standalone footers do not need a trailing delimiter or provider name.
+run_case fail "standalone AI-assisted footer" \
+  "$(printf 'feat: x\n\nAI-assisted')"
+
+run_case fail "emoji-prefixed standalone AI-assisted footer" \
+  "$(printf 'feat: x\n\n🤖 AI-assisted')"
+
+
 echo
 echo "check_commit_attribution_test: ${pass_count} passed, ${fail_count} failed"
 
