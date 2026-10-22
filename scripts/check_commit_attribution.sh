@@ -260,42 +260,7 @@ if [ -n "$commit_list" ]; then
       # Credits containing a structured person <email> must follow the same
       # precise classification as Git trailers. A first name "Claude" or
       # employer domain "@openai.com" by itself must not reject a human.
-      human_credit_regex='^[[:space:]]*([^<>]+)[[:space:]]*<([^<>[:space:]]+@[^<>[:space:]]+)>[[:space:]]*
-        credit_name="$(printf '%s' "${BASH_REMATCH[1]}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-        credit_email="${BASH_REMATCH[2]}"
-        credit_domain="${credit_email##*@}"
-        if is_ai_name "$credit_name" || {
-          is_ai_domain "$credit_domain" && is_known_ai_bot_mailbox "$credit_email"
-        }; then
-          credit_is_ai=1
-        fi
-      elif has_ai_words "$credit_text"; then
-        # Plain provider/model credits or Markdown-linked bot banners.
-        credit_is_ai=1
-      fi
-
-      if [ "$credit_is_ai" -eq 1 ]; then
-        found_violation=1
-        echo "PROHIBITED AI ATTRIBUTION: commit $(git rev-parse --short "$sha") -- $raw_line"
-      fi
-    done <<<"$message"
-  done <<<"$commit_list"
-fi
-
-if [ "$found_violation" -eq 0 ]; then
-  echo "check_commit_attribution: no prohibited AI attribution found in ${base_sha}..${head_sha}."
-  exit 0
-fi
-
-if [ -n "$pr_number" ] && [ -n "$exception_pr" ] && [ "$pr_number" = "$exception_pr" ]; then
-  echo "check_commit_attribution: prohibited AI attribution WAS detected, but an explicit owner-approved exception is active for PR #${pr_number} via the AI_ATTRIBUTION_EXCEPTION_PR repository variable."
-  echo "check_commit_attribution: treat this exception as temporary; clear/change AI_ATTRIBUTION_EXCEPTION_PR once this PR is done so it cannot silently apply to a later PR."
-  exit 0
-fi
-
-echo "check_commit_attribution: prohibited AI attribution detected in ${base_sha}..${head_sha}."
-exit 1
-
+      human_credit_regex='^[[:space:]]*([^<>]+)[[:space:]]*<([^<>[:space:]]+@[^<>[:space:]]+)>[[:space:]]*$'
       if [[ "$credit_text" =~ $human_credit_regex ]]; then
         credit_name="$(printf '%s' "${BASH_REMATCH[1]}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
         credit_email="${BASH_REMATCH[2]}"
