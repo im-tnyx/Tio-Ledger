@@ -72,6 +72,7 @@ Follow `.github/PUSH_TEMPLATE.md` before push. List only checks actually run.
 - [ ] Inspect **every branch commit** for unintended AI co-author and self-credit trailers; this is not guaranteed solely by a passing fixture test.
 - [ ] Before the owner-approved merge, inspect the **final** squash/merge subject, body and trailers; do not accept generated AI attribution. A PR-head check cannot scan a newly created merge message.
 - [ ] After merge, check the resulting `main` commit and the separate **Post-merge attribution audit**; failures are post-merge detection, not pre-merge prevention.
+- [ ] Require the protected `main` branch to be **up to date before merging** (`strict_required_status_checks_policy: true`) before claiming the App guard enforces current-main policy; update/re-run stale PR checks after `main` advances.
 - [ ] Do not treat App-owned `Commit attribution guard` as required until its exact App-source status check is verified and pinned in the protected-main ruleset.
 
 ## Notes
