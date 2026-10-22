@@ -100,6 +100,16 @@ jobs:
           echo "commit-attribution-guard: fetched PR #${PR_NUMBER} head ${fetched_head_sha} as data only (not checked out, not executed)."
           echo "head_sha=${fetched_head_sha}" >> "$GITHUB_OUTPUT"
 
+      # Revalidate against the current trusted main when each PR event
+      # runs. This blocks stale-base events and PRs that have not been updated.
+      # A base push after a prior successful run still requires GitHub's
+      # strict "Require branches to be up to date" setting (ruleset 25645516).
+      - name: Require current main and updated PR head
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ steps.fetch_pr_head.outputs.head_sha }}
+        run: bash scripts/check_attribution_base_freshness.sh "$BASE_SHA" "$HEAD_SHA"
+
       - name: Check PR commits for prohibited AI attribution
         id: checker
         env:
