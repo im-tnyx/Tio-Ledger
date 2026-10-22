@@ -122,6 +122,11 @@ is_ai_name() {
   if [[ "$name_lc" =~ ^gpt-[[:digit:]]+[[:alnum:]._-]*$ ]]; then
     return 0
   fi
+  # Versioned Gemini models are AI identities, unlike an ordinary human
+  # whose first name happens to be Gemini. Only known model suffixes match.
+  if [[ "$name_lc" =~ ^(google[[:space:]]+)?gemini[[:space:]]+[[:digit:]]+(\.[[:digit:]]+)?([[:space:]]+(pro|flash|flash-lite|ultra|nano|thinking|exp|preview))?$ ]]; then
+    return 0
+  fi
   return 1
 }
 
@@ -228,17 +233,48 @@ if [ -n "$commit_list" ]; then
       fi
     done <<<"$trailers"
 
-    # Free-form generated/assisted footers are not Git trailers.
+    # Free-form generated/assisted credits may not be Git trailers.
+    # Match explicit attribution rather than ordinary AI-related prose.
     while IFS= read -r raw_line; do
       lc_line="$(to_lower "$raw_line")"
-      # Cosmetic bot/emoji prefixes and markdown links are common in AI
-      # footer templates. Match only clear attribution lines, not normal prose.
-      # "AI-assisted" alone (optionally bot/emoji-prefixed) is a complete
-      # attribution footer; it need not have a trailing colon or tool name.
-      if [[ "$lc_line" =~ ^[^[:alnum:]]*ai[[:space:]-]*assisted[[:space:]:-]*$ ]] || {
-        [[ "$lc_line" =~ ^[^[:alnum:]]*(generated[[:space:]]+(with|by)|assisted[[:space:]]+by|ai[[:space:]-]*assisted([[:space:]]+with)?)[[:space:]:-]+ ]] &&
-          has_ai_words "$lc_line"
-      }; then
+
+      # A bare AI-assisted credit is explicit even without a delimiter.
+      # Also retain the short, previously rejected "AI-assisted development"
+      # footer, but do not reject feature descriptions that continue as prose.
+      if [[ "$lc_line" =~ ^[^[:alnum:]]*ai[[:space:]-]*assisted[[:space:]:-]*$ ]] ||
+         [[ "$lc_line" =~ ^[^[:alnum:]]*ai[[:space:]-]*assisted[[:space:]:-]+development[[:space:].!]*$ ]]; then
+        found_violation=1
+        echo "PROHIBITED AI ATTRIBUTION: commit $(git rev-parse --short "$sha") -- $raw_line"
+        continue
+      fi
+
+      # The textual credit prefix alone is not enough: the remainder must
+      # identify an AI agent/model or known bot mailbox. "AI-assisted
+      # transaction import still requires ..." is normal feature prose.
+      if [[ ! "$lc_line" =~ ^[^[:alnum:]]*(generated[[:space:]]+(with|by)|assisted[[:space:]]+by|ai[[:space:]-]*assisted([[:space:]]+with)?)[[:space:]:-]+ ]]; then
+        continue
+      fi
+      credit_text="${lc_line:${#BASH_REMATCH[0]}}"
+      credit_is_ai=0
+
+      # Credits containing a structured person <email> must follow the same
+      # precise classification as Git trailers. A first name "Claude" or
+      # employer domain "@openai.com" by itself must not reject a human.
+      if [[ "$credit_text" =~ ^[[:space:]]*([^<>]+)[[:space:]]*\<([^<>[:space:]]+@[^<>[:space:]]+)\>[[:space:]]*$ ]]; then
+        credit_name="$(printf '%s' "${BASH_REMATCH[1]}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        credit_email="${BASH_REMATCH[2]}"
+        credit_domain="${credit_email##*@}"
+        if is_ai_name "$credit_name" || {
+          is_ai_domain "$credit_domain" && is_known_ai_bot_mailbox "$credit_email"
+        }; then
+          credit_is_ai=1
+        fi
+      elif has_ai_words "$credit_text"; then
+        # Plain provider/model credits or Markdown-linked bot banners.
+        credit_is_ai=1
+      fi
+
+      if [ "$credit_is_ai" -eq 1 ]; then
         found_violation=1
         echo "PROHIBITED AI ATTRIBUTION: commit $(git rev-parse --short "$sha") -- $raw_line"
       fi
