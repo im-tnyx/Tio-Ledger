@@ -15,8 +15,8 @@ name: Commit attribution guard
 # (source github-actions) cannot stand in for it. The App private key lives
 # only in the attribution-guard-trusted environment, whose deployment branch
 # policy admits main only; pull_request jobs evaluate as refs/pull/<n>/merge
-# and cannot obtain it. See .ai/tasks/tnyx-232-option-c-app-check.md
-# (GitHub #283 / TNYX-232).
+# and cannot obtain it. See docs/commit-attribution-guard.md
+# for this repository's setup and trusted execution boundary.
 
 on:
   pull_request_target:
