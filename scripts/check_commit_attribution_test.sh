@@ -212,6 +212,17 @@ run_case pass "legitimate human signed-off-by" \
 run_case pass "non-AI generator footer" \
   "$(printf 'chore: x\n\nGenerated-with: Kotlin compiler')"
 
+# Review regression cases: bot banners, non-trailer AI-assisted text, humans.
+run_case fail "emoji and markdown-linked generated-with AI footer" \
+  "$(printf 'docs: x\n\n🤖 Generated with [Claude Code](https://claude.ai/code)')"
+
+run_case fail "free-form AI-assisted with Claude Code" \
+  "$(printf 'feat: x\n\nAI-assisted with Claude Code')"
+
+run_case pass "human Assisted-by with Claude first name" \
+  "$(printf 'fix: x\n\nAssisted-by: Claude Dupont <claude.dupont@example.com>')"
+
+
 echo
 echo "check_commit_attribution_test: ${pass_count} passed, ${fail_count} failed"
 
