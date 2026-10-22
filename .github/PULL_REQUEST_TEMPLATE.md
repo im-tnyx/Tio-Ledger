@@ -67,6 +67,21 @@ Follow `.github/PUSH_TEMPLATE.md` before push. List only checks actually run.
 - [ ] Financial history remains immutable, if applicable.
 - [ ] Automation still requires user confirmation for financial mutations, if applicable.
 
+## Review Evidence
+
+- **Base SHA:** `<commit SHA>`
+- **Reviewed Head SHA:** `<exact commit SHA reviewed>`
+- **Reviewed Diff Scope:** `<files, directories, or commit range reviewed>`
+- **Reviewer:** `<reviewer name, agent, or tool identity>`
+- **Review Classification:** `[ ] Independent review  [ ] Self-review  [ ] Tool/bot assessment`
+- **Review Decision:** `[ ] GitHub APPROVED  [ ] Non-binding recommendation / comments only`
+- **Actionable Findings And Disposition:**
+  - `<finding or "None">: <resolved in commit / deferred to issue / accepted risk>`
+- **Checks Verification:**
+  - Required checks executed: `<list commands or checks actually run>`
+  - Missing/skipped checks: `<list or none>`
+- **Remaining Risks And Limitations:** `<residual risks, unverified edge cases, or none>`
+
 ## Commit Attribution And Merge Handoff
 
 - [ ] Inspect **every branch commit** for unintended AI co-author and self-credit trailers; this is not guaranteed solely by a passing fixture test.
