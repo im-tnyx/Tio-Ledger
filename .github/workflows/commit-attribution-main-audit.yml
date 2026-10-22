@@ -1,0 +1,45 @@
+name: Post-merge attribution audit
+
+# Detection after a protected-main update, not a required pre-merge guard.
+# The new merge/squash commit message may not exist at PR review time.
+# Alert on prohibited attribution after main changes, without secrets or
+# executing untrusted PR code. This cannot undo or prevent a completed merge.
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Main commit attribution audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Check all new main commit messages
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if ! git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            echo "post-merge-attribution-audit: error: missing or invalid previous main SHA" >&2
+            exit 2
+          fi
+          if ! git cat-file -e "${AFTER_SHA}^{commit}" 2>/dev/null; then
+            echo "post-merge-attribution-audit: error: missing or invalid new main SHA" >&2
+            exit 2
+          fi
+          if ! git merge-base --is-ancestor "$BEFORE_SHA" "$AFTER_SHA"; then
+            echo "post-merge-attribution-audit: error: previous SHA is not an ancestor of new main" >&2
+            exit 2
+          fi
+          bash scripts/check_commit_attribution.sh "$BEFORE_SHA" "$AFTER_SHA"
