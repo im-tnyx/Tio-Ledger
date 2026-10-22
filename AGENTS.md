@@ -86,9 +86,12 @@ After a PR merge, follow `.github/POST_MERGE_SYNC.md` before starting the next b
 ## Commit Attribution
 
 - AI assistance does not imply Git co-authorship.
-- Do not add AI provider or model identities, such as Claude, ChatGPT, Codex, Copilot, or Gemini, as `Co-Authored-By` trailers, "Generated with" footers, or equivalent attribution. This applies to commit messages, squash-merge messages, and pull request descriptions. The only exception is when the repository owner explicitly requests it for that change.
-- When squash-merging, pass an explicit subject and body instead of relying on generated text that copies trailers from branch commits.
-- Keep the intended human account as the Git author and committer.
+- Never add `Co-Authored-By` trailers for Codex, Claude, ChatGPT, Cursor, Copilot, Gemini, or any other AI agent, provider, model, or bot by default.
+- Do not add automated AI attribution, self-credit, or promotional signatures, including AI `Signed-off-by`, `Assisted-by`, `AI-assisted`, `Generated with/by`, or equivalent trailers and footers. This applies to commits, squash-merge messages, pull request titles/descriptions, and release text.
+- Preserve the intended human Git author and committer identity, as well as legitimate human co-authors and compliance-required human sign-offs. Do not impersonate a different human account.
+- Never disable, skip, tamper with, or bypass commit attribution validation, required checks, GitHub App verification, or protected-branch rules. Fix any rejected feature-branch commit and re-run validation before requesting merge.
+- An AI attribution exception requires specific, explicit repository-owner approval for that exact change and must follow the approved owner-controlled exception process. Agents may not grant themselves exceptions.
+- Before pushing, check the full commit message and trailers for unwanted AI attribution. When squash-merging, provide an explicit clean subject and body instead of copying generated text from feature commits.
 - Do not rewrite published history solely to remove historical AI trailers without separate explicit approval.
 
 ## Never Commit
