@@ -204,7 +204,7 @@ if [ -n "$commit_list" ]; then
       if [ "$violation" -eq 1 ]; then
         found_violation=1
         short_sha="$(git rev-parse --short "$sha")"
-        echo "PROHIBITED AI ATTRIBUTION: commit ${short_sha} -- Co-Authored-By: ${name} <${email}> (${reason})"
+        echo "PROHIBITED AI ATTRIBUTION: commit ${short_sha} -- ${trailer_line} (${reason})"
       fi
     done <<<"$trailers"
 
@@ -232,5 +232,5 @@ if [ -n "$pr_number" ] && [ -n "$exception_pr" ] && [ "$pr_number" = "$exception
   exit 0
 fi
 
-echo "check_commit_attribution: prohibited AI Co-Authored-By attribution detected in ${base_sha}..${head_sha}."
+echo "check_commit_attribution: prohibited AI attribution detected in ${base_sha}..${head_sha}."
 exit 1
