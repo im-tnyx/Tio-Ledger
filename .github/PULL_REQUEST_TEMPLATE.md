@@ -67,6 +67,13 @@ Follow `.github/PUSH_TEMPLATE.md` before push. List only checks actually run.
 - [ ] Financial history remains immutable, if applicable.
 - [ ] Automation still requires user confirmation for financial mutations, if applicable.
 
+## Commit Attribution And Merge Handoff
+
+- [ ] Inspect **every branch commit** for unintended AI co-author and self-credit trailers; this is not guaranteed solely by a passing fixture test.
+- [ ] Before the owner-approved merge, inspect the **final** squash/merge subject, body and trailers; do not accept generated AI attribution. A PR-head check cannot scan a newly created merge message.
+- [ ] After merge, check the resulting `main` commit and the separate **Post-merge attribution audit**; failures are post-merge detection, not pre-merge prevention.
+- [ ] Do not treat App-owned `Commit attribution guard` as required until its exact App-source status check is verified and pinned in the protected-main ruleset.
+
 ## Notes
 
 Add implementation notes, intentional deviations, skipped checks, or non-applicable checklist explanations.
