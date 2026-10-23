@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Ready for Review
+Status: Ready for Review after publication
 Active Task: `.ai/tasks/docs/local-20261023-reference-reconciliation.md`
 Branch: `tnyx/docs-reference-inventory-planning`
 Platform Scope: `docs/references, canonical roadmap, and documentation continuity`
 Last Updated: `2026-10-23`
-Next Action: `The docs-only branch has been committed and pushed. Obtain independent review at its exact published head before any PR/merge decision. PR #82 and PR #86 are merged; their historical device evidence is not validation of this documentation branch. No PR creation or merge is authorized for this slice.`
+Next Action: `The owner authorized commit, push, and PR #90 update for the bounded Category, Settings, and Calendar supporting-reference notes. Verify PR #90 reflects the latest published branch head, then obtain independent review at that exact head. Merge is not authorized.`
 
 ## Usage
 

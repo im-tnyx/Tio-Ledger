@@ -1,6 +1,6 @@
 # Checked-in Screenshot Reference Reconciliation
 
-Status: Ready for Review
+Status: Ready for Review after publication
 Objective: Document all 24 root Money Manager screenshots, repair stale reference notes/status, and publish a docs-only branch without introducing product behavior.
 Branch: `tnyx/docs-reference-inventory-planning`
 Base: `main@e50ae964deaa3b49d79d8013647fd8c65db770ed` (local and GitHub main matched before branch creation)
@@ -21,7 +21,8 @@ Owner-selected scope: the user's request to document all saved screenshots, incl
 - Screenshot presence is evidence of reference hierarchy, not blanket feature approval. Do not copy reference code/assets/layout measurements or infer hidden behavior.
 - `Categories` v1 exists but not edit/archive/hierarchy management; `MainRoute.Settings` currently owns reminders only; #73 remains open for Appearance. Android system theme #60 is merged; #43 reminder acceptance remains open.
 - PR #82 merged on 2026-10-21 and PR #86 merged on 2026-10-22. The prior `.ai/current.md` Accounts pointer was stale against clean main. Old TalkBack limitations are not resolved or revalidated by this task.
-- User authorized scoped file edits, commit and branch push. PR creation, merge, issue edits, branch deletion, force-push, and device operations are not authorized here.
+- The initial screenshot slice was committed and pushed. The owner subsequently authorized opening PR #90 at `3b882485`; that authorization did not include merge. A later `go next` authorized a bounded local documentation follow-up using the technical reference, followed by explicit authorization to commit, push, and update PR #90 for this follow-up. Merge, issue edits, branch deletion, force-push, and device operations remain unauthorized.
+- `docs/references/realbyteapps/` is present locally but Git-ignored and untracked. Supporting technical findings are provisional and cannot serve as independently reviewable PR evidence without a separately authorized source; checked-in screenshots remain the primary evidence.
 
 ## Documentation Plan
 
@@ -33,7 +34,7 @@ Owner-selected scope: the user's request to document all saved screenshots, incl
 
 ## Review Status
 
-Implementation owner: this documentation-authoring agent. Independent review has not been performed; self-review and automated checks do not replace it. No merge-readiness claim follows from push alone.
+Implementation owner: this documentation-authoring agent. PR #90 was opened at the original published head; the supporting-reference follow-up is in this task's scope. Independent review has not been performed; self-review and automated checks do not replace it. Review must use the latest published head. No merge-readiness claim follows from PR publication.
 
 ## Validation And Handoff
 
@@ -45,4 +46,4 @@ Implementation owner: this documentation-authoring agent. Independent review has
 - `ktlintCheck`: `BUILD SUCCESSFUL`, checks mostly `UP-TO-DATE`/`SKIPPED`.
 - `detekt`: `BUILD SUCCESSFUL`, project checks `NO-SOURCE`/`UP-TO-DATE`.
 - Gradle emitted an existing Kotlin property deprecation warning; this docs slice changes no Gradle configuration.
-- Next authorized action after commit/push: independent review of the exact docs branch head. PR creation and merge remain separate owner gates.
+- Publication gate for this follow-up: validate the exact changed notes, commit/push, and update PR #90 under the owner's authorization. Confirm the resulting GitHub head before independent review; merge remains a separate owner gate.

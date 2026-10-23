@@ -36,6 +36,8 @@ The `docs/references/realbyteapps/` folder contains a decompiled technical refer
 - Screen relationships.
 - Feature discovery.
 
+This folder is ignored by Git and is not part of the published repository or PR diff. Findings based only on a local copy must be identified as provisional in screen notes; reviewers cannot independently verify them from GitHub alone. Do not make a product or merge decision depend on those findings without separately reviewable evidence.
+
 The JADX reference is a supporting analysis aid. It must be summarized as original reference notes before implementation begins. It must never be treated as source code, layout source, asset source, design-token source, or a direct implementation template.
 
 ### Explicit Restrictions

@@ -16,6 +16,10 @@ Reference area: Transactions `Daily`, `Calendar`, `Monthly`, `Total`, and `Note`
 
 The reference keeps the selected period, view selector, content, and transaction-add affordance together within the Transactions area. `Daily` shows period totals and a chronological history or empty state. `Calendar` changes the same content area to a month grid with a selected date. `Monthly` summarizes months with smaller time-group rows. `Total` combines budget progress, account-related summary, and an export entry. `Note` presents a separate note-oriented collection. The images do not prove date-selection rules, row expansion behavior, note storage, or export format.
 
+## Supporting Technical Analysis: Calendar Drill-Down
+
+A bounded local inspection suggests that Calendar is a distinct Transactions view and selecting a day opens a separate day-detail surface. The reference separates the calendar grid from day-detail content rather than proving an inline-only expansion. Its decompiled source is Git-ignored and unavailable in this PR, so this is provisional navigation context, not independently reviewable evidence. Tio Ledger must still decide whether a selected date opens a detail route, sheet, or filtered Transactions list. The reference does not establish date-range, timezone, filtering, back-navigation, or accessibility behavior; those require a Tio-specific contract.
+
 ## Tio Ledger Runtime Boundary
 
 `TransactionsScreen` currently renders a flat persisted-history list with loading, empty, error, retry, add, and SMS-review entry states. `TransactionEntryScreen` supports income, expense, transfer, date/account/category/amount, and an optional note. `ReportsScreen` has separate Week/Month/Year analytics. There is no `Daily`/`Calendar`/`Monthly`/`Total`/`Note` history selector or calendar grid in the current route. `Budgets` and `Accounts` are separate destinations. These are deliberate descriptions of source state, not claims of visual parity.
@@ -23,7 +27,7 @@ The reference keeps the selected period, view selector, content, and transaction
 ## Planning Decisions Required Before UI Specification
 
 1. Decide which of the five reference views belong in Tio Ledger Transactions, which reuse existing Budgets/Accounts/Reports, and which are deferred. Do not duplicate financial totals or add a sixth primary bottom destination.
-2. Define period, timezone, week-start, month-start, and day-selection semantics from the application/domain contracts before showing financial aggregates. The screenshots do not determine these rules.
+2. Define period, timezone, week-start, month-start, day-selection, and day-detail return semantics from the application/domain and navigation contracts before showing financial aggregates. The reference does not determine these rules for Tio Ledger.
 3. Specify whether `Note` means transaction-note filtering or a separate note record type. Do not create a new financial or note data model from the image alone.
 4. Specify export separately with format, privacy, permissions, and recovery expectations. The screenshot's export entry is not a safe implementation contract.
 5. For each approved view, record navigation entry/exit, empty/loading/error states, accessibility, light/dark and large-text behavior, and focused tests before Compose work.
@@ -41,4 +45,4 @@ The reference keeps the selected period, view selector, content, and transaction
 
 Tio Ledger's five primary destinations, separate Reports/Budgets/Accounts routes, ledger-first rules, and shared design system supersede a literal reference-tab copy. These differences require an explicit product decision before a new production UI slice. Any future selector must expose selected state to screen readers; calendar dates need date/amount semantics and predictable focus; large text must not hide period controls or financial totals.
 
-No proprietary code, layout, resource, asset, color, dimension, or animation is imported from the reference.
+Screenshots remain primary. Decompiled material was used only to understand Calendar view-to-detail navigation; no proprietary code, layout, resource, asset, string, color, dimension, or animation is imported from the reference.

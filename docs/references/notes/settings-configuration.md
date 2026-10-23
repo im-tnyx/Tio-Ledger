@@ -18,6 +18,10 @@ Supporting screenshots: [Account Group](<../Screenshot_20260630_164151_Money Man
 
 The top-level reference Settings hub presents Configuration, PC Manager, Backup, Style, Help, and Feedback. Configuration groups account-management entries; income/expense category and budget entries; currency and start-date preferences; interaction/display preferences; and other controls including alarms, style, and language. The images do not define persistence, permissions, backup format, reset semantics, or security safeguards.
 
+## Supporting Technical Analysis: Navigation Grouping
+
+A bounded local inspection suggests a two-level relationship: the top-level hub opens Configuration, Style, Backup, and other destinations, while Configuration opens separate account, category, budget, and preference flows. Income and Expense category entries converge on the same management surface with distinct types; budget management remains a separate flow. Some reference entries vary with app or locale conditions, so the screenshot is one captured configuration, not a universal menu contract. The decompiled source is Git-ignored and unavailable in this PR, making this provisional context rather than independently reviewable evidence. It does not establish which options Tio Ledger should ship or how any setting is stored.
+
 ## Current Tio Ledger Boundary
 
 The existing typed `MainRoute.Settings` is non-primary and renders Android reminder switches plus notification-delivery state through `AndroidReminderSettingsService`. The approved [reminder note](settings-reminders.md) governs that behavior and must not be weakened. `MainRoute.Categories`, `MainRoute.Budgets`, and `MainRoute.Accounts` are already separate destinations. `MainActivity` follows the device's theme; there is no persisted Appearance override. [Issue #73](https://github.com/im-tnyx/Tio-Ledger/issues/73) tracks System/Light/Dark selection. Backup/export appears only as a Phase 8 roadmap objective; PC Manager and most reference Configuration options have no approved Tio contract.
@@ -51,4 +55,4 @@ Keep the approved five primary bottom destinations. Extend the existing non-prim
 
 ## Proprietary Boundary
 
-This note uses screenshots only for hierarchy and workflow discovery. It does not copy source, layout, strings, assets, icons, dimensions, colors, animations, or proprietary implementation details.
+Screenshots are primary; the decompiled reference was consulted only for screen relationships and conditional navigation. This note does not copy source, layout, strings, assets, icons, dimensions, colors, animations, or proprietary implementation details.

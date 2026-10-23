@@ -14,11 +14,16 @@ Tio Ledger `Categories` v1 exists on the primary bottom navigation. This note re
 
 - [Product Requirements: Categories](../../product-requirements.md) requires customizable defaults, useful parent-child hierarchy, category budgets, and analytics.
 - [Budget Setting screenshot](<../Screenshot_20260630_164302_Money Manager.jpg>) shows the relationship between category labels and budget configuration, without specifying Tio behavior.
-- Existing `CategoriesScreen`, `CategoriesViewModel`, and `CategoryUseCases` are the current runtime contracts. No JADX material was needed for this note.
+- Existing `CategoriesScreen`, `CategoriesViewModel`, and `CategoryUseCases` are the current runtime contracts.
+- A local, Git-ignored decompiled technical reference was inspected only to clarify the management screen relationships below; screenshots remain primary. Its files are not published with this PR.
 
 ## Observed Reference Workflow And Hierarchy
 
 The reference reaches category management through Settings/Configuration, with separate Income and Expense entries. Each category-management screen places add at the top, shows a subcategory control, then a list of category rows. Rows expose visible edit, remove, and ordering affordances; some expense rows summarize children. A screenshot alone does not establish whether remove deletes, archives, hides, or reparents a category, nor how ordering and the subcategory control persist.
+
+## Supporting Technical Analysis: Screen Relationships
+
+A bounded local inspection suggests that Income and Expense enter the same kind of main-category list with different transaction types. Main-category selection can lead to a child-category list or an editing flow; child categories have a separate editing flow. Subcategory configuration and budget configuration are adjacent management entries, not proof that either should live inside Tio Ledger's Categories screen. This is provisional navigation context, not independently reviewable PR evidence or a product contract. The conditions for showing children, removal semantics, ordering persistence, and historical-transaction treatment still require Tio-specific decisions.
 
 ## Tio Ledger Runtime And Intentional Deviations
 
@@ -31,7 +36,7 @@ Tio's primary Categories destination differs from the reference Settings/Configu
 1. Entry and ownership: retain `MainRoute.Categories` as the owner; decide whether Settings links to it or a narrower editor sub-route. Do not silently duplicate the screen.
 2. Editing: define allowed name/type/parent changes and duplicate-name scope, including what happens to historical transactions and existing budget associations.
 3. Removal: decide archive/hide versus deletion, default-category protection, and behavior for categories referenced by immutable history. Destructive deletion is not implied by the red reference icon.
-4. Hierarchy: define depth, parent/child type rules, cycle prevention, and how budgets/analytics aggregate parent and child amounts. A toggle in the reference is not sufficient to choose these rules.
+4. Hierarchy: define depth, parent/child type rules, cycle prevention, how a parent opens its children or editor, and how budgets/analytics aggregate parent and child amounts. The reference's separate child flow does not choose these rules for Tio Ledger.
 5. Ordering and defaults: decide whether manual reorder and seeded defaults are product requirements for the next slice, with deterministic persistence and migration implications reviewed first.
 
 ## Future Functional And Navigation Checklist
