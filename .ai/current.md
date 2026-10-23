@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Ready for Review after publication
+Status: Ready for Review
 Active Task: `.ai/tasks/docs/local-20261023-reference-reconciliation.md`
 Branch: `tnyx/docs-reference-inventory-planning`
 Platform Scope: `docs/references, canonical roadmap, and documentation continuity`
 Last Updated: `2026-10-23`
-Next Action: `The owner authorized commit, push, and PR #90 update for the bounded Category, Settings, and Calendar supporting-reference notes. Verify PR #90 reflects the latest published branch head, then obtain independent review at that exact head. Merge is not authorized.`
+Next Action: `PR #90 independent reviewer im-tio requested two governance corrections at b5b11655. Publish the corrected .ai handoff, verify the new PR head and exact-head checks, then obtain im-tio's re-review before the owner-authorized merge. Do not treat the old review as approval of the new head.`
 
 ## Usage
 
