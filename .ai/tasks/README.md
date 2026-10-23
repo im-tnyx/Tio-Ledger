@@ -17,7 +17,10 @@ Task files preserve only the context needed to resume one objective.
 
 Status: In Progress
 Objective: <one concrete outcome>
+Implementation Owner: <human or agent identity>
 Branch: `<branch>`
+Base SHA: `<commit SHA>`
+Inspected Head SHA: `<exact commit SHA inspected>`
 Scope: `<repository area>`
 Created: `YYYY-MM-DD`
 Last Updated: `YYYY-MM-DD`
@@ -27,8 +30,10 @@ Last Updated: `YYYY-MM-DD`
 - `.ai/core/<relevant-file>.md`
 - `<canonical doc or source path>`
 
-## Constraints
+## Approved Scope And Constraints
 
+- Scope: <explicitly approved boundary>
+- Non-goals: <explicit non-goals>
 - <important truth boundary>
 
 ## Decisions
@@ -39,15 +44,29 @@ Last Updated: `YYYY-MM-DD`
 
 - [ ] <next verifiable unit>
 
-## Validation
+## Validation Evidence
 
-- Not run yet.
+- Checks executed: `<list actual commands run and exit results>`
+- Checks skipped / unavailable: `<list and reasons>`
 
 ## Changed Files
 
 - None yet.
 
-## Next Action
+## Review Evidence And Findings
 
-<single concrete continuation step>
+- Review Status: `[ ] REVIEW_PENDING  [ ] REVIEW_COMPLETE  [ ] OWNER_DEFERRED_REVIEW`
+- Independent Reviewer: `<reviewer identity or None yet>`
+- Review classification: `[ ] Independent review  [ ] Self-review  [ ] Tool/bot assessment`
+- Review decision: `[ ] Approved  [ ] Changes requested  [ ] Comments / Non-binding`
+- Owner Deferral Authorization: `<owner authorization reference, or None>`
+- Deferral Reason & Accepted Risks: `<reason and residual risks, or None>`
+- Follow-up Review Owner & Checkpoint: `<follow-up reviewer and next checkpoint, or None>`
+- Outstanding findings: `<open findings or None>`
+- Remaining risks: `<residual risks or None>`
+
+## Next Action And Handoff
+
+- Owner: <who owns the next action>
+- Next Action: <single concrete continuation step>
 ```
