@@ -6,11 +6,11 @@ Transaction Entry Screen v1
 
 ## Primary Reference
 
-- `docs/references/transaction/README.md` documents reference sources and UI patterns
-- Money Manager standard transaction entry workflow patterns
-- Official Play Store and website resources
+- [Expense entry](<../Screenshot_20260630_164401_Money Manager.jpg>)
+- [Transfer entry](<../Screenshot_20260630_164416_Money Manager.jpg>)
+- [Income entry](<../Screenshot_20260630_164425_Money Manager.jpg>)
 
-Reference screenshots for transaction entry form were not available in the initial collection. Implementation based on observed Money Manager patterns and Tio Ledger architecture.
+These screenshots were not available to the original v1 reference package. They now supersede fallback sources for visible form hierarchy, but do not retroactively validate or approve the production screen. The [transaction reference index](../transaction/README.md) and [history-views note](transaction-history-views.md) keep form and history surfaces distinct.
 
 ## Supporting References
 
@@ -35,7 +35,7 @@ Transaction Entry Screen v1 presents a form for capturing transaction data:
 10. Success: navigates back to transaction list
 11. Error: displays validation feedback
 
-This is UI-only v1. Save logic, repository integration, and ledger posting will be added in Transaction Entry Integration v1.
+Current runtime is no longer UI-only: `TransactionEntryViewModel` invokes `RecordIncomeUseCase`, `RecordExpenseUseCase`, or `RecordTransferUseCase` on Save. The UI owns no ledger calculation or posting rule. Reference screenshots do not alter the approved Application/ledger contracts.
 
 ## Information Hierarchy
 
@@ -70,7 +70,7 @@ This is UI-only v1. Save logic, repository integration, and ledger posting will 
 
 7. **Tags Section** (placeholder)
    - Visual placeholder for future enhancement
-   - Not functional in v1
+   - Visible placeholder only; not a supported posting field
 
 8. **Action Buttons**
    - Save (primary)
@@ -78,7 +78,7 @@ This is UI-only v1. Save logic, repository integration, and ledger posting will 
 
 ## Intentional Deviations
 
-1. **UI-Only Implementation**: v1 is presentation layer only. No save logic, no repository calls, no financial calculations.
+1. **Layered posting**: the UI delegates saving to Application use cases; financial calculation and ledger posting stay outside Compose.
 
 2. **State-Driven Rendering**: All data comes from state objects, not hardcoded.
 
@@ -90,7 +90,7 @@ This is UI-only v1. Save logic, repository integration, and ledger posting will 
 
 1. **Architecture Compliance**: Frozen layers must not be modified. Presentation layer must remain decoupled from business logic.
 
-2. **Phased Implementation**: UI v1 first, integration v2 second. Allows visual review before complex integration.
+2. **Phased implementation history**: the earlier UI-only milestone was followed by Transaction Entry Integration v1. This note describes the current integrated flow, not a future promise.
 
 3. **Design System Adherence**: Tio Ledger uses its own design system built on Material Design 3, not Money Manager's legacy styling.
 

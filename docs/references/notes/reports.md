@@ -13,6 +13,10 @@ Reports Screen v1 with Cash-flow analytics v1
 
 The fallback package is sufficient because it fixes the workflow, information hierarchy, period controls, state handling, deterministic bucket rules, and financial boundaries without inventing a proprietary layout. Reports stays familiar to personal-finance users by leading with period selection, top-line totals, cash flow over time, and deterministic category/account breakdowns.
 
+## Later Checked-in Screenshot Reconciliation
+
+The screenshot collection now includes Stats monthly Income/Expenses empty states ([164023](<../Screenshot_20260630_164023_Money Manager.jpg>), [164027](<../Screenshot_20260630_164027_Money Manager.jpg>)) and annual category pies/ranked values ([164048](<../Screenshot_20260630_164048_Money Manager.jpg>), [164058](<../Screenshot_20260630_164058_Money Manager.jpg>)). These were unavailable **at the original milestone**, not unavailable now. The current `ReportsScreen` remains a text-first Week/Month/Year, per-currency report. A chart or new period/navigation flow needs its own approved specification; the screenshots do not change the established immutable-read and currency boundaries or retroactively complete pixel/accessibility review.
+
 ## Workflow Summary
 
 1. Open Reports from the registered typed `MainRoute.Reports` destination.

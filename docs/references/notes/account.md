@@ -11,10 +11,10 @@ Accounts
 ## Supporting References
 
 - `docs/references/accounts/Screenshot_20260630_164124_Money Manager.jpg`
-- `docs/references/accounts/Screenshot_20260630_164134_Money Manager.jpg`
-- `docs/references/accounts/Screenshot_20260630_164139_Money Manager.jpg`
 - `docs/references/accounts/README.md`
 - `docs/references/realbyteapps/` only if additional workflow, navigation, hierarchy, terminology, or interaction-pattern analysis is required.
+
+The copied 164134/164139 images show Settings and Configuration, not the Accounts list. They are cataloged in [Settings configuration](settings-configuration.md) rather than used as Accounts layout evidence.
 
 ## Workflow Summary
 

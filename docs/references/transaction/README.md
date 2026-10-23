@@ -4,11 +4,10 @@
 
 ### Primary References
 
-Money Manager UI patterns (observed from available screenshots):
-- Transaction list view with FAB
-- Standard form input patterns
-- Dark theme Material Design
-- Category-based organization
+- [Expense entry](<../Screenshot_20260630_164401_Money Manager.jpg>)
+- [Transfer entry](<../Screenshot_20260630_164416_Money Manager.jpg>)
+- [Income entry](<../Screenshot_20260630_164425_Money Manager.jpg>)
+- [Daily history](<../Screenshot_20260630_163942_Money Manager.jpg>) and the other views in [Transaction History Views](../notes/transaction-history-views.md)
 
 ### Supporting References
 
@@ -16,13 +15,9 @@ Money Manager UI patterns (observed from available screenshots):
 - Official Money Manager website: https://realbyteapps.com/
 - Money Manager standard transaction entry workflow patterns
 
-### Reference Screenshots Not Available
+### Historical And Current Status
 
-Transaction entry form screenshots were not included in the initial screenshot collection. Implementation is based on:
-1. Standard Money Manager transaction entry patterns
-2. Existing Tio Ledger UI Foundation components
-3. Material Design 3 guidelines
-4. Accessibility requirements
+The initial reference package used for Transaction Entry v1 did not contain form screenshots. The repository now contains the three checked-in form screenshots above. They show visible type, account, category, amount, date, and note relationships; they do not prove hidden validation, posting, or picker behavior. `TransactionEntryScreen` and `TransactionEntryViewModel` now implement an integrated income/expense/transfer flow through Application use cases. Visual deviations from the newly available screenshots need a separate review rather than retroactive approval.
 
 ## Transaction Entry UI Patterns
 
@@ -41,7 +36,7 @@ Based on Money Manager standard patterns:
 
 ### Optional Fields
 - Note/description
-- Tags (future enhancement placeholder)
+- Tags remain a visible placeholder in the current entry UI, not a supported posting field.
 
 ### Actions
 - Save button (primary action)

@@ -17,8 +17,8 @@ This folder contains the approved screenshot set for Accounts Screen v1.
 ### Supporting
 
 - `Screenshot_20260630_164124_Money Manager.jpg`
-- `Screenshot_20260630_164134_Money Manager.jpg`
-- `Screenshot_20260630_164139_Money Manager.jpg`
+
+The copies of 164134 (Settings hub) and 164139 (Configuration) are retained in this folder for traceability only. They are **not** Accounts-screen visual references; see [Settings configuration](../notes/settings-configuration.md). The 164124 image is an Accounts-related Total Stats subview, not the main account list.
 
 ## Workflow Summary
 

@@ -4,9 +4,9 @@
 
 Dashboard
 
-## Primary Reference
+## Primary Reference And Runtime Status
 
-- TBD before Dashboard implementation: approved screenshot in `docs/references/`.
+None of the [24 checked-in root screenshots](../screenshot-inventory.md) shows a Dashboard/Home content view suitable as a direct reference. `MainRoute.Dashboard` is registered in navigation, but `RootNavigationHost` currently renders `MainPlaceholderDestination` for it; a template/preview is not production Dashboard content. A product-approved screenshot or fallback source and complete screen specification are still required before implementing that content.
 
 ## Supporting References
 
@@ -18,11 +18,11 @@ Dashboard
 
 ## Workflow Summary
 
-TBD before implementation. Capture the dashboard's role, entry points, summary cards, trends, and navigation relationships in original Tio Ledger language.
+The current route can be selected from bottom navigation but leads to a placeholder. The intended summary workflow, actions, and data sources remain to be specified against an approved reference. The clean-header decision below applies to a future production Dashboard; it does not validate its content.
 
 ## Information Hierarchy
 
-TBD before implementation. Document top-level summary order, sections, actions, and relationships to Accounts, Transactions, Categories, Budgets, Loans, and Reports.
+Only the navigation position and the approved absence of a branded top bar are established. Summary order, sections, actions, and relationships to Accounts, Transactions, Categories, Budgets, Loans, and Reports are not yet an approved production hierarchy.
 
 ## Intentional Deviations
 
@@ -35,7 +35,7 @@ TBD before implementation. Document top-level summary order, sections, actions, 
 ## Accessibility Considerations
 
 - Removing the decorative branded top bar must not remove any navigation action or status information.
-- The first visible content section remains `Overview`, and existing bottom-navigation semantics remain unchanged.
+- The template's first section was conceived as `Overview`; the current production route is a placeholder and does not display that section. Any future Overview must be specified and reviewed, while existing bottom-navigation semantics remain unchanged.
 - Complete screen reader labels, touch targets, dynamic type, light/dark theme behavior, and responsive-layout review before Dashboard is promoted from template to production screen.
 
 ## JADX Boundary

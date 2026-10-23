@@ -5,12 +5,13 @@
 - Ledger Engine: Frozen v1 as of 2026-06-30.
 - Approved architectural blockers for commonMain compatibility, type-safe posting strategies, and strategy registry separation are resolved.
 - Application Layer, repository contracts, SQLDelight repository implementations, application bootstrap, and shared UI foundation are implemented.
-- Dashboard Screen v1, Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, Cash-flow Analytics v1, Loan Payoff Analytics v1, and Shared Reminder Planner v1 are implemented and CI-validated on `main`.
+- Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, Cash-flow Analytics v1, Loan Payoff Analytics v1, and Shared Reminder Planner v1 are implemented and CI-validated on `main`. Dashboard is registered in navigation but still renders placeholder content in `RootNavigationHost`; do not count it as a completed production screen.
 - Loan Payoff Analytics v1 is merged through issue #29 and PR #30.
 - Primary bottom-navigation callback wiring is completed through issue #34 and PR #36 without changing the canonical five destinations or redesigning Dashboard content.
 - Phase 6 Finance Features is complete.
 - Phase 7 Analytics And Notifications is in progress.
-- EMI and budget reminders v1 product rules and platform boundaries are approved through issue #41, and the pure shared planner/Application slice is implemented through issue #42 and PR #47. Android delivery integration under issue #43 is the active next milestone.
+- EMI and budget reminders v1 product rules and platform boundaries are approved through issue #41, and the pure shared planner/Application slice is implemented through issue #42 and PR #47. Android delivery code is present on `main`; issue #43 remains open for outstanding acceptance and device-evidence items. Do not describe the adapter as not yet started or the open issue as complete.
+- The 24 checked-in Money Manager screenshots are mapped in [the screenshot inventory](references/screenshot-inventory.md). Category-management, Settings/Appearance, and Transactions Daily/Calendar/Monthly/Total/Note planning gaps are recorded there; screenshot presence is not implementation approval.
 
 ## Phase 0: Documentation And Decisions
 
@@ -171,7 +172,9 @@ EMI and budget reminders v1 rules are approved through issue #41. The canonical
 specification is `docs/emi-budget-reminders-v1.md`. The shared planner and
 Application read-orchestration slice is implemented through issue #42 and PR
 #47. Android permission, scheduling, cancellation, delivery-receipt, lifecycle,
-and destination integration remains isolated under issue #43.
+and destination integration are present in Android source. Issue #43 remains
+open for its outstanding acceptance/device evidence; do not infer full approval
+from the presence of code.
 
 Objectives:
 
@@ -201,15 +204,25 @@ Current sequence:
    repository orchestration, Bootstrap/Koin registration, and focused CI
    coverage complete through issue #42 and PR #47.
 6. Android permission, settings, scheduling, cancellation, delivery receipts,
-   lifecycle reconciliation, and destination integration — next separate slice
-   under issue #43; platform code must consume shared plans without duplicating
-   reminder business rules.
+   lifecycle reconciliation, and destination integration — source present;
+   complete the remaining issue #43 acceptance/device matrix without
+   duplicating shared reminder business rules.
 
 Deliverables:
 
 - `shared/analytics`
 - `shared/notifications`
 - Platform notification adapters.
+
+## Reference Reconciliation And Bounded Follow-ups
+
+The [screenshot inventory](references/screenshot-inventory.md) and linked screen notes document the current evidence. They do not change completed v1 milestone labels or authorize all visible reference features. Select one small product slice at a time, with an owner-approved specification and Definition of Done evidence:
+
+1. Resolve the Transactions Daily/Calendar/Monthly/Total/Note mapping against the existing flat history, Reports, Budgets, and Accounts routes. Define date and monetary aggregation rules before UI work.
+2. Approve Category management scope: edit/archive, hierarchy, default categories, ordering, and the Settings entry relationship. Preserve immutable history and avoid duplicate category ownership.
+3. Implement [Appearance #73](https://github.com/im-tnyx/Tio-Ledger/issues/73) only after its Settings reference/spec update; keep System as the default on top of the merged system-theme fix.
+4. Triage remaining screenshot areas (Stats charts, account groups/settings, budget-setting links, currency/display/language preferences, PC Manager, backup/import/export/reset) as separate product decisions. Backup/export remains a Phase 8 hardening objective, not a currently shipped workflow.
+5. Obtain an approved Dashboard content reference and specification before replacing its current placeholder. No checked-in root screenshot supplies that content.
 
 ## Phase 8: Hardening And Release Preparation
 

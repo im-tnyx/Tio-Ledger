@@ -1,11 +1,11 @@
 # Active Task
 
-Status: In Progress
-Active Task: `.ai/tasks/shared/local-20261015-accounts-currency-groups.md`
-Branch: `tnyx/fix-accounts-currency-groups`
-Platform Scope: `shared Application/UI`
-Last Updated: `2026-10-21`
-Next Action: `PR #82 current HEAD and current exact-head CI must be read from GitHub PR #82 at handoff time; this pointer is not authoritative for either value. Historical runtime validation is pinned to 0b601efa, including the isolated API35 device/APK evidence and historical CI provenance run 38877987148. That historical evidence does not validate any later PR HEAD. TalkBack speech was captured for Cash and Credit Card headers, but actual swipe traversal was not demonstrated. The approved isolated AVD attempt is currently blocked by emulator lock error 5. No merge, issue edit, or further device change.`
+Status: Ready for Review
+Active Task: `.ai/tasks/docs/local-20261023-reference-reconciliation.md`
+Branch: `tnyx/docs-reference-inventory-planning`
+Platform Scope: `docs/references, canonical roadmap, and documentation continuity`
+Last Updated: `2026-10-23`
+Next Action: `Commit and push the validated docs-only branch, then obtain independent review at the exact published head. PR #82 and PR #86 are merged; their historical device evidence is not validation of this documentation branch. No PR creation or merge is authorized for this slice.`
 
 ## Usage
 

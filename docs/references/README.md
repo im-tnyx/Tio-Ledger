@@ -6,6 +6,8 @@ Production UI must be implemented using one or more approved reference sources. 
 
 Tio Ledger should remain functionally familiar to Money Manager while modernizing visual quality, accessibility, responsiveness, and platform fit. Screenshots and reference notes in this directory are implementation references, not loose inspiration.
 
+The [checked-in screenshot inventory](screenshot-inventory.md) maps all 24 root screenshots to current Tio Ledger surfaces and planning gaps, including the Transactions Daily/Calendar/Monthly/Total/Note views. The [screen notes index](notes/README.md) points to applicable evidence and specifications. Screenshot presence alone does not approve a new feature or supersede an earlier scoped contract.
+
 Reference material is used to understand product behavior and user expectations. It is never a license to copy proprietary implementation details.
 
 ## Source Priority
