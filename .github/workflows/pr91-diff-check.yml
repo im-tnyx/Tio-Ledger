@@ -1,0 +1,50 @@
+name: PR 91 exact-head diff check
+
+on:
+  push:
+    branches:
+      - ci/pr91-diff-check
+
+permissions:
+  contents: read
+
+jobs:
+  patch-hygiene:
+    name: PR 91 git diff --check
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact PR 91 HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: 8f8134e9035de3880039b59b51a0c3ca5350783c
+          fetch-depth: 0
+
+      - name: Validate exact HEAD and base, then run git diff --check
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          expected_head=8f8134e9035de3880039b59b51a0c3ca5350783c
+          expected_base=067dae888e96de37795aab895abd085117b1d084
+
+          actual_head="$(git rev-parse HEAD)"
+          echo "PR #91 checked-out HEAD: $actual_head"
+          test "$actual_head" = "$expected_head"
+
+          git fetch --no-tags origin main
+          actual_main="$(git rev-parse refs/remotes/origin/main)"
+          echo "Remote main SHA: $actual_main"
+          test "$actual_main" = "$expected_base"
+
+          git branch -f main "$expected_base"
+          echo "Running: git diff --check main...HEAD"
+          if git diff --check main...HEAD; then
+            echo "PASS: git diff --check main...HEAD (exit 0)"
+          else
+            code=$?
+            echo "FAIL: git diff --check main...HEAD (exit $code)"
+            exit "$code"
+          fi
+
+          echo "Exact-HEAD validation completed."
