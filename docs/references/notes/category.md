@@ -1,40 +1,55 @@
-# Category Screen Reference Note
+# Category Screen Reference Note And Management Gap
 
-## Screen Name
+## Screen And Readiness
 
-Category
+Tio Ledger `Categories` v1 exists on the primary bottom navigation. This note reconciles that runtime with the checked-in Money Manager category-management screenshots. The reference evidence is now available, but the expanded management workflow is **not yet approved for implementation**. [Issue #8](https://github.com/im-tnyx/Tio-Ledger/issues/8) covered v1 list/create; nested hierarchy and deletion of referenced categories were explicitly outside its scope.
 
-## Primary Reference
+## Primary References
 
-- TBD before Category Screen v1 implementation: approved screenshot in `docs/references/`.
+- [Configuration entry points](<../Screenshot_20260630_164139_Money Manager.jpg>)
+- [Income Category management](<../Screenshot_20260630_164241_Money Manager.jpg>)
+- [Expense Category management](<../Screenshot_20260630_164246_Money Manager.jpg>)
 
 ## Supporting References
 
-- Approved Tio Ledger mockups, if available.
-- `docs/references/realbyteapps/` only if workflow, navigation, hierarchy, terminology, layout grouping, dialog flow, screen relationship, feature discovery, or interaction-pattern analysis is required.
-- Official Money Manager website only if higher-priority references are insufficient.
-- Official Play Store screenshots only if higher-priority references are insufficient.
+- [Product Requirements: Categories](../../product-requirements.md) requires customizable defaults, useful parent-child hierarchy, category budgets, and analytics.
+- [Budget Setting screenshot](<../Screenshot_20260630_164302_Money Manager.jpg>) shows the relationship between category labels and budget configuration, without specifying Tio behavior.
+- Existing `CategoriesScreen`, `CategoriesViewModel`, and `CategoryUseCases` are the current runtime contracts.
+- A local, Git-ignored decompiled technical reference was inspected only to clarify the management screen relationships below; screenshots remain primary. Its files are not published with this PR.
 
-## Workflow Summary
+## Observed Reference Workflow And Hierarchy
 
-TBD before implementation. Capture how users discover, browse, search, group, create, update, archive, or select categories without copying proprietary code, XML, resources, strings, colors, dimensions, animations, or assets.
+The reference reaches category management through Settings/Configuration, with separate Income and Expense entries. Each category-management screen places add at the top, shows a subcategory control, then a list of category rows. Rows expose visible edit, remove, and ordering affordances; some expense rows summarize children. A screenshot alone does not establish whether remove deletes, archives, hides, or reparents a category, nor how ordering and the subcategory control persist.
 
-## Information Hierarchy
+## Supporting Technical Analysis: Screen Relationships
 
-TBD before implementation. Document only original observations about top-level navigation, grouping, category rows, empty/loading/error states, dialogs, and primary actions.
+A bounded local inspection suggests that Income and Expense enter the same kind of main-category list with different transaction types. Main-category selection can lead to a child-category list or an editing flow; child categories have a separate editing flow. Subcategory configuration and budget configuration are adjacent management entries, not proof that either should live inside Tio Ledger's Categories screen. This is provisional navigation context, not independently reviewable PR evidence or a product contract. The conditions for showing children, removal semantics, ordering persistence, and historical-transaction treatment still require Tio-specific decisions.
 
-## Intentional Deviations
+## Tio Ledger Runtime And Intentional Deviations
 
-TBD before implementation. Any deviation from the primary reference must be listed here before production code begins.
+`CategoriesScreen` lists active Income/Expense groups, handles loading/empty/error/retry, and opens an Add dialog for name and type. `CategoriesViewModel` uses list/create use cases. Application also has update/archive use cases, but the production Categories UI does not expose editing, archiving, ordering, or parent selection. The existing category model has a `parentId`; that is not evidence that a complete hierarchy workflow is implemented. A production default-category seed was not established by this audit; verify bootstrap behavior before promising defaults.
 
-## Reason For Deviations
+Tio's primary Categories destination differs from the reference Settings/Configuration entry. Preserve the approved five-destination navigation unless the owner explicitly approves a change. A future Settings shortcut may point to the existing category-management surface, but must not create a second category source of truth. The v1 Add dialog and grouped list remain in place until a separately reviewed change supersedes them.
 
-TBD before implementation. Each deviation must have a product, accessibility, platform, design-system, or architecture reason.
+## Decisions Needed For A Management Specification
 
-## Accessibility Considerations
+1. Entry and ownership: retain `MainRoute.Categories` as the owner; decide whether Settings links to it or a narrower editor sub-route. Do not silently duplicate the screen.
+2. Editing: define allowed name/type/parent changes and duplicate-name scope, including what happens to historical transactions and existing budget associations.
+3. Removal: decide archive/hide versus deletion, default-category protection, and behavior for categories referenced by immutable history. Destructive deletion is not implied by the red reference icon.
+4. Hierarchy: define depth, parent/child type rules, cycle prevention, how a parent opens its children or editor, and how budgets/analytics aggregate parent and child amounts. The reference's separate child flow does not choose these rules for Tio Ledger.
+5. Ordering and defaults: decide whether manual reorder and seeded defaults are product requirements for the next slice, with deterministic persistence and migration implications reviewed first.
 
-TBD before implementation. Include screen reader labels, touch targets, dynamic type, light/dark theme behavior, keyboard/focus behavior where applicable, and responsive layout expectations.
+## Future Functional And Navigation Checklist
 
-## JADX Boundary
+- [ ] Owner approves one bounded management slice and an updated Tio UI specification.
+- [ ] A single route/source of truth handles category list and any Settings entry.
+- [ ] Update/archive operations preserve transaction and ledger history; no silent financial mutation.
+- [ ] Parent/child rules, duplicate validation, defaults, and ordering are explicitly specified before UI work.
+- [ ] Income and Expense remain distinguishable by text and screen-reader labels, not color alone.
+- [ ] Add/edit/archive failures keep persisted state truthful and offer recovery.
+- [ ] Existing transaction entry and budget category selection remain compatible.
+- [ ] Light/dark, large text, touch targets, focus order, and populated/empty/error states are reviewed.
 
-No copied Java/Kotlin source, XML layouts, resources, drawables, icons, strings, colors, dimensions, animations, assets, or proprietary implementation details are allowed in this note or implementation.
+## Approval And Proprietary Boundary
+
+This is an evidence and planning correction, not retroactive v1 UI approval or authorization for category-management code. Future intentional deviations require owner approval under [ADR-0015](../../adr/0015-reference-driven-ui-development.md). No reference code, XML, resources, strings, icons, colors, dimensions, animations, or assets are copied into Tio Ledger.

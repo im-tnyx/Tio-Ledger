@@ -13,6 +13,10 @@ Budgets Screen v1
 
 The official listing describes budget management as a quick comparison of budget and expense through a graph. Tio Ledger preserves that information hierarchy with deterministic target, spent, remaining, and progress presentation while using original Compose Multiplatform implementation and existing design tokens.
 
+## Later Checked-in Screenshot Reconciliation
+
+The repository now contains a [Total-screen budget summary](<../Screenshot_20260630_163957_Money Manager.jpg>), its [continuation](<../Screenshot_20260630_164004_Money Manager.jpg>), and a [Budget Setting list](<../Screenshot_20260630_164302_Money Manager.jpg>). They were not available at the original v1 milestone. Tio's current Budgets route has its own create/edit flow; these images do not approve a combined Total screen, a second budget editor in Settings, or new financial rules. Any visual alignment or Settings link requires a separately approved deviation/spec update.
+
 ## Workflow Summary
 
 1. Open Budgets from the primary bottom navigation.

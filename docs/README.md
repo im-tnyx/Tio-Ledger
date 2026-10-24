@@ -23,6 +23,10 @@ The product should remain functionally familiar to Money Manager. The goal is to
 - [Implementation Roadmap](implementation-roadmap.md)
 - [Testing Strategy](testing-strategy.md)
 - [Reference Screenshots](references/README.md)
+- [Checked-in Screenshot Inventory And Feature Gaps](references/screenshot-inventory.md)
+- [Transaction History Views Planning Note](references/notes/transaction-history-views.md)
+- [Category Management Reference Note](references/notes/category.md)
+- [Settings Configuration Reference Plan](references/notes/settings-configuration.md)
 - [ADRs](adr/README.md)
 
 ## Status Reports
@@ -87,6 +91,7 @@ docs/
 2. Preserve completed Phase 6 finance workflows unless a verified defect requires a focused fix.
 3. Preserve the merged Spending Analytics / Reports, Cash-flow Analytics, Loan Payoff Analytics, and Shared Reminder Planner boundaries, including immutable reads, integer-only calculations, deterministic time or schedule semantics, multi-currency separation, and stable reminder identities.
 4. Preserve the canonical five primary bottom-navigation destinations and their typed callback wiring; Dashboard content remains governed by its approved specification rather than this navigation fix.
-5. Implement Android notification permission, scheduling, cancellation, delivery-receipt, lifecycle-reconciliation, and destination integration under issue #43 by consuming the validated shared planner contract without duplicating reminder rules.
+5. Preserve the Android reminder permission, scheduling, cancellation, delivery-receipt, lifecycle-reconciliation, and destination integration already present in source. Issue #43 remains open for its remaining acceptance and device-evidence matrix; do not equate existing code with final approval.
 6. Keep analytics and reminder business logic outside Compose and platform schedulers; expose immutable Application-owned state and semantic reminder plans at module boundaries.
 7. Treat the remaining Reports and Cash-flow visual/accessibility checklist items as explicit review follow-up, not as completed validation.
+8. Reconcile the checked-in screenshot set with existing screen notes before selecting the next bounded UI slice. Daily/Calendar/Monthly/Total/Note, category management, Appearance #73, and additional Settings options require separate product decisions and validation.

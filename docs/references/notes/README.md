@@ -2,6 +2,8 @@
 
 This folder contains screen-level reference notes used before production UI implementation.
 
+Current evidence/planning notes: [Transaction history views](transaction-history-views.md), [Categories](category.md), and [Settings configuration](settings-configuration.md). See the [24-image inventory](../screenshot-inventory.md) to locate every checked-in root screenshot. Existing production notes remain scoped to their approved milestones; these planning notes do not authorize implementation by themselves.
+
 Screen notes convert approved screenshots, approved Tio Ledger mockups, and permitted technical analysis into original Tio Ledger implementation guidance. They must not contain copied code, copied XML, copied resources, copied strings, copied colors, copied dimensions, copied animations, copied assets, or proprietary implementation details.
 
 ## Required Fields

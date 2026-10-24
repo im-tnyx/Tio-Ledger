@@ -13,8 +13,8 @@ Android Settings / Reminders v1
 
 ## Reference Readiness
 
-- Checked-in Settings screenshot: unavailable.
-- Checked-in `docs/references/settings/` source: unavailable.
+- Checked-in Settings screenshot: unavailable at issue #51 approval time; [Settings hub](<../Screenshot_20260630_164134_Money Manager.jpg>) and [Configuration](<../Screenshot_20260630_164139_Money Manager.jpg>) are now present in the root reference collection. They inform hierarchy, not the reminder switch details.
+- Checked-in `docs/references/settings/` source folder: still unavailable; see the root screenshot inventory and [Settings configuration plan](settings-configuration.md).
 - Approved fallback source: official Realbyte Android Help Center article **How to set up a reminding alarm**: `https://help.realbyteapps.com/hc/en-us/articles/360060613673-How-to-set-up-a-reminding-alarm`.
 - Supporting official source: Realbyte Help Center Settings/Configuration material, including **How to set style**: `https://help.realbyteapps.com/hc/en-us/articles/7318083094169-How-to-set-style`.
 - Repository navigation source: existing `MainRoute.Settings` typed destination in `shared/ui/src/commonMain/kotlin/com/tioledger/ui/navigation/Routes.kt`.
