@@ -1,11 +1,14 @@
 # Active Task
 
-Status: Ready for Review
+Status: Published - Review Pending
 Active Task: `shared/transactions-daily-stage-a`
 Branch: `tnyx/transactions-daily-stage-a`
 Platform Scope: `shared/application`
-Last Updated: `2026-10-31`
-Next Action: `Owner review of the uncommitted Stage A branch; Stage B UI remains out of scope.`
+PR: `#92 <https://github.com/im-tnyx/Tio-Ledger/pull/92>`
+Base SHA: `b55569a8d39db675655b82c3faf82fd7dddb8b58`
+Published Head SHA: `668a0dc6c616168c4b5f3101de58857e1b421305`
+Last Updated: `2026-11-01`
+Next Action: `Resolve im-tio's P2 handoff finding on PR #92, obtain independent re-review, confirm CI, then wait for the owner merge gate; Stage B UI remains out of scope.`
 
 ## Usage
 
