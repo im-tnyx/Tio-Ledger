@@ -6,9 +6,9 @@ Branch: `tnyx/transactions-daily-stage-a`
 Platform Scope: `shared/application`
 PR: `#92 <https://github.com/im-tnyx/Tio-Ledger/pull/92>`
 Base SHA: `b55569a8d39db675655b82c3faf82fd7dddb8b58`
-Published Head SHA: `668a0dc6c616168c4b5f3101de58857e1b421305`
+Current HEAD: resolve from GitHub PR `#92` on branch `tnyx/transactions-daily-stage-a`; do not cache a mutable head SHA here.
 Last Updated: `2026-11-01`
-Next Action: `Resolve im-tio's P2 handoff finding on PR #92, obtain independent re-review, confirm CI, then wait for the owner merge gate; Stage B UI remains out of scope.`
+Next Action: `Resolve im-tio's P2 handoff finding on PR #92, resolve current HEAD from GitHub, obtain independent re-review, confirm CI, then wait for the owner merge gate; Stage B UI remains out of scope.`
 
 ## Usage
 
