@@ -22,6 +22,7 @@ import com.tioledger.application.usecase.loan.ListLoansUseCase
 import com.tioledger.application.usecase.notification.PlanRemindersUseCase
 import com.tioledger.application.usecase.sms.ConfirmSmsTransactionUseCase
 import com.tioledger.application.usecase.sms.PrepareSmsTransactionReviewUseCase
+import com.tioledger.application.usecase.transaction.GetDailyTransactionsUseCase
 import com.tioledger.application.usecase.transaction.ListTransactionsUseCase
 import com.tioledger.application.usecase.transaction.RecordAdjustmentUseCase
 import com.tioledger.application.usecase.transaction.RecordExpenseUseCase
@@ -108,6 +109,7 @@ fun applicationModule(): Module =
         factory { CreateLoanUseCase(get(), get(), get(), get()) }
         factory { PlanRemindersUseCase(get(), get(), get()) }
         factory { ListTransactionsUseCase(get()) }
+        factory { GetDailyTransactionsUseCase(get(), get()) }
         factory { RecordIncomeUseCase(get(), get(), get(), get()) }
         factory { RecordExpenseUseCase(get(), get(), get(), get()) }
         factory { RecordTransferUseCase(get(), get(), get()) }
@@ -180,6 +182,7 @@ fun diagnosticsModule(): Module =
                         getOrNull<GetLoanDetailsAnalyticsUseCase>() != null &&
                         getOrNull<PlanRemindersUseCase>() != null &&
                         getOrNull<ListTransactionsUseCase>() != null &&
+                        getOrNull<GetDailyTransactionsUseCase>() != null &&
                         getOrNull<RecordIncomeUseCase>() != null &&
                         getOrNull<PrepareSmsTransactionReviewUseCase>() != null &&
                         getOrNull<ConfirmSmsTransactionUseCase>() != null,

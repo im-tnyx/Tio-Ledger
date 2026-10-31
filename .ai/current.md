@@ -1,11 +1,11 @@
 # Active Task
 
-Status: Idle
-Active Task: none
-Branch: `main`
-Platform Scope: `none`
-Last Updated: `2026-10-24`
-Next Action: `PR #90 was approved and merged at main@067dae888e96de37795aab895abd085117b1d084. No active implementation task. Select and authorize one bounded next task before making changes.`
+Status: Ready for Review
+Active Task: `shared/transactions-daily-stage-a`
+Branch: `tnyx/transactions-daily-stage-a`
+Platform Scope: `shared/application`
+Last Updated: `2026-10-31`
+Next Action: `Owner review of the uncommitted Stage A branch; Stage B UI remains out of scope.`
 
 ## Usage
 
