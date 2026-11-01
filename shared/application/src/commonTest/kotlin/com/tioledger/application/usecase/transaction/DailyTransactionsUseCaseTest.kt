@@ -42,6 +42,19 @@ class DailyTransactionsUseCaseTest {
     }
 
     @Test
+    fun rejectsFixedOffsetTimeZoneIdsWithTypedValidationFailure() {
+        val useCase = dailyUseCase(emptyList())
+
+        listOf("+05:30", "UTC+05:30").forEach { timeZoneId ->
+            val result = useCase(DailyTransactionsQuery(LocalDate(2026, 7, 1), timeZoneId))
+
+            val failure = assertIs<ApplicationResult.Failure>(result)
+            val validation = assertIs<ApplicationError.Validation>(failure.error)
+            assertEquals("timeZoneId", validation.field)
+        }
+    }
+
+    @Test
     fun returnsHalfOpenLeapYearMonthAndYearRolloverBoundaries() {
         val leapMonth = LocalDate(2028, 2, 1)
         val records =

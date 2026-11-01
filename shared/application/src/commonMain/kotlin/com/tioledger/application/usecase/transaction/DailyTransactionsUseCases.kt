@@ -57,6 +57,11 @@ class GetDailyTransactionsUseCase(
                 ApplicationError.Validation("timeZoneId", "must not be blank"),
             )
         }
+        if (query.timeZoneId != TimeZone.UTC.id && query.timeZoneId !in TimeZone.availableZoneIds) {
+            return ApplicationResult.Failure(
+                ApplicationError.Validation("timeZoneId", "must be a valid IANA time zone ID"),
+            )
+        }
 
         val timeZone =
             try {
