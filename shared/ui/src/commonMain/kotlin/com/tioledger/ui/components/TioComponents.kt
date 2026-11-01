@@ -106,7 +106,8 @@ fun TioBottomNavigation(
                 label = {
                     Text(
                         text = item.label,
-                        maxLines = 1,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 2,
                     )
                 },
             )
