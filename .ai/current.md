@@ -1,11 +1,14 @@
 # Active Task
 
-Status: Idle
-Active Task: none
-Branch: `main`
-Platform Scope: `none`
-Last Updated: `2026-10-24`
-Next Action: `PR #90 was approved and merged at main@067dae888e96de37795aab895abd085117b1d084. No active implementation task. Select and authorize one bounded next task before making changes.`
+Status: Published - Review Pending
+Active Task: `shared/transactions-daily-stage-a`
+Branch: `tnyx/transactions-daily-stage-a`
+Platform Scope: `shared/application`
+PR: `#92 <https://github.com/im-tnyx/Tio-Ledger/pull/92>`
+Base SHA: `b55569a8d39db675655b82c3faf82fd7dddb8b58`
+Current HEAD: resolve from GitHub PR `#92` on branch `tnyx/transactions-daily-stage-a`; do not cache a mutable head SHA here.
+Last Updated: `2026-11-01`
+Next Action: `Resolve im-tio's P2 handoff finding on PR #92, resolve current HEAD from GitHub, obtain independent re-review, confirm CI, then wait for the owner merge gate; Stage B UI remains out of scope.`
 
 ## Usage
 

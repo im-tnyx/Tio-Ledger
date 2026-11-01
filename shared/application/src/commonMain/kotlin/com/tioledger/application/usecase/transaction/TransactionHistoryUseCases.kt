@@ -37,17 +37,20 @@ class ListTransactionsUseCase(
                         value =
                             result.value
                                 .mapNotNull(TransactionHistoryRecord::toSummary)
-                                .sortedWith(
-                                    compareByDescending<TransactionSummary> { it.timestamp }
-                                        .thenByDescending { it.id },
-                                ),
+                                .sortedForTransactionHistory(),
                     ),
                 )
             is LedgerResult.Failure -> ApplicationResult.Failure(ApplicationError.Repository(result.error))
         }
 }
 
-private fun TransactionHistoryRecord.toSummary(): TransactionSummary? {
+internal fun List<TransactionSummary>.sortedForTransactionHistory(): List<TransactionSummary> =
+    sortedWith(
+        compareByDescending<TransactionSummary> { it.timestamp }
+            .thenByDescending { it.id },
+    )
+
+internal fun TransactionHistoryRecord.toSummary(): TransactionSummary? {
     val firstSplit = splits.firstOrNull() ?: return null
     val sourceSplit =
         if (type == TransactionType.TRANSFER) {

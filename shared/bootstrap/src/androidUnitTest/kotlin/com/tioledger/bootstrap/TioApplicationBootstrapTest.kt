@@ -11,6 +11,7 @@ import com.tioledger.application.usecase.loan.ListLoansUseCase
 import com.tioledger.application.usecase.notification.PlanRemindersUseCase
 import com.tioledger.application.usecase.sms.ConfirmSmsTransactionUseCase
 import com.tioledger.application.usecase.sms.PrepareSmsTransactionReviewUseCase
+import com.tioledger.application.usecase.transaction.GetDailyTransactionsUseCase
 import com.tioledger.application.usecase.transaction.RecordIncomeUseCase
 import com.tioledger.bootstrap.database.DatabaseInitializer
 import com.tioledger.bootstrap.di.tioApplicationModules
@@ -56,6 +57,7 @@ class TioApplicationBootstrapTest {
         assertNotNull(app.koin.get<LoanRepository>())
         assertNotNull(app.koin.get<TransactionRepository>())
         assertNotNull(app.koin.get<GetSpendingAnalyticsUseCase>())
+        assertNotNull(app.koin.get<GetDailyTransactionsUseCase>())
         assertNotNull(app.koin.get<LoanPayoffAnalyticsCalculator>())
         assertNotNull(app.koin.get<ReminderPlanner>())
         assertNotNull(app.koin.get<LoanCalculator>())
