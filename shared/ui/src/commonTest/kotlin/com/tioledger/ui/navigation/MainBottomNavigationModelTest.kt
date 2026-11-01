@@ -21,6 +21,10 @@ class MainBottomNavigationModelTest {
         assertEquals(expectedRoutes, TioNavigationGraphs.main.bottomNavigationRoutes)
         assertEquals(expectedRoutes, model.routes)
         assertEquals(expectedRoutes.map(MainRoute::title), model.items.map { it.label })
+        assertEquals(
+            listOf("Dashboard", "Accounts", "Transactions", "Categories", "Budgets"),
+            model.items.map { it.label },
+        )
         assertEquals(expectedRoutes.map(MainRoute::icon), model.items.map { it.icon })
     }
 
