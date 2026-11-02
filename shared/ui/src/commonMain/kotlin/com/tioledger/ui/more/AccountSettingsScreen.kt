@@ -88,14 +88,15 @@ fun AccountSettingsScreen(
             items(accountSettings, key = AccountSettingEntry::title) { entry ->
                 TioListItem(
                     title = entry.title,
-                    trailing = entry.value?.let { value ->
-                        {
-                            Text(
-                                text = value,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    },
+                    trailing =
+                        entry.value?.let { value ->
+                            {
+                                Text(
+                                    text = value,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        },
                     onClick = entry.route?.let { route -> { onNavigate(route) } },
                 )
             }

@@ -3,13 +3,13 @@
 
 package com.tioledger.ui.more
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
@@ -19,8 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.components.TioListItem
@@ -97,9 +97,7 @@ private val moreSections =
     )
 
 @Composable
-fun MoreRoute(
-    onNavigate: (MainRoute) -> Unit = {},
-) {
+fun MoreRoute(onNavigate: (MainRoute) -> Unit = {}) {
     MoreScreen(onNavigate = onNavigate)
 }
 
@@ -130,9 +128,10 @@ fun MoreScreen(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
             )
         },
         bottomBar = {
@@ -156,10 +155,11 @@ fun MoreScreen(
                     item(key = "header-$title") {
                         Text(
                             text = title,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f))
-                                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f))
+                                    .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.titleSmall,
                         )
@@ -175,14 +175,15 @@ fun MoreScreen(
                                 contentDescription = entry.title,
                             )
                         },
-                        trailing = entry.value?.let { value ->
-                            {
-                                Text(
-                                    text = value,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        },
+                        trailing =
+                            entry.value?.let { value ->
+                                {
+                                    Text(
+                                        text = value,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            },
                         onClick = { onNavigate(entry.route) },
                     )
                 }

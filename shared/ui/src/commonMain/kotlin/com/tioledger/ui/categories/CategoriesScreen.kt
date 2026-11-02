@@ -27,8 +27,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.tioledger.domain.model.CategoryType
@@ -38,7 +38,6 @@ import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioErrorState
 import com.tioledger.ui.components.TioFilterChip
 import com.tioledger.ui.components.TioLoadingState
-import com.tioledger.ui.components.TioSectionHeader
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs

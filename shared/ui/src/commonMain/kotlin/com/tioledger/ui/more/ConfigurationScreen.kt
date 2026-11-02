@@ -66,9 +66,7 @@ private val configurationEntries =
     )
 
 @Composable
-fun ConfigurationRoute(
-    onNavigate: (MainRoute) -> Unit = {},
-) {
+fun ConfigurationRoute(onNavigate: (MainRoute) -> Unit = {}) {
     ConfigurationScreen(onNavigate = onNavigate)
 }
 

@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -116,14 +116,15 @@ fun AccountGroupScreen(
             items(accountGroups, key = AccountGroupEntry::title) { entry ->
                 TioListItem(
                     title = entry.title,
-                    trailing = entry.value?.let { value ->
-                        {
-                            Text(
-                                text = value,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    },
+                    trailing =
+                        entry.value?.let { value ->
+                            {
+                                Text(
+                                    text = value,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        },
                     onClick = entry.route?.let { route -> { onNavigate(route) } },
                 )
             }

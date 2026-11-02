@@ -110,9 +110,10 @@ fun StyleScreen(
                             color = MaterialTheme.colorScheme.primary,
                         )
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { contentDescription = "${option.title} theme" },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .semantics { contentDescription = "${option.title} theme" },
                     onClick = { onThemeModeChanged(option.mode) },
                 )
             }

@@ -83,13 +83,14 @@ fun LoansScreen(
         topBar = {
             TioAppBar(
                 title = "Loans",
-                navigationIcon = onNavigateBack?.let { navigateBack ->
-                    {
-                        TextButton(onClick = navigateBack) {
-                            Text("‹ Account Group")
+                navigationIcon =
+                    onNavigateBack?.let { navigateBack ->
+                        {
+                            TextButton(onClick = navigateBack) {
+                                Text("‹ Account Group")
+                            }
                         }
-                    }
-                },
+                    },
                 actions = {
                     TextButton(onClick = { onAction(LoansAction.AddClicked) }) {
                         Text("+")
