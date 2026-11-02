@@ -22,7 +22,7 @@ The fallback package is sufficient because it fixes the workflow, information hi
   - The four reference tabs (transactions, statistics, accounts, more) contain no separate Loans destination.
   - The supporting `More` settings and configuration screenshots contain no Loans entry either.
 - Checked-in JADX technical reference (structure only, per `docs/references/README.md`): no dedicated loan screen or loan menu exists. Loan concepts appear only as an account-group concept and in help text. No code, layout, resource, or string was copied.
-- Approved Tio precedent: `docs/references/notes/settings-reminders.md` defines Settings as a non-primary shell destination. Production exposes it as an Accounts app-bar action that routes to the existing typed `MainRoute.Settings`.
+- Approved Tio precedent: `docs/references/notes/settings-reminders.md` defines Settings as a non-primary More-owned destination that routes to the existing typed `MainRoute.Settings`.
 - Conclusion: the reference product keeps loans inside Accounts and never gives them a primary tab. Tio's Loans list is a product extension (`docs/product-requirements.md` → Loans) with no screenshot of its own. The closest reference-consistent entry is therefore a non-primary Accounts app-bar action, following the approved Settings precedent.
 
 ## Workflow Summary
@@ -135,7 +135,7 @@ The fallback package is sufficient because it fixes the workflow, information hi
   - Android system back from Loans returns to `TioNavigationGraphs.root.mainEntry` (Accounts), matching Settings, instead of leaving the app.
   - System back from `MainRoute.LoanDetails` still returns to `MainRoute.Loans`.
 - **Bottom navigation:**
-  - The canonical five destinations (Dashboard, Accounts, Transactions, Categories, Budgets) are unchanged.
+  - The four primary destinations are Transactions, Stats, Accounts, and More.
   - The Loans list keeps rendering them with no item selected.
   - Loan Details keeps omitting them.
 - **Accessibility:**
@@ -186,7 +186,7 @@ The fallback package is sufficient because it fixes the workflow, information hi
 - [ ] Valid creation persists the loan and complete schedule atomically.
 - [ ] Successful creation refreshes the list and shows feedback.
 - [ ] The Accounts app bar exposes a `Loans` action that opens `MainRoute.Loans` from a clean install, with no loan ID.
-- [ ] The Loans entry does not change the five primary bottom-navigation destinations; Loans shows them with no item selected.
+- [ ] The Loans entry does not change the four primary bottom-navigation destinations; Loans shows them with no item selected.
 - [ ] Android system back from Loans returns to Accounts; system back from Loan Details returns to Loans.
 - [ ] The Loans entry has an accessible name, a button role, and a minimum touch target, and it is reachable in focus order.
 - [ ] Selecting a loan opens typed details navigation.

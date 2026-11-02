@@ -53,15 +53,15 @@ The repository now contains a [Total-screen budget summary](<../Screenshot_20260
 
 - Add `MainRoute.Budgets` with path `budgets` and `TioIconToken.Budget`.
 - Register Budgets in the main graph.
-- Budgets temporarily occupies the fifth primary bottom-navigation slot previously used by the placeholder Reports destination.
-- Reports remains registered in the main graph for future direct/overflow navigation.
+- Budgets remains registered in the main graph as a non-primary destination reached from More → Configuration.
+- The primary bottom-navigation shell is Transactions, Stats, Accounts, and More.
 - Selecting another bottom-navigation destination exits Budgets through the existing typed `RootRoute.Main` callback.
 - No unsaved editor data is persisted when the editor is dismissed.
 
 ## Intentional Deviations
 
 - The fallback source describes a graph but does not provide an approved checked-in Budgets screenshot. V1 uses accessible progress cards rather than reproducing an unknown proprietary chart layout.
-- Reports is temporarily removed from primary bottom navigation because Material navigation guidance and the current component are designed for a compact primary destination set; Budgets is the implemented finance workflow while Reports remains a placeholder.
+- Budgets is intentionally reachable outside the primary bottom navigation; its existing finance workflow and typed route remain unchanged.
 - Custom budget periods are not exposed in v1 because the approved workflow does not yet define explicit start/end editing, even though the frozen schema permits custom periods.
 - Budget-period rows are not persisted in v1; current recurring windows are derived deterministically by the pure budget engine.
 

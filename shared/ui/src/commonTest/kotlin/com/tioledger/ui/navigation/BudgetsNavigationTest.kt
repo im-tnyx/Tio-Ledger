@@ -13,8 +13,8 @@ class BudgetsNavigationTest {
         assertEquals("main/budgets", destination.path)
         assertEquals(MainRoute.Budgets, destination.destination)
         assertTrue(MainRoute.Budgets in TioNavigationGraphs.main.routes)
-        assertTrue(MainRoute.Budgets in TioNavigationGraphs.main.bottomNavigationRoutes)
-        assertFalse(MainRoute.Reports in TioNavigationGraphs.main.bottomNavigationRoutes)
+        assertFalse(MainRoute.Budgets in TioNavigationGraphs.main.bottomNavigationRoutes)
+        assertTrue(MainRoute.Reports in TioNavigationGraphs.main.bottomNavigationRoutes)
         assertTrue(MainRoute.Reports in TioNavigationGraphs.main.routes)
     }
 }

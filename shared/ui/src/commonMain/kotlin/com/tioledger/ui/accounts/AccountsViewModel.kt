@@ -134,8 +134,8 @@ private fun AccountType.toGroupTitle(): String =
     when (this) {
         AccountType.CASH -> "Cash"
         AccountType.BANK -> "Accounts"
-        AccountType.CREDIT_CARD -> "Credit Card"
-        AccountType.WALLET -> "Wallet"
+        AccountType.CREDIT_CARD -> "Card"
+        AccountType.WALLET -> "Others"
         AccountType.LOAN_LINKED -> "Loan"
         AccountType.INVESTMENT -> "Investments"
     }

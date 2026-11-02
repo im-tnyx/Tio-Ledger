@@ -55,15 +55,15 @@ The screenshot collection now includes Stats monthly Income/Expenses empty state
 
 ## Navigation Definition
 
-- Keep `MainRoute.Reports` with path `reports` and `TioIconToken.Analytics`.
-- Keep Reports registered in the main graph and outside the five-item primary bottom navigation.
+- Keep `MainRoute.Reports` with path `reports`, user-facing title `Stats`, and `TioIconToken.Analytics`.
+- Keep Reports registered in the main graph and promoted into the five-item primary bottom navigation as `Stats`.
 - Keep the production `ReportsRoute`; no additional nested cash-flow destination is introduced.
 - The Reports screen renders the standard primary bottom navigation so users can exit to existing primary destinations through the typed `RootRoute.Main` callback.
 
 ## Intentional Deviations
 
 - No checked-in screenshot exists for Reports or Cash-flow analytics at milestone start, so the screen uses the existing Tio card-and-summary vocabulary instead of guessing a proprietary chart layout.
-- Reports remains outside the five-item primary bottom navigation because Budgets currently occupies the fifth slot and that navigation contract is already validated.
+- Reports is now the `Stats` primary destination in the four-item shell: Transactions, Stats, Accounts, and More. Categories and Budgets are reached from More → Configuration. The More hub and unsupported Configuration entries are placeholders where no runtime contract exists.
 - V1 shows deterministic summary cards, text-first cash-flow rows, and breakdown lists rather than charts. This keeps the screen accessible and original while preserving the required analytics information hierarchy.
 - V1 separates currencies instead of converting them because the product does not define an exchange-rate source or a base-currency policy.
 - V1 excludes transfers, loan disbursements, repayments, and adjustments because the approved scope limits Reports analytics to ledger-backed income and expense history.

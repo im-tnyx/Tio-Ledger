@@ -8,21 +8,20 @@ import kotlin.test.assertNull
 class MainBottomNavigationModelTest {
     @Test
     fun usesCanonicalRouteOrderAndMetadata() {
-        val model = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Dashboard)
+        val model = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Transactions)
         val expectedRoutes =
             listOf(
-                MainRoute.Dashboard,
-                MainRoute.Accounts,
                 MainRoute.Transactions,
-                MainRoute.Categories,
-                MainRoute.Budgets,
+                MainRoute.Reports,
+                MainRoute.Accounts,
+                MainRoute.More,
             )
 
         assertEquals(expectedRoutes, TioNavigationGraphs.main.bottomNavigationRoutes)
         assertEquals(expectedRoutes, model.routes)
         assertEquals(expectedRoutes.map(MainRoute::title), model.items.map { it.label })
         assertEquals(
-            listOf("Dashboard", "Accounts", "Transactions", "Categories", "Budgets"),
+            listOf("Transactions", "Stats", "Accounts", "More"),
             model.items.map { it.label },
         )
         assertEquals(expectedRoutes.map(MainRoute::icon), model.items.map { it.icon })
@@ -39,12 +38,39 @@ class MainBottomNavigationModelTest {
     }
 
     @Test
-    fun doesNotSelectPrimaryItemForNonPrimaryRoute() {
-        listOf(MainRoute.Reports, MainRoute.Loans, MainRoute.Settings).forEach { currentRoute ->
+    fun selectsMoreForRoutesOwnedByMore() {
+        listOf(
+            MainRoute.Categories,
+            MainRoute.IncomeCategories,
+            MainRoute.ExpenseCategories,
+            MainRoute.Budgets,
+            MainRoute.Settings,
+            MainRoute.Configuration,
+            MainRoute.AccountSettings,
+            MainRoute.AccountGroup,
+            MainRoute.BudgetSettings,
+            MainRoute.TransactionSettings,
+            MainRoute.RepeatSettings,
+            MainRoute.CurrencySettings,
+            MainRoute.SubCurrencySettings,
+            MainRoute.PasscodeSettings,
+            MainRoute.AlarmSettings,
+            MainRoute.ApplicationIconSettings,
+            MainRoute.LanguageSettings,
+            MainRoute.AdTrackingSettings,
+            MainRoute.CopyPasteSettings,
+        ).forEach { currentRoute ->
             val model = TioNavigationGraphs.main.bottomNavigationModel(currentRoute)
 
-            assertFalse(model.items.any { it.selected })
+            assertEquals("More", model.items.single { it.selected }.label)
         }
+    }
+
+    @Test
+    fun doesNotSelectPrimaryItemForUnownedNonPrimaryRoute() {
+        val model = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Loans)
+
+        assertFalse(model.items.any { it.selected })
     }
 
     @Test

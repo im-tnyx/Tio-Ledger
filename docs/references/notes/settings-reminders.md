@@ -54,7 +54,7 @@ Not imported from the fallback source:
 8. The OS runtime permission prompt is launched only from that explicit action. Merely opening Settings never prompts.
 9. If permission is denied, revoked, or app notifications are disabled, financial workflows and reminder preferences remain usable. The screen shows non-blocking guidance to Android app notification settings instead of repeatedly prompting.
 10. When permission state changes, Android reconciliation is requested through the platform service.
-11. User leaves Settings through existing main navigation; the canonical five bottom-navigation destinations remain unchanged.
+11. User leaves Settings through the existing More-owned bottom-navigation destination; the current four primary destinations remain unchanged.
 
 ## Information Hierarchy
 
@@ -129,8 +129,8 @@ Not imported from the fallback source:
 
 - Reuse existing `MainRoute.Settings` with path `settings` and `TioIconToken.Settings`.
 - Do not create a second Settings route.
-- Do not add Settings as a sixth primary bottom-navigation destination. The canonical primary destinations remain Dashboard, Accounts, Transactions, Categories, and Budgets.
-- The Settings entry is a non-primary app-shell action equivalent to the reference product's `More`/settings hierarchy. A later implementation PR may expose it through an app-bar overflow or other already-approved non-primary shell affordance, but it must route to the existing `MainRoute.Settings` destination.
+- Do not add Settings as a fifth primary bottom-navigation destination. The current primary destinations are Transactions, Stats, Accounts, and More.
+- The Settings entry is a non-primary More-owned destination equivalent to the reference product's `More`/settings hierarchy and routes to the existing `MainRoute.Settings` destination.
 - The Settings screen remains inside the main graph and preserves the existing primary bottom navigation unless a separate approved navigation decision changes that shell behavior.
 - Selecting any primary bottom-navigation item exits Settings through the existing typed main-route callbacks.
 - Notification deep links continue to target their functional destinations (Loan Details or Budgets), not Settings.
@@ -167,14 +167,14 @@ Not imported from the fallback source:
 ## Intentional Deviations
 
 1. **Two reminder types only.** The reference product's generic daily alarm workflow is not reproduced. Tio Ledger v1 exposes only the approved global EMI and budget reminder preferences from issue #43.
-2. **No sixth bottom-navigation destination.** The reference product uses a `More` hierarchy. Tio Ledger preserves its already-approved five primary destinations and exposes Settings as a non-primary route.
+2. **Settings remains non-primary.** The reference product uses a `More` hierarchy. Tio Ledger now exposes a typed `More` primary destination and a reference-aligned Configuration route while keeping reminder Settings as a non-primary route.
 3. **Dedicated explicit permission action.** Opening Settings or changing a preference does not automatically launch the Android runtime prompt. The user chooses a dedicated action first.
 4. **Preference survives permission denial.** Reminder preference and Android delivery capability are shown independently so user intent is preserved.
 5. **No exact-alarm UX.** Tio Ledger does not ask for exact-alarm permission or promise delivery exactly at 09:00.
 
 ## Reasons For Deviations
 
-- Repository navigation and issue #43 explicitly require preservation of the canonical five primary destinations and non-blocking permission behavior.
+- Repository navigation and issue #43 require typed primary navigation and non-blocking permission behavior; the current primary destinations are Transactions, Stats, Accounts, and More.
 - The Android foundation keeps preferences and permission history as platform-local non-financial metadata.
 - Shared reminder planning is already authoritative; adding Realbyte daily-alarm semantics would duplicate or change approved business rules.
 - A dedicated explicit permission action provides a clearer consent boundary and guarantees that the first runtime prompt is user initiated.
@@ -202,7 +202,7 @@ Not imported from the fallback source:
 ## Functional Acceptance Checklist
 
 - [ ] Existing `MainRoute.Settings` is reused.
-- [ ] Canonical five bottom-navigation destinations remain unchanged.
+- [ ] The current four bottom-navigation destinations remain Transactions, Stats, Accounts, and More.
 - [ ] Only global EMI and budget reminder controls are exposed.
 - [ ] Initial values come from the Android platform settings snapshot.
 - [ ] Preference writes use the Android reminder settings service and trigger reconciliation outside UI.
@@ -223,7 +223,7 @@ Not imported from the fallback source:
 
 | Area | Reference behavior | Tio Ledger v1 decision | Approval basis |
 | --- | --- | --- | --- |
-| Settings entry | Reference uses a `More`/settings hierarchy | Reuse typed `MainRoute.Settings` through a non-primary shell action | Existing route + canonical five-destination rule |
+| Settings entry | Reference uses a `More`/settings hierarchy | Expose typed `MainRoute.More` as the final primary destination and keep Settings/Configuration entries non-primary | Existing route + explicit navigation decision |
 | Reminder scope | Generic reminding alarm | EMI + budget reminder preferences only | Issue #43 scope |
 | Permission request | Reference directs user to enable app notifications | Dedicated explicit Android runtime-permission action, then settings guidance after denial/revocation | Issue #43 permission contract |
 | Scheduling promise | Generic alarm reminder | Best-effort WorkManager delivery; no exact-alarm permission | Merged PR #52 architecture and issue #43 |

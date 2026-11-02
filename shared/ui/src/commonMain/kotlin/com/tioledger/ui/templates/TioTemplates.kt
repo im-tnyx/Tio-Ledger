@@ -244,7 +244,7 @@ object TioTemplatePreviewData {
             TioNavigationItem("Home", TioIconToken.Home, selected = true),
             TioNavigationItem("Calendar", TioIconToken.Calendar, selected = false),
             TioNavigationItem("Stats", TioIconToken.Analytics, selected = false),
-            TioNavigationItem("Settings", TioIconToken.Settings, selected = false),
+            TioNavigationItem("More", TioIconToken.More, selected = false),
         )
 
     val listItems: List<TioListTemplateItem> =

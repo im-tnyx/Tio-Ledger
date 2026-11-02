@@ -121,7 +121,7 @@ Ordering matches the reference's name-then-type-then-currency-then-save pattern 
 - Cancel returns to the Accounts screen exactly as it was before the dialog opened (unchanged state).
 - Success returns to the Accounts screen with a refreshed list.
 - No new primary navigation destination is introduced.
-- The canonical five bottom-navigation destinations (Dashboard, Accounts, Transactions, Categories, Budgets) remain unchanged.
+- The current four bottom-navigation destinations (Transactions, Stats, Accounts, More) remain unchanged.
 
 ## Error And Edge States
 
@@ -188,7 +188,7 @@ Phone-width review covering:
 ## Functional Acceptance Checklist
 
 - [ ] Entry is from the existing Accounts FAB only; no new route is introduced.
-- [ ] Canonical five bottom-navigation destinations remain unchanged.
+- [ ] The four primary bottom-navigation destinations remain Transactions, Stats, Accounts, and More.
 - [ ] Name is required; blank name is rejected with an inline message.
 - [ ] `Cash`, `Bank`, and `Loan-linked` are all selectable and each reaches `CreateAccountCommand.type` correctly.
 - [ ] Currency is an explicit, visible, user-changeable selection that reaches `CreateAccountCommand.currencyCode` unchanged; no currency is silently persisted.

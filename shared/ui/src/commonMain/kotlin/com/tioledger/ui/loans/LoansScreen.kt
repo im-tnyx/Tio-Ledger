@@ -36,7 +36,6 @@ import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioCard
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioErrorState
-import com.tioledger.ui.components.TioFloatingActionButton
 import com.tioledger.ui.components.TioLoadingState
 import com.tioledger.ui.components.TioNavigationItem
 import com.tioledger.ui.design.TioSpacing
@@ -48,6 +47,7 @@ import org.koin.compose.koinInject
 fun LoansRoute(
     viewModel: LoansViewModel = koinInject(),
     onNavigate: (MainRoute) -> Unit = {},
+    onNavigateBack: (() -> Unit)? = null,
 ) {
     val state by viewModel.uiState.collectAsState()
     LoansScreen(
@@ -55,6 +55,7 @@ fun LoansRoute(
         onAction = viewModel::onAction,
         onOpenDetails = { loanId -> onNavigate(MainRoute.LoanDetails(loanId)) },
         onNavigate = onNavigate,
+        onNavigateBack = onNavigateBack,
     )
 }
 
@@ -64,6 +65,7 @@ fun LoansScreen(
     onAction: (LoansAction) -> Unit,
     onOpenDetails: (String) -> Unit,
     onNavigate: (MainRoute) -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val navigationRoutes = TioNavigationGraphs.main.bottomNavigationRoutes
@@ -78,11 +80,21 @@ fun LoansScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TioAppBar(title = "Loans") },
-        floatingActionButton = {
-            TioFloatingActionButton(
-                onClick = { onAction(LoansAction.AddClicked) },
-                contentDescription = "Add loan",
+        topBar = {
+            TioAppBar(
+                title = "Loans",
+                navigationIcon = onNavigateBack?.let { navigateBack ->
+                    {
+                        TextButton(onClick = navigateBack) {
+                            Text("‹ Account Group")
+                        }
+                    }
+                },
+                actions = {
+                    TextButton(onClick = { onAction(LoansAction.AddClicked) }) {
+                        Text("+")
+                    }
+                },
             )
         },
         bottomBar = {

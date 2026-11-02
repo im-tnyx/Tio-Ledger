@@ -34,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +46,6 @@ import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioFilterChip
-import com.tioledger.ui.components.TioFloatingActionButton
 import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.components.TioSearchField
 import com.tioledger.ui.design.TioDimensions
@@ -86,34 +84,10 @@ fun AccountsScreen(
             TioAppBar(
                 title = "Accounts",
                 actions = {
-                    TioIcon(TioIconToken.Analytics, contentDescription = "Account statistics")
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(TioDimensions.minTouchTarget)
-                                .clickable(role = Role.Button) { onNavigate(MainRoute.Loans) }
-                                .semantics { contentDescription = "Loans" },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        TioIcon(TioIconToken.Loan)
-                    }
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(TioDimensions.minTouchTarget)
-                                .clickable { onNavigate(MainRoute.Settings) }
-                                .semantics { contentDescription = "Settings" },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        TioIcon(TioIconToken.Settings)
+                    TextButton(onClick = { onAction(AccountsAction.AddClicked) }) {
+                        Text("+")
                     }
                 },
-            )
-        },
-        floatingActionButton = {
-            TioFloatingActionButton(
-                onClick = { onAction(AccountsAction.AddClicked) },
-                contentDescription = "Add account",
             )
         },
         bottomBar = {
@@ -165,16 +139,16 @@ fun AccountsScreen(
                         singleLine = true,
                         enabled = !state.isSaving,
                     )
-                    Text("Type", style = MaterialTheme.typography.labelLarge)
+                    Text("Account Group", style = MaterialTheme.typography.labelLarge)
                     Row(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
                     ) {
-                        CREATABLE_ACCOUNT_TYPES.forEach { type ->
+                        CREATABLE_ACCOUNT_GROUPS.forEach { group ->
                             TioFilterChip(
-                                label = type.creationLabel(),
-                                selected = state.draftType == type,
-                                onClick = { onAction(AccountsAction.TypeChanged(type)) },
+                                label = group.title,
+                                selected = state.draftType == group.type,
+                                onClick = { onAction(AccountsAction.TypeChanged(group.type)) },
                             )
                         }
                     }
@@ -205,14 +179,6 @@ fun AccountsScreen(
         )
     }
 }
-
-private fun AccountType.creationLabel(): String =
-    when (this) {
-        AccountType.CASH -> "Cash"
-        AccountType.BANK -> "Bank"
-        AccountType.LOAN_LINKED -> "Loan-linked"
-        AccountType.CREDIT_CARD, AccountType.WALLET, AccountType.INVESTMENT -> name
-    }
 
 @Composable
 private fun AccountsSummaryRow(summary: AccountsSummaryUiModel) {

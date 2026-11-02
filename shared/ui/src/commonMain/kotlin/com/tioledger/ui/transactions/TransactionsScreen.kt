@@ -10,13 +10,19 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -38,7 +44,6 @@ import org.koin.compose.koinInject
 @Composable
 fun TransactionsRoute(
     viewModel: TransactionsViewModel = koinInject(),
-    onAddTransaction: () -> Unit = {},
     onReviewSms: () -> Unit = {},
     onNavigate: (MainRoute) -> Unit = {},
 ) {
@@ -46,21 +51,23 @@ fun TransactionsRoute(
     TransactionsScreen(
         state = state,
         onAction = viewModel::onAction,
-        onAddTransaction = onAddTransaction,
         onReviewSms = onReviewSms,
         onNavigate = onNavigate,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(
     state: TransactionsUiState,
     onAction: (TransactionsAction) -> Unit,
-    onAddTransaction: () -> Unit,
     onReviewSms: () -> Unit,
     onNavigate: (MainRoute) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var isAddTransactionSheetVisible by remember { mutableStateOf(false) }
+    val openAddTransaction = { isAddTransactionSheetVisible = true }
+    val addTransactionSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val navigationRoutes = TioNavigationGraphs.main.bottomNavigationRoutes
     val navigationItems =
         navigationRoutes.map { route ->
@@ -90,7 +97,7 @@ fun TransactionsScreen(
         },
         floatingActionButton = {
             TioFloatingActionButton(
-                onClick = onAddTransaction,
+                onClick = openAddTransaction,
                 contentDescription = "Add transaction",
             )
         },
@@ -130,7 +137,7 @@ fun TransactionsScreen(
                         title = "No transactions",
                         message = "Income, expenses, and transfers will appear here after they are recorded.",
                         action = {
-                            TextButton(onClick = onAddTransaction) {
+                            TextButton(onClick = openAddTransaction) {
                                 Text("Add transaction")
                             }
                         },
@@ -138,6 +145,18 @@ fun TransactionsScreen(
                 }
                 else -> TransactionsList(state.transactions)
             }
+        }
+    }
+
+    if (isAddTransactionSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { isAddTransactionSheetVisible = false },
+            sheetState = addTransactionSheetState,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            TransactionEntryHost(
+                onNavigateBack = { isAddTransactionSheetVisible = false },
+            )
         }
     }
 }

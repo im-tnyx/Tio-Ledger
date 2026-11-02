@@ -15,16 +15,24 @@ import com.tioledger.ui.categories.CategoriesRoute
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
+import com.tioledger.domain.model.CategoryType
 import com.tioledger.ui.design.TioSpacing
+import com.tioledger.ui.design.ThemeMode
 import com.tioledger.ui.loans.LoanDetailsRoute
 import com.tioledger.ui.loans.LoansRoute
+import com.tioledger.ui.more.ConfigurationRoute
+import com.tioledger.ui.more.MoreRoute
+import com.tioledger.ui.more.RepeatSettingsRoute
+import com.tioledger.ui.more.TransactionSettingsRoute
+import com.tioledger.ui.more.AccountGroupRoute
+import com.tioledger.ui.more.AccountSettingsRoute
+import com.tioledger.ui.more.StyleRoute
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 import com.tioledger.ui.navigation.bottomNavigationModel
 import com.tioledger.ui.reports.ReportsRoute
 import com.tioledger.ui.sms.SmsTransactionReviewRoute
-import com.tioledger.ui.transactions.TransactionEntryHost
 import com.tioledger.ui.transactions.TransactionsRoute
 
 @Composable
@@ -37,6 +45,8 @@ fun RootNavigationHost(
             onNavigate = onSettingsNavigate,
         )
     },
+    themeMode: ThemeMode = ThemeMode.System,
+    onThemeModeChanged: (ThemeMode) -> Unit = {},
     content: @Composable (RootRoute) -> Unit = { route ->
         when (route) {
             RootRoute.Splash -> Splash()
@@ -56,6 +66,21 @@ fun RootNavigationHost(
                         )
                     MainRoute.Categories ->
                         CategoriesRoute(
+                            initialType = CategoryType.EXPENSE,
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
+                    MainRoute.IncomeCategories ->
+                        CategoriesRoute(
+                            initialType = CategoryType.INCOME,
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
+                    MainRoute.ExpenseCategories ->
+                        CategoriesRoute(
+                            initialType = CategoryType.EXPENSE,
                             onNavigate = { target ->
                                 onNavigate(RootRoute.Main(target))
                             },
@@ -64,6 +89,9 @@ fun RootNavigationHost(
                         LoansRoute(
                             onNavigate = { target ->
                                 onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountGroup))
                             },
                         )
                     is MainRoute.LoanDetails ->
@@ -75,9 +103,6 @@ fun RootNavigationHost(
                         )
                     MainRoute.Transactions ->
                         TransactionsRoute(
-                            onAddTransaction = {
-                                onNavigate(RootRoute.Main(MainRoute.TransactionEntry))
-                            },
                             onReviewSms = {
                                 onNavigate(RootRoute.Main(MainRoute.SmsTransactionReview))
                             },
@@ -85,16 +110,75 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(target))
                             },
                         )
-                    MainRoute.TransactionEntry ->
-                        TransactionEntryHost(
-                            onNavigateBack = {
-                                onNavigate(RootRoute.Main(MainRoute.Transactions))
-                            },
-                        )
                     MainRoute.Reports ->
                         ReportsRoute(
                             onNavigate = { target ->
                                 onNavigate(RootRoute.Main(target))
+                            },
+                        )
+                    MainRoute.More ->
+                        MoreRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
+                    MainRoute.Configuration ->
+                        ConfigurationRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
+                    MainRoute.AccountSettings ->
+                        AccountSettingsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.More))
+                            },
+                        )
+                    MainRoute.AccountGroup ->
+                        AccountGroupRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountSettings))
+                            },
+                        )
+                    MainRoute.BudgetSettings ->
+                        BudgetsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                        )
+                    MainRoute.TransactionSettings ->
+                        TransactionSettingsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.More))
+                            },
+                        )
+                    MainRoute.RepeatSettings ->
+                        RepeatSettingsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.More))
+                            },
+                        )
+                    MainRoute.Style ->
+                        StyleRoute(
+                            themeMode = themeMode,
+                            onThemeModeChanged = onThemeModeChanged,
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.More))
                             },
                         )
                     MainRoute.SmsTransactionReview ->

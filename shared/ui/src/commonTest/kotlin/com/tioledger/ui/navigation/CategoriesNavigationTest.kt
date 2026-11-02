@@ -2,6 +2,7 @@ package com.tioledger.ui.navigation
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class CategoriesNavigationTest {
@@ -12,6 +13,6 @@ class CategoriesNavigationTest {
         assertEquals("main/categories", destination.path)
         assertEquals(MainRoute.Categories, destination.destination)
         assertTrue(MainRoute.Categories in TioNavigationGraphs.main.routes)
-        assertTrue(MainRoute.Categories in TioNavigationGraphs.main.bottomNavigationRoutes)
+        assertFalse(MainRoute.Categories in TioNavigationGraphs.main.bottomNavigationRoutes)
     }
 }

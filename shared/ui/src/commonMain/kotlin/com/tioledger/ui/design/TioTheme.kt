@@ -14,6 +14,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+enum class ThemeMode {
+    System,
+    Light,
+    Dark,
+}
+
 @Composable
 fun TioLedgerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

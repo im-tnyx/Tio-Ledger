@@ -9,18 +9,30 @@ import org.junit.Test
 
 class MainActivityNavigationTest {
     @Test
-    fun systemBackFromSettingsReturnsAccountsMainEntry() {
+    fun systemBackFromConfigurationReturnsMore() {
         assertEquals(
-            TioNavigationGraphs.root.mainEntry,
-            systemBackTargetOrNull(RootRoute.Main(MainRoute.Settings)),
+            RootRoute.Main(MainRoute.More),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.Configuration)),
         )
     }
 
     @Test
-    fun systemBackFromTransactionEntryReturnsTransactions() {
+    fun systemBackFromMoreEntriesReturnsMore() {
         assertEquals(
-            RootRoute.Main(MainRoute.Transactions),
-            systemBackTargetOrNull(RootRoute.Main(MainRoute.TransactionEntry)),
+            RootRoute.Main(MainRoute.More),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.Settings)),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.More),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.Categories)),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.More),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.Budgets)),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.More),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.CurrencySettings)),
         )
     }
 
@@ -43,11 +55,10 @@ class MainActivityNavigationTest {
     @Test
     fun systemBackDoesNotOverridePrimaryNavigationRoutes() {
         listOf(
-            MainRoute.Dashboard,
-            MainRoute.Accounts,
             MainRoute.Transactions,
-            MainRoute.Categories,
-            MainRoute.Budgets,
+            MainRoute.Reports,
+            MainRoute.Accounts,
+            MainRoute.More,
         ).forEach { route ->
             assertNull(systemBackTargetOrNull(RootRoute.Main(route)))
         }
@@ -56,7 +67,7 @@ class MainActivityNavigationTest {
     @Test
     fun systemBackFromLoansReturnsAccountsMainEntry() {
         assertEquals(
-            RootRoute.Main(MainRoute.Accounts),
+            RootRoute.Main(MainRoute.Transactions),
             TioNavigationGraphs.root.mainEntry,
         )
         assertEquals(

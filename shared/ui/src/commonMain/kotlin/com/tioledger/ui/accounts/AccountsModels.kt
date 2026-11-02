@@ -22,7 +22,22 @@ data class AccountsUiState(
 
 // Narrow, deterministic currency/type choices for Account Creation v2 — see account-creation-v2.md.
 val SUPPORTED_ACCOUNT_CURRENCY_CODES: List<String> = listOf("USD", "INR", "EUR", "GBP")
-val CREATABLE_ACCOUNT_TYPES: List<AccountType> = listOf(AccountType.CASH, AccountType.BANK, AccountType.LOAN_LINKED)
+
+/**
+ * Account creation is selected by the visible Account Group. The mapped
+ * AccountType is retained underneath because it controls ledger semantics.
+ */
+data class AccountGroupOption(
+    val type: AccountType,
+    val title: String,
+)
+
+val CREATABLE_ACCOUNT_GROUPS: List<AccountGroupOption> =
+    listOf(
+        AccountGroupOption(AccountType.CASH, "Cash"),
+        AccountGroupOption(AccountType.BANK, "Accounts"),
+        AccountGroupOption(AccountType.LOAN_LINKED, "Loan"),
+    )
 
 data class AccountsSummaryUiModel(
     val assets: String,
