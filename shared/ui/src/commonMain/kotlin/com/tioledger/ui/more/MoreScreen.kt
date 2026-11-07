@@ -4,23 +4,18 @@
 package com.tioledger.ui.more
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.components.TioListItem
@@ -111,15 +106,8 @@ fun MoreScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = {
-                    androidx.compose.foundation.layout.Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("Settings")
-                    }
-                },
+            TioAppBar(
+                title = "Settings",
                 actions = {
                     Text(
                         text = "0.1.0",
@@ -128,10 +116,6 @@ fun MoreScreen(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
             )
         },
         bottomBar = {
@@ -144,11 +128,8 @@ fun MoreScreen(
         },
     ) { padding ->
         LazyColumn(
-            modifier =
-                Modifier
-                    .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = padding,
         ) {
             moreSections.forEach { section ->
                 section.title?.let { title ->
