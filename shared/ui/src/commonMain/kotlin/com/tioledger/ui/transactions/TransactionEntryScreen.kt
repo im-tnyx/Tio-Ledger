@@ -26,9 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -95,11 +93,6 @@ fun TransactionEntryScreen(
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
                         Text("‹ Trans.")
-                    }
-                },
-                actions = {
-                    TextButton(onClick = {}) {
-                        Text("☆≡")
                     }
                 },
             )
@@ -177,20 +170,6 @@ fun TransactionEntryScreen(
                         onAmountChanged = { onAction(TransactionEntryAction.AmountChanged(it)) },
                         transactionType = state.transactionType,
                     )
-
-                    if (state.isTransfer) {
-                        if (state.isFeeEnabled) {
-                            ReferenceFeeRow(
-                                fee = state.fee,
-                                onEdit = { onAction(TransactionEntryAction.FeesClicked) },
-                                onRemove = { onAction(TransactionEntryAction.FeeRemoved) },
-                            )
-                        } else {
-                            TextButton(onClick = { onAction(TransactionEntryAction.FeesClicked) }) {
-                                Text("Fees")
-                            }
-                        }
-                    }
 
                     if (state.isTransfer) {
                         ReferenceSelectorRow(
@@ -274,19 +253,6 @@ fun TransactionEntryScreen(
             onDismiss = { onAction(TransactionEntryAction.CategoryPickerDismissed) },
             onSelected = { onAction(TransactionEntryAction.CategorySelected(it)) },
         )
-    }
-
-    if (state.isFeeSheetVisible) {
-        ModalBottomSheet(
-            onDismissRequest = { onAction(TransactionEntryAction.FeeSheetDismissed) },
-        ) {
-            FeeBottomSheetContent(
-                fee = state.fee,
-                onFeeChanged = { onAction(TransactionEntryAction.FeeChanged(it)) },
-                onCancel = { onAction(TransactionEntryAction.FeeSheetDismissed) },
-                onSave = { onAction(TransactionEntryAction.FeeConfirmed) },
-            )
-        }
     }
 }
 
@@ -382,64 +348,6 @@ private fun ReferenceAmountRow(
                     unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
                 ),
         )
-    }
-}
-
-@Composable
-private fun ReferenceFeeRow(
-    fee: String,
-    onEdit: () -> Unit,
-    onRemove: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit).padding(vertical = TioSpacing.xs),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
-    ) {
-        Text("Fees", modifier = Modifier.width(104.dp), style = MaterialTheme.typography.bodyLarge)
-        Text(
-            text = "₹ $fee",
-            modifier = Modifier.weight(1f).padding(vertical = TioSpacing.sm),
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        IconButton(onClick = onRemove) {
-            Text("×", style = MaterialTheme.typography.headlineSmall)
-        }
-    }
-    HorizontalDivider()
-}
-
-@Composable
-private fun FeeBottomSheetContent(
-    fee: String,
-    onFeeChanged: (String) -> Unit,
-    onCancel: () -> Unit,
-    onSave: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(TioSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(TioSpacing.md),
-    ) {
-        Text("Fees", style = MaterialTheme.typography.headlineSmall)
-        OutlinedTextField(
-            value = fee,
-            onValueChange = onFeeChanged,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Fee amount") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
-        ) {
-            TextButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-                Text("Cancel")
-            }
-            Button(onClick = onSave, modifier = Modifier.weight(1f)) {
-                Text("Save")
-            }
-        }
     }
 }
 
