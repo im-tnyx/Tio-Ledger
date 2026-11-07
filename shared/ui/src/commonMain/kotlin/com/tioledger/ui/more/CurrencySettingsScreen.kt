@@ -52,6 +52,7 @@ import com.tioledger.ui.navigation.MainRoute
 import org.koin.compose.koinInject
 
 private val CoralAccentColor = Color(0xFFF25A4B)
+private val SelectionListMaxHeight = 320.dp
 
 @Composable
 fun CurrencySettingsRoute(
@@ -301,7 +302,11 @@ private fun <T> CurrencySelectionBottomSheet(
             Surface(
                 shape = RoundedCornerShape(14.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = SelectionListMaxHeight)
+                        .weight(1f, fill = false),
             ) {
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     item(key = "header") {

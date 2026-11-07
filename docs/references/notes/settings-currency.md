@@ -21,7 +21,7 @@ Authorized by explicit product-owner instruction in Task 1 / Task 1A:
 - Settings → Main Currency Setting establishes the default currency preference for the entire application.
 - Selections edit an in-memory draft; only tapping "Save" atomically persists changes.
 - Persisted configuration must survive application process restart.
-- Back button, Cancel button, and outside dismissal discard all draft modifications without persistence.
+- The "‹ Settings" back control and system back discard all draft modifications without persistence; a selection sheet's Cancel button and outside dismissal only close that sheet and retain the draft.
 - Supported initial currencies: INR, USD, EUR, GBP. Default configuration: `INR`, `Front`, `TWO` decimal places (`₹ 1.00`).
 
 ## Workflow Summary
