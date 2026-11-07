@@ -2,7 +2,6 @@
 
 package com.tioledger.ui.more
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,29 +9,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,10 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -52,12 +46,9 @@ import androidx.compose.ui.unit.dp
 import com.tioledger.domain.model.CurrencyDecimalDisplay
 import com.tioledger.domain.model.CurrencyUnitPosition
 import com.tioledger.ui.components.TioAppBar
-import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.design.TioDimensions
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
-import com.tioledger.ui.navigation.TioNavigationGraphs
-import com.tioledger.ui.navigation.bottomNavigationModel
 import org.koin.compose.koinInject
 
 private val CoralAccentColor = Color(0xFFF25A4B)
@@ -78,7 +69,6 @@ fun CurrencySettingsRoute(
             viewModel.onAction(CurrencySettingsAction.ResetDraft)
             onNavigateBack()
         },
-        onNavigate = onNavigate,
     )
 }
 
@@ -89,21 +79,23 @@ fun CurrencySettingsScreen(
     onAction: (CurrencySettingsAction) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onNavigate: (MainRoute) -> Unit = {},
 ) {
-    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.CurrencySettings)
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TioAppBar(
                 title = "Main Currency Setting",
                 navigationIcon = {
-                    IconButton(
+                    TextButton(
                         onClick = onNavigateBack,
-                        modifier = Modifier.semantics { contentDescription = "Navigate back" },
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                        modifier = Modifier.semantics { contentDescription = "Navigate back to Settings" },
                     ) {
-                        CurrencyBackIcon()
+                        Text(
+                            text = "‹ Settings",
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                        )
                     }
                 },
                 actions = {
@@ -121,21 +113,13 @@ fun CurrencySettingsScreen(
                 },
             )
         },
-        bottomBar = {
-            TioBottomNavigation(
-                items = bottomNavigation.items,
-                onItemSelected = { selectedItem ->
-                    bottomNavigation.navigate(selectedItem, onNavigate)
-                },
-            )
-        },
     ) { padding ->
         Column(
             modifier =
                 Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing),
+                    .verticalScroll(rememberScrollState()),
         ) {
             Column(
                 modifier =
@@ -373,33 +357,5 @@ private fun <T> CurrencySelectionBottomSheet(
 
             Spacer(modifier = Modifier.height(TioSpacing.sm))
         }
-    }
-}
-
-@Composable
-private fun CurrencyBackIcon(
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurface,
-) {
-    Canvas(modifier = modifier.size(24.dp)) {
-        val stroke = 2.dp.toPx()
-        val path =
-            Path().apply {
-                moveTo(size.width * 0.82f, size.height * 0.5f)
-                lineTo(size.width * 0.22f, size.height * 0.5f)
-                moveTo(size.width * 0.5f, size.height * 0.22f)
-                lineTo(size.width * 0.22f, size.height * 0.5f)
-                lineTo(size.width * 0.5f, size.height * 0.78f)
-            }
-        drawPath(
-            path = path,
-            color = color,
-            style =
-                Stroke(
-                    width = stroke,
-                    cap = StrokeCap.Round,
-                    join = StrokeJoin.Round,
-                ),
-        )
     }
 }
