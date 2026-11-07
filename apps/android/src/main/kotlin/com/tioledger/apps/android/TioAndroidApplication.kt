@@ -1,6 +1,7 @@
 package com.tioledger.apps.android
 
 import android.app.Application
+import com.tioledger.apps.android.currency.SharedPreferencesCurrencyPreferenceRepository
 import com.tioledger.apps.android.reminders.ReminderDataChangeDriverFactory
 import com.tioledger.apps.android.reminders.ReminderNotificationChannels
 import com.tioledger.apps.android.reminders.ReminderReconciliationEnqueuer
@@ -8,8 +9,10 @@ import com.tioledger.apps.android.reminders.ReminderReconciliationReason
 import com.tioledger.apps.android.reminders.androidReminderModule
 import com.tioledger.bootstrap.TioApplicationBootstrap
 import com.tioledger.bootstrap.database.AndroidDatabaseDriverFactory
+import com.tioledger.domain.repository.CurrencyPreferenceRepository
 import com.tioledger.ui.di.tioUiModule
 import org.koin.core.KoinApplication
+import org.koin.dsl.module
 
 class TioAndroidApplication : Application() {
     lateinit var koinApplication: KoinApplication
@@ -31,6 +34,11 @@ class TioAndroidApplication : Application() {
                         listOf(
                             tioUiModule(),
                             androidReminderModule(this),
+                            module {
+                                single<CurrencyPreferenceRepository> {
+                                    SharedPreferencesCurrencyPreferenceRepository(this@TioAndroidApplication)
+                                }
+                            },
                         ),
                 )
         ReminderNotificationChannels.create(this)

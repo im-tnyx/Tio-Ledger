@@ -15,6 +15,8 @@ import com.tioledger.application.usecase.category.ArchiveCategoryUseCase
 import com.tioledger.application.usecase.category.CreateCategoryUseCase
 import com.tioledger.application.usecase.category.ListCategoriesUseCase
 import com.tioledger.application.usecase.category.UpdateCategoryUseCase
+import com.tioledger.application.usecase.currency.GetMainCurrencyConfigUseCase
+import com.tioledger.application.usecase.currency.SaveMainCurrencyConfigUseCase
 import com.tioledger.application.usecase.loan.CreateLoanUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsAnalyticsUseCase
 import com.tioledger.application.usecase.loan.GetLoanDetailsUseCase
@@ -38,6 +40,7 @@ import com.tioledger.core.feature.FeatureFlagProvider
 import com.tioledger.core.feature.StaticFeatureFlagProvider
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.core.util.UuidGenerator
+import com.tioledger.data.repository.InMemoryCurrencyPreferenceRepository
 import com.tioledger.data.repository.SQLDelightAccountRepository
 import com.tioledger.data.repository.SQLDelightBudgetRepository
 import com.tioledger.data.repository.SQLDelightCategoryRepository
@@ -49,6 +52,7 @@ import com.tioledger.domain.model.SmsTransactionParser
 import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.BudgetRepository
 import com.tioledger.domain.repository.CategoryRepository
+import com.tioledger.domain.repository.CurrencyPreferenceRepository
 import com.tioledger.domain.repository.LedgerRepository
 import com.tioledger.domain.repository.LoanRepository
 import com.tioledger.domain.repository.TransactionHistoryRepository
@@ -78,6 +82,7 @@ fun databaseModule(): Module =
 
 fun dataModule(): Module =
     module {
+        single<CurrencyPreferenceRepository> { InMemoryCurrencyPreferenceRepository() }
         single<AccountRepository> { SQLDelightAccountRepository(get()) }
         single<CategoryRepository> { SQLDelightCategoryRepository(get()) }
         single<BudgetRepository> { SQLDelightBudgetRepository(get()) }
@@ -90,6 +95,8 @@ fun dataModule(): Module =
 
 fun applicationModule(): Module =
     module {
+        factory { GetMainCurrencyConfigUseCase(get()) }
+        factory { SaveMainCurrencyConfigUseCase(get()) }
         factory { CreateAccountUseCase(get()) }
         factory { UpdateAccountUseCase(get()) }
         factory { ArchiveAccountUseCase(get()) }
