@@ -63,11 +63,11 @@ Authorized by explicit product-owner instruction in Task 1 / Task 1A:
 
 ## Technical Architecture & Contracts
 
-- **Domain Model:** `MainCurrencyConfig` (`SupportedCurrency`, `CurrencyUnitPosition`, `CurrencyDecimalDisplay`). Pure immutable value class with deterministic `formatPreview(Double)` method.
-- **Repository Contract:** `CurrencyPreferenceRepository` exposing `getMainCurrencyConfig(): MainCurrencyConfig`, `observeMainCurrencyConfig(): Flow<MainCurrencyConfig>`, and `saveMainCurrencyConfig(config: MainCurrencyConfig)`.
-- **Application Layer Use Cases:** `GetMainCurrencyConfigUseCase`, `ObserveMainCurrencyConfigUseCase`, `SaveMainCurrencyConfigUseCase`.
+- **Domain Model:** `MainCurrencyConfig` (`SupportedCurrency`, `CurrencyUnitPosition`, `CurrencyDecimalDisplay`). Pure immutable value class with deterministic `formatSampleAmount()` method for the fixed preview sample.
+- **Repository Contract:** `CurrencyPreferenceRepository` exposing `getConfig(): MainCurrencyConfig` and `saveConfig(config: MainCurrencyConfig): Boolean`.
+- **Application Layer Use Cases:** `GetMainCurrencyConfigUseCase` and `SaveMainCurrencyConfigUseCase`.
 - **UI State Holder:** `CurrencyPreferenceStore` provides shared reactive `StateFlow<MainCurrencyConfig>` for `MoreScreen` and other consumer screens.
 - **Persistence Implementations:**
-  - Production (Android): `SharedPreferencesCurrencyPreferenceRepository` storing `currency_code`, `unit_position`, and `decimal_display` in private app preferences.
+  - Production (Android): `SharedPreferencesCurrencyPreferenceRepository` storing `main_currency_code`, `currency_unit_position`, and `currency_decimal_display` in private app preferences.
   - Fallback / Tests: `InMemoryCurrencyPreferenceRepository`.
 - **Dependency Injection:** Koin modules in `shared:bootstrap` (`dataModule`, `applicationModule`), `shared:ui` (`tioUiModule`), and `apps:android` (`TioAndroidApplication`).
