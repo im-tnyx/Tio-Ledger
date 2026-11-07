@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.tioledger.bootstrap.diagnostics.StartupDiagnostics
+import com.tioledger.ui.design.ThemeMode
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
@@ -16,6 +17,8 @@ import com.tioledger.ui.navigation.TioNavigationGraphs
 fun TioAppShell(
     diagnostics: StartupDiagnostics,
     darkTheme: Boolean,
+    themeMode: ThemeMode? = null,
+    onThemeModeChanged: (ThemeMode) -> Unit = {},
     currentRoute: RootRoute = TioNavigationGraphs.root.mainEntry,
     onNavigate: ((RootRoute) -> Unit)? = null,
     settingsContent: @Composable ((MainRoute) -> Unit) -> Unit = { onNavigate ->
@@ -33,7 +36,14 @@ fun TioAppShell(
             TioNavigationGraphs.root.startRoute
         }
 
-    TioRootScaffold(darkTheme = darkTheme) {
+    val resolvedDarkTheme =
+        when (themeMode) {
+            ThemeMode.Light -> false
+            ThemeMode.Dark -> true
+            ThemeMode.System, null -> darkTheme
+        }
+
+    TioRootScaffold(darkTheme = resolvedDarkTheme) {
         RootNavigationHost(
             currentRoute = route,
             onNavigate = { destination ->
@@ -44,6 +54,8 @@ fun TioAppShell(
                 }
             },
             settingsContent = settingsContent,
+            themeMode = themeMode ?: ThemeMode.System,
+            onThemeModeChanged = onThemeModeChanged,
         )
     }
 }

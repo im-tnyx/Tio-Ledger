@@ -7,11 +7,11 @@ import kotlin.test.assertTrue
 
 class TioNavigationGraphsTest {
     @Test
-    fun rootGraphStartsAtSplashAndLinksToAccountsMainEntry() {
+    fun rootGraphStartsAtSplashAndLinksToTransactionsMainEntry() {
         val root = TioNavigationGraphs.root
 
         assertEquals(RootRoute.Splash, root.startRoute)
-        assertEquals(MainRoute.Accounts, root.mainEntry.destination)
+        assertEquals(MainRoute.Transactions, root.mainEntry.destination)
         assertTrue(root.routes.contains(root.mainEntry))
     }
 
@@ -19,17 +19,38 @@ class TioNavigationGraphsTest {
     fun mainGraphPreparesAllTopLevelRoutes() {
         val main = TioNavigationGraphs.main
 
-        assertEquals(MainRoute.Accounts, main.startRoute)
+        assertEquals(MainRoute.Transactions, main.startRoute)
         assertEquals(
             listOf(
                 MainRoute.Dashboard,
                 MainRoute.Accounts,
                 MainRoute.Transactions,
-                MainRoute.TransactionEntry,
                 MainRoute.SmsTransactionReview,
                 MainRoute.Categories,
+                MainRoute.IncomeCategories,
+                MainRoute.ExpenseCategories,
                 MainRoute.Budgets,
                 MainRoute.Reports,
+                MainRoute.More,
+                MainRoute.Configuration,
+                MainRoute.AccountSettings,
+                MainRoute.AccountGroup,
+                MainRoute.BudgetSettings,
+                MainRoute.TransactionSettings,
+                MainRoute.RepeatSettings,
+                MainRoute.CurrencySettings,
+                MainRoute.SubCurrencySettings,
+                MainRoute.PasscodeSettings,
+                MainRoute.AlarmSettings,
+                MainRoute.ApplicationIconSettings,
+                MainRoute.LanguageSettings,
+                MainRoute.AdTrackingSettings,
+                MainRoute.CopyPasteSettings,
+                MainRoute.PcManager,
+                MainRoute.Backup,
+                MainRoute.Style,
+                MainRoute.Help,
+                MainRoute.Feedback,
                 MainRoute.Loans,
                 MainRoute.Settings,
             ),
@@ -43,11 +64,10 @@ class TioNavigationGraphsTest {
 
         assertEquals(
             listOf(
-                MainRoute.Dashboard,
-                MainRoute.Accounts,
                 MainRoute.Transactions,
-                MainRoute.Categories,
-                MainRoute.Budgets,
+                MainRoute.Reports,
+                MainRoute.Accounts,
+                MainRoute.More,
             ),
             main.bottomNavigationRoutes,
         )

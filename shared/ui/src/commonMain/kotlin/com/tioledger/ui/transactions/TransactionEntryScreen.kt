@@ -2,6 +2,8 @@
 
 package com.tioledger.ui.transactions
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,25 +21,32 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioErrorState
@@ -70,6 +79,7 @@ fun TransactionEntryRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionEntryScreen(
     state: TransactionEntryUiState,
@@ -81,10 +91,15 @@ fun TransactionEntryScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TioAppBar(
-                title = "Add Transaction",
+                title = state.transactionType.displayName,
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
-                        TioIcon(TioIconToken.Close, contentDescription = "Cancel")
+                        Text("‹ Trans.")
+                    }
+                },
+                actions = {
+                    TextButton(onClick = {}) {
+                        Text("☆≡")
                     }
                 },
             )
@@ -128,8 +143,8 @@ fun TransactionEntryScreen(
                             .windowInsetsPadding(WindowInsets.safeDrawing)
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(TioSpacing.lg),
-                    verticalArrangement = Arrangement.spacedBy(TioSpacing.lg),
+                            .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(TioSpacing.sm),
                 ) {
                     TransactionTypeSelector(
                         selectedType = state.transactionType,
@@ -152,71 +167,86 @@ fun TransactionEntryScreen(
                         onDismiss = { onAction(TransactionEntryAction.MessageDismissed) },
                     )
 
-                    AmountInputCard(
+                    ReferenceDateRow(
+                        selectedDate = state.selectedDate,
+                        onDateClicked = { onAction(TransactionEntryAction.DateClicked) },
+                    )
+
+                    ReferenceAmountRow(
                         amount = state.amount,
-                        currencyCode = state.selectedCurrencyCode,
                         onAmountChanged = { onAction(TransactionEntryAction.AmountChanged(it)) },
                         transactionType = state.transactionType,
                     )
 
                     if (state.isTransfer) {
-                        AccountSelectorCard(
+                        if (state.isFeeEnabled) {
+                            ReferenceFeeRow(
+                                fee = state.fee,
+                                onEdit = { onAction(TransactionEntryAction.FeesClicked) },
+                                onRemove = { onAction(TransactionEntryAction.FeeRemoved) },
+                            )
+                        } else {
+                            TextButton(onClick = { onAction(TransactionEntryAction.FeesClicked) }) {
+                                Text("Fees")
+                            }
+                        }
+                    }
+
+                    if (state.isTransfer) {
+                        ReferenceSelectorRow(
                             label = "From account",
-                            selectedAccount = state.selectedAccount?.name,
-                            subtitle = state.selectedAccount?.subtitle,
-                            onAccountClicked = { onAction(TransactionEntryAction.SourceAccountClicked) },
+                            value = state.selectedAccount?.name,
+                            onClick = { onAction(TransactionEntryAction.SourceAccountClicked) },
                         )
-                        AccountSelectorCard(
+                        ReferenceSelectorRow(
                             label = "To account",
-                            selectedAccount = state.selectedTargetAccount?.name,
-                            subtitle = state.selectedTargetAccount?.subtitle,
-                            onAccountClicked = { onAction(TransactionEntryAction.TargetAccountClicked) },
+                            value = state.selectedTargetAccount?.name,
+                            onClick = { onAction(TransactionEntryAction.TargetAccountClicked) },
                         )
                     } else {
-                        AccountSelectorCard(
-                            label = "Account",
-                            selectedAccount = state.selectedAccount?.name,
-                            subtitle = state.selectedAccount?.subtitle,
-                            onAccountClicked = { onAction(TransactionEntryAction.SourceAccountClicked) },
+                        ReferenceSelectorRow(
+                            label = "Category",
+                            value = state.selectedCategory?.name,
+                            onClick = { onAction(TransactionEntryAction.CategoryClicked) },
                         )
-                        CategorySelectorCard(
-                            selectedCategory = state.selectedCategory?.name,
-                            subtitle = state.selectedCategory?.subtitle,
-                            onCategoryClicked = { onAction(TransactionEntryAction.CategoryClicked) },
+                        ReferenceSelectorRow(
+                            label = "Account",
+                            value = state.selectedAccount?.name,
+                            onClick = { onAction(TransactionEntryAction.SourceAccountClicked) },
                         )
                     }
 
-                    DateSelectorCard(
-                        selectedDate = state.selectedDate,
-                        onDateClicked = { onAction(TransactionEntryAction.DateClicked) },
-                    )
-
-                    NoteInputCard(
+                    ReferenceNoteRow(
                         note = state.note,
                         onNoteChanged = { onAction(TransactionEntryAction.NoteChanged(it)) },
                     )
 
-                    TagsPlaceholderCard()
+                    HorizontalDivider()
 
-                    Spacer(modifier = Modifier.height(TioSpacing.md))
+                    ReferenceDescriptionRow()
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
                     ) {
-                        TextButton(
-                            onClick = onNavigateBack,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("Cancel")
-                        }
-
                         Button(
                             onClick = { onAction(TransactionEntryAction.SaveClicked) },
-                            modifier = Modifier.weight(1f).semantics { contentDescription = "Save transaction button" },
+                            modifier = Modifier.weight(1.6f).semantics { contentDescription = "Save transaction button" },
                             enabled = state.canSave,
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = state.transactionType.color,
+                                    contentColor = state.transactionType.saveContentColor,
+                                ),
                         ) {
                             Text(if (state.isSaving) "Saving..." else "Save")
+                        }
+                        TextButton(
+                            onClick = { onAction(TransactionEntryAction.SaveClicked) },
+                            modifier = Modifier.weight(1f).border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.medium),
+                            enabled = state.canSave,
+                        ) {
+                            Text("Continue")
                         }
                     }
                 }
@@ -245,6 +275,19 @@ fun TransactionEntryScreen(
             onSelected = { onAction(TransactionEntryAction.CategorySelected(it)) },
         )
     }
+
+    if (state.isFeeSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { onAction(TransactionEntryAction.FeeSheetDismissed) },
+        ) {
+            FeeBottomSheetContent(
+                fee = state.fee,
+                onFeeChanged = { onAction(TransactionEntryAction.FeeChanged(it)) },
+                onCancel = { onAction(TransactionEntryAction.FeeSheetDismissed) },
+                onSave = { onAction(TransactionEntryAction.FeeConfirmed) },
+            )
+        }
+    }
 }
 
 @Composable
@@ -253,18 +296,229 @@ private fun TransactionTypeSelector(
     onTypeSelected: (TransactionType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val types = TransactionType.entries
-    TabRow(
-        selectedTabIndex = types.indexOf(selectedType),
-        modifier = modifier.semantics { contentDescription = "Transaction type selector" },
+    Row(
+        modifier = modifier.fillMaxWidth().semantics { contentDescription = "Transaction type selector" },
+        horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
     ) {
-        types.forEach { type ->
-            Tab(
-                selected = type == selectedType,
+        TransactionType.entries.forEach { type ->
+            val selected = type == selectedType
+            TextButton(
                 onClick = { onTypeSelected(type) },
-                text = { Text(type.displayName) },
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .border(
+                            width = if (selected) 2.dp else 1.dp,
+                            color = if (selected) type.color else MaterialTheme.colorScheme.outline,
+                            shape = MaterialTheme.shapes.small,
+                        ),
+            ) {
+                Text(
+                    text = type.displayName,
+                    color = if (selected) type.color else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+private val TransactionType.color: Color
+    get() =
+        when (this) {
+            TransactionType.Income -> Color(0xFF4EA1FF)
+            TransactionType.Expense -> Color(0xFFFF5D5D)
+            TransactionType.Transfer -> MaterialThemeFallbackTransferColor
+        }
+
+private val MaterialThemeFallbackTransferColor = Color(0xFFE7E7EA)
+
+private val TransactionType.saveContentColor: Color
+    get() =
+        when (this) {
+            TransactionType.Income, TransactionType.Expense -> Color.White
+            TransactionType.Transfer -> Color(0xFF202124)
+        }
+
+@Composable
+private fun ReferenceDateRow(
+    selectedDate: String,
+    onDateClicked: () -> Unit,
+) {
+    ReferenceSelectorRow(
+        label = "Date",
+        value = selectedDate,
+        onClick = onDateClicked,
+        trailing = "↻\nRep/Inst.",
+    )
+}
+
+@Composable
+private fun ReferenceAmountRow(
+    amount: String,
+    onAmountChanged: (String) -> Unit,
+    transactionType: TransactionType,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = TioSpacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
+    ) {
+        Text("Amount", modifier = Modifier.width(104.dp), style = MaterialTheme.typography.bodyLarge)
+        TextField(
+            value = amount,
+            onValueChange = onAmountChanged,
+            modifier = Modifier.weight(1f).semantics { contentDescription = "Transaction amount input" },
+            placeholder = { Text("0.00") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = transactionType.color),
+            colors =
+                TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                    focusedIndicatorColor = transactionType.color,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                ),
+        )
+    }
+}
+
+@Composable
+private fun ReferenceFeeRow(
+    fee: String,
+    onEdit: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit).padding(vertical = TioSpacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
+    ) {
+        Text("Fees", modifier = Modifier.width(104.dp), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = "₹ $fee",
+            modifier = Modifier.weight(1f).padding(vertical = TioSpacing.sm),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        IconButton(onClick = onRemove) {
+            Text("×", style = MaterialTheme.typography.headlineSmall)
+        }
+    }
+    HorizontalDivider()
+}
+
+@Composable
+private fun FeeBottomSheetContent(
+    fee: String,
+    onFeeChanged: (String) -> Unit,
+    onCancel: () -> Unit,
+    onSave: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(TioSpacing.lg),
+        verticalArrangement = Arrangement.spacedBy(TioSpacing.md),
+    ) {
+        Text("Fees", style = MaterialTheme.typography.headlineSmall)
+        OutlinedTextField(
+            value = fee,
+            onValueChange = onFeeChanged,
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Fee amount") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
+        ) {
+            TextButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
+                Text("Cancel")
+            }
+            Button(onClick = onSave, modifier = Modifier.weight(1f)) {
+                Text("Save")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReferenceSelectorRow(
+    label: String,
+    value: String?,
+    onClick: () -> Unit,
+    trailing: String? = null,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = TioSpacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
+    ) {
+        Text(label, modifier = Modifier.width(104.dp), style = MaterialTheme.typography.bodyLarge)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = value ?: "",
+                color = if (value == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(vertical = TioSpacing.sm),
+            )
+            HorizontalDivider()
+        }
+        if (trailing != null) {
+            Text(
+                text = trailing,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall,
             )
         }
+    }
+}
+
+@Composable
+private fun ReferenceNoteRow(
+    note: String,
+    onNoteChanged: (String) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = TioSpacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
+    ) {
+        Text("Note", modifier = Modifier.width(104.dp), style = MaterialTheme.typography.bodyLarge)
+        TextField(
+            value = note,
+            onValueChange = onNoteChanged,
+            modifier = Modifier.weight(1f).semantics { contentDescription = "Transaction note input" },
+            singleLine = true,
+            placeholder = { Text("Note") },
+            colors =
+                TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                ),
+        )
+        Text("!", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun ReferenceDescriptionRow() {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = TioSpacing.sm, vertical = TioSpacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "Description",
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Text("▣", color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

@@ -41,7 +41,7 @@ The existing typed `MainRoute.Settings` is non-primary and renders Android remin
 
 ## Navigation And Tio UI Specification Gate
 
-Keep the approved five primary bottom destinations. Extend the existing non-primary `MainRoute.Settings` only through separately approved sections or links; do not add a parallel Settings route or copy the reference four-tab shell. A future Settings IA specification must define section order, entry/exit paths, labels, loading/error states, preference write-failure truthfulness, accessibility, and responsive/light/dark behavior. It must explicitly state which reference rows are omitted and why. No new setting should imply a working feature before its runtime contract exists.
+Keep the current four primary bottom destinations—Transactions, Stats, Accounts, and More. The reference-aligned More hub opens Configuration, where Categories, Budgets, Account settings, Transaction settings, and Currency settings are represented by typed destinations; unsupported behavior remains placeholder-only. A future Settings IA specification must define section order, entry/exit paths, labels, loading/error states, preference write-failure truthfulness, accessibility, and responsive/light/dark behavior. It must explicitly state which reference rows are omitted and why. No new setting should imply a working feature before its runtime contract exists.
 
 ## Acceptance For The Next Documentation Decision
 

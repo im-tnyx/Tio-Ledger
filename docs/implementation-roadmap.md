@@ -7,7 +7,7 @@
 - Application Layer, repository contracts, SQLDelight repository implementations, application bootstrap, and shared UI foundation are implemented.
 - Accounts Screen v1, Transaction Entry Integration v1, Transactions List / History Screen v1, Categories Screen v1, Budgets Screen v1, Loan Creation and Loan Details v1, SMS-Assisted Transaction Review Flow v1, Spending Analytics / Reports Screen v1, Cash-flow Analytics v1, Loan Payoff Analytics v1, and Shared Reminder Planner v1 are implemented and CI-validated on `main`. Dashboard is registered in navigation but still renders placeholder content in `RootNavigationHost`; do not count it as a completed production screen.
 - Loan Payoff Analytics v1 is merged through issue #29 and PR #30.
-- Primary bottom-navigation callback wiring is completed through issue #34 and PR #36 without changing the canonical five destinations or redesigning Dashboard content.
+- Primary bottom-navigation callback wiring is completed through issue #34 and PR #36. The current four destinations are Transactions, Stats, Accounts, and More; the More/Configuration hierarchy follows the approved reference shell while unsupported settings remain placeholders.
 - Phase 6 Finance Features is complete.
 - Phase 7 Analytics And Notifications is in progress.
 - EMI and budget reminders v1 product rules and platform boundaries are approved through issue #41, and the pure shared planner/Application slice is implemented through issue #42 and PR #47. Android delivery code is present on `main`; issue #43 remains open for outstanding acceptance and device-evidence items. Do not describe the adapter as not yet started or the open issue as complete.

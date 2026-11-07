@@ -4,6 +4,9 @@ data class TransactionEntryUiState(
     val transactionType: TransactionType = TransactionType.Expense,
     val amount: String = "",
     val note: String = "",
+    val isFeeEnabled: Boolean = false,
+    val fee: String = "0.00",
+    val isFeeSheetVisible: Boolean = false,
     val selectedDate: String = "Today",
     val selectedTimestamp: Long = 0L,
     val accountOptions: List<TransactionAccountOption> = emptyList(),
@@ -62,8 +65,8 @@ data class TransactionCategoryOption(
 )
 
 enum class TransactionType(val displayName: String) {
-    Expense("Expense"),
     Income("Income"),
+    Expense("Expense"),
     Transfer("Transfer"),
 }
 
@@ -80,6 +83,16 @@ sealed interface TransactionEntryAction {
     data class TypeChanged(val type: TransactionType) : TransactionEntryAction
 
     data class AmountChanged(val amount: String) : TransactionEntryAction
+
+    data object FeesClicked : TransactionEntryAction
+
+    data class FeeChanged(val fee: String) : TransactionEntryAction
+
+    data object FeeSheetDismissed : TransactionEntryAction
+
+    data object FeeConfirmed : TransactionEntryAction
+
+    data object FeeRemoved : TransactionEntryAction
 
     data object SourceAccountClicked : TransactionEntryAction
 

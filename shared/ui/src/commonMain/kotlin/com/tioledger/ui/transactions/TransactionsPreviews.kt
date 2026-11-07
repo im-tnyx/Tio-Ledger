@@ -14,7 +14,6 @@ private fun TransactionsLightPreview() {
         TransactionsScreen(
             state = previewTransactionsState(),
             onAction = {},
-            onAddTransaction = {},
             onReviewSms = {},
             onNavigate = {},
         )
@@ -28,7 +27,6 @@ private fun TransactionsDarkPreview() {
         TransactionsScreen(
             state = previewTransactionsState(),
             onAction = {},
-            onAddTransaction = {},
             onReviewSms = {},
             onNavigate = {},
         )

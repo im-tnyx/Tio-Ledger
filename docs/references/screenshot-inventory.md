@@ -31,7 +31,7 @@ This is an evidence map for the 24 screenshots at the root of `docs/references/`
 
 ## Interpretation And Next Decisions
 
-- The reference product has four primary tabs (`Trans.`, `Stats`, `Accounts`, `More`). Tio Ledger already has five approved primary destinations: Dashboard, Accounts, Transactions, Categories, and Budgets. This inventory does **not** approve replacing that navigation contract.
+- The reference product has four primary tabs (`Trans.`, `Stats`, `Accounts`, `More`). Tio Ledger now uses the same four-destination shell: Transactions, Stats, Accounts, and More. More opens the reference-aligned Settings hub and Configuration list; unsupported reference surfaces remain placeholders.
 - A screenshot proves visible hierarchy and affordances, not hidden behavior, persistence rules, accessibility, or pixel-level implementation. Do not infer those from the image.
 - The top priority planning gaps are the five Transactions views, Category management, and a coherent Settings information architecture. Appearance is already tracked by [issue #73](https://github.com/im-tnyx/Tio-Ledger/issues/73). Android reminder delivery remains tracked by [issue #43](https://github.com/im-tnyx/Tio-Ledger/issues/43).
 - Account Group, Account Settings, chart variants, PC Manager, backup/import/export, reset, and numerous Configuration preferences are evidence for product triage, not automatic requirements. Backup/restore/reset in particular need explicit data-integrity and security decisions.

@@ -49,6 +49,16 @@ class TransactionEntryViewModel(
             TransactionEntryAction.Load, TransactionEntryAction.Retry -> loadReferenceData()
             is TransactionEntryAction.TypeChanged -> updateTransactionType(action.type)
             is TransactionEntryAction.AmountChanged -> updateAmount(action.amount)
+            TransactionEntryAction.FeesClicked ->
+                _uiState.update { it.copy(isFeeSheetVisible = true) }
+            is TransactionEntryAction.FeeChanged ->
+                _uiState.update { it.copy(fee = action.fee) }
+            TransactionEntryAction.FeeSheetDismissed ->
+                _uiState.update { it.copy(isFeeSheetVisible = false) }
+            TransactionEntryAction.FeeConfirmed ->
+                _uiState.update { it.copy(isFeeEnabled = true, isFeeSheetVisible = false) }
+            TransactionEntryAction.FeeRemoved ->
+                _uiState.update { it.copy(isFeeEnabled = false, isFeeSheetVisible = false, fee = "0.00") }
             TransactionEntryAction.SourceAccountClicked -> openAccountPicker(TransactionAccountPickerTarget.Source)
             TransactionEntryAction.TargetAccountClicked -> openAccountPicker(TransactionAccountPickerTarget.Destination)
             is TransactionEntryAction.AccountSelected -> selectAccount(action.accountId)
@@ -403,7 +413,11 @@ private fun AccountBalanceSummary.toOption(): TransactionAccountOption =
     )
 
 private fun TransactionEntryUiState.normalizedForType(): TransactionEntryUiState =
-    if (transactionType == TransactionType.Transfer) copy(selectedCategoryId = null) else copy(selectedTargetAccountId = null)
+    if (transactionType == TransactionType.Transfer) {
+        copy(selectedCategoryId = null)
+    } else {
+        copy(selectedTargetAccountId = null, isFeeEnabled = false, isFeeSheetVisible = false, fee = "0.00")
+    }
 
 private fun AccountType.displayName(): String =
     when (this) {

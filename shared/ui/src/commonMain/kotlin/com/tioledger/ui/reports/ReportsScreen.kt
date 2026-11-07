@@ -33,11 +33,11 @@ import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioErrorState
 import com.tioledger.ui.components.TioFilterChip
 import com.tioledger.ui.components.TioLoadingState
-import com.tioledger.ui.components.TioNavigationItem
 import com.tioledger.ui.components.TioSummaryCard
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
+import com.tioledger.ui.navigation.bottomNavigationModel
 import org.koin.compose.koinInject
 
 @Composable
@@ -60,27 +60,16 @@ fun ReportsScreen(
     onNavigate: (MainRoute) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val navigationRoutes = TioNavigationGraphs.main.bottomNavigationRoutes
-    val navigationItems =
-        navigationRoutes.map { route ->
-            TioNavigationItem(
-                label = route.title,
-                icon = route.icon,
-                selected = false,
-            )
-        }
+    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Reports)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TioAppBar(title = "Reports") },
+        topBar = { TioAppBar(title = MainRoute.Reports.title) },
         bottomBar = {
             TioBottomNavigation(
-                items = navigationItems,
+                items = bottomNavigation.items,
                 onItemSelected = { selectedItem ->
-                    val selectedIndex = navigationItems.indexOf(selectedItem)
-                    if (selectedIndex >= 0) {
-                        onNavigate(navigationRoutes[selectedIndex])
-                    }
+                    bottomNavigation.navigate(selectedItem, onNavigate)
                 },
             )
         },
@@ -104,7 +93,7 @@ fun ReportsScreen(
                 state.isLoading -> TioLoadingState(label = "Loading spending analytics")
                 state.loadErrorMessage != null -> {
                     TioErrorState(
-                        title = "Reports unavailable",
+                        title = "Stats unavailable",
                         message = state.loadErrorMessage,
                         retryLabel = "Retry",
                         onRetry = { onAction(ReportsAction.Retry) },

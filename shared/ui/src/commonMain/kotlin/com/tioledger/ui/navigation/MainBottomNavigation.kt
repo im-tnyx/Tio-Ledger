@@ -20,12 +20,13 @@ class MainBottomNavigationModel internal constructor(
 
 fun MainGraph.bottomNavigationModel(currentRoute: MainRoute): MainBottomNavigationModel {
     val routes = bottomNavigationRoutes
+    val selectedRoute = currentRoute.bottomNavigationParent()
     val items =
         routes.map { route ->
             TioNavigationItem(
                 label = route.title,
                 icon = route.icon,
-                selected = route == currentRoute,
+                selected = route == selectedRoute,
             )
         }
 
@@ -34,3 +35,33 @@ fun MainGraph.bottomNavigationModel(currentRoute: MainRoute): MainBottomNavigati
         items = items,
     )
 }
+
+private fun MainRoute.bottomNavigationParent(): MainRoute =
+    when (this) {
+        MainRoute.Categories,
+        MainRoute.IncomeCategories,
+        MainRoute.ExpenseCategories,
+        MainRoute.Budgets,
+        MainRoute.Settings,
+        MainRoute.Configuration,
+        MainRoute.AccountSettings,
+        MainRoute.AccountGroup,
+        MainRoute.BudgetSettings,
+        MainRoute.TransactionSettings,
+        MainRoute.RepeatSettings,
+        MainRoute.CurrencySettings,
+        MainRoute.SubCurrencySettings,
+        MainRoute.PasscodeSettings,
+        MainRoute.AlarmSettings,
+        MainRoute.ApplicationIconSettings,
+        MainRoute.LanguageSettings,
+        MainRoute.AdTrackingSettings,
+        MainRoute.CopyPasteSettings,
+        MainRoute.PcManager,
+        MainRoute.Backup,
+        MainRoute.Style,
+        MainRoute.Help,
+        MainRoute.Feedback,
+        -> MainRoute.More
+        else -> this
+    }

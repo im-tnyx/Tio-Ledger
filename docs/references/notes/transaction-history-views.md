@@ -43,6 +43,6 @@ A bounded local inspection suggests that Calendar is a distinct Transactions vie
 
 ## Deviations And Accessibility
 
-Tio Ledger's five primary destinations, separate Reports/Budgets/Accounts routes, ledger-first rules, and shared design system supersede a literal reference-tab copy. These differences require an explicit product decision before a new production UI slice. Any future selector must expose selected state to screen readers; calendar dates need date/amount semantics and predictable focus; large text must not hide period controls or financial totals.
+Tio Ledger's four primary destinations—Transactions, Stats, Accounts, and More—follow the approved reference shell. Categories and Budgets remain separate Configuration destinations, while ledger-first rules and the shared design system continue to govern implementation. Any future selector must expose selected state to screen readers; calendar dates need date/amount semantics and predictable focus; large text must not hide period controls or financial totals.
 
 Screenshots remain primary. Decompiled material was used only to understand Calendar view-to-detail navigation; no proprietary code, layout, resource, asset, string, color, dimension, or animation is imported from the reference.

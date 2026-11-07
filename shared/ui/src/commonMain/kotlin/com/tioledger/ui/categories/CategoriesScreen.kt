@@ -18,38 +18,42 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.tioledger.domain.model.CategoryType
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
-import com.tioledger.ui.components.TioCategoryRow
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioErrorState
 import com.tioledger.ui.components.TioFilterChip
-import com.tioledger.ui.components.TioFloatingActionButton
 import com.tioledger.ui.components.TioLoadingState
-import com.tioledger.ui.components.TioNavigationItem
-import com.tioledger.ui.components.TioSectionHeader
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
+import com.tioledger.ui.navigation.bottomNavigationModel
 import org.koin.compose.koinInject
 
 @Composable
 fun CategoriesRoute(
+    initialType: CategoryType = CategoryType.EXPENSE,
     viewModel: CategoriesViewModel = koinInject(),
     onNavigate: (MainRoute) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     CategoriesScreen(
         state = state,
+        initialType = initialType,
         onAction = viewModel::onAction,
         onNavigate = onNavigate,
     )
@@ -60,35 +64,31 @@ fun CategoriesScreen(
     state: CategoriesUiState,
     onAction: (CategoriesAction) -> Unit,
     onNavigate: (MainRoute) -> Unit,
+    initialType: CategoryType = CategoryType.EXPENSE,
     modifier: Modifier = Modifier,
 ) {
-    val navigationRoutes = TioNavigationGraphs.main.bottomNavigationRoutes
-    val navigationItems =
-        navigationRoutes.map { route ->
-            TioNavigationItem(
-                label = route.title,
-                icon = route.icon,
-                selected = route == MainRoute.Categories,
-            )
-        }
+    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Categories)
+    var selectedType by remember { mutableStateOf(initialType) }
+    var subcategoryEnabled by remember { mutableStateOf(true) }
+    val selectedGroup = state.groups.firstOrNull { it.type == selectedType }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TioAppBar(title = "Categories") },
-        floatingActionButton = {
-            TioFloatingActionButton(
-                onClick = { onAction(CategoriesAction.AddClicked) },
-                contentDescription = "Add category",
+        topBar = {
+            TioAppBar(
+                title = if (selectedType == CategoryType.EXPENSE) "Exp." else "Income",
+                actions = {
+                    TextButton(onClick = { onAction(CategoriesAction.AddClicked) }) {
+                        Text("+")
+                    }
+                },
             )
         },
         bottomBar = {
             TioBottomNavigation(
-                items = navigationItems,
+                items = bottomNavigation.items,
                 onItemSelected = { selectedItem ->
-                    val selectedIndex = navigationItems.indexOf(selectedItem)
-                    if (selectedIndex >= 0) {
-                        onNavigate(navigationRoutes[selectedIndex])
-                    }
+                    bottomNavigation.navigate(selectedItem, onNavigate)
                 },
             )
         },
@@ -100,6 +100,28 @@ fun CategoriesScreen(
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .fillMaxSize(),
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Subcategory", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Switch(checked = subcategoryEnabled, onCheckedChange = { subcategoryEnabled = it })
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = TioSpacing.lg),
+                horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
+            ) {
+                TioFilterChip(
+                    label = "Exp.",
+                    selected = selectedType == CategoryType.EXPENSE,
+                    onClick = { selectedType = CategoryType.EXPENSE },
+                )
+                TioFilterChip(
+                    label = "Income",
+                    selected = selectedType == CategoryType.INCOME,
+                    onClick = { selectedType = CategoryType.INCOME },
+                )
+            }
             state.successMessage?.let { message ->
                 CategorySuccessMessage(
                     message = message,
@@ -127,7 +149,7 @@ fun CategoriesScreen(
                         },
                     )
                 }
-                else -> CategoriesGroupedList(state.groups)
+                else -> CategoriesGroupedList(selectedGroup)
             }
         }
     }
@@ -141,29 +163,55 @@ fun CategoriesScreen(
 }
 
 @Composable
-private fun CategoriesGroupedList(groups: List<CategoryGroupUiModel>) {
+private fun CategoriesGroupedList(group: CategoryGroupUiModel?) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        groups.forEach { group ->
-            item(key = "header-${group.type}") {
-                TioSectionHeader(title = "${group.title} (${group.categories.size})")
-            }
+        if (group == null) {
+            item { Text("No categories", modifier = Modifier.padding(TioSpacing.lg)) }
+        } else {
             items(group.categories, key = CategoryRowUiModel::id) { category ->
-                TioCategoryRow(
-                    name = category.name,
-                    subtitle = if (category.isDefault) "Default category" else null,
-                    modifier =
-                        Modifier.semantics {
-                            contentDescription =
-                                if (category.isDefault) {
-                                    "${category.name}, default ${group.title.lowercase()} category"
-                                } else {
-                                    "${category.name}, ${group.title.lowercase()} category"
-                                }
-                        },
+                CategoryManagementRow(
+                    category = category,
+                    typeTitle = group.title,
                 )
                 HorizontalDivider()
             }
         }
+    }
+}
+
+@Composable
+private fun CategoryManagementRow(
+    category: CategoryRowUiModel,
+    typeTitle: String,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .semantics {
+                    contentDescription = "${category.name}, $typeTitle category"
+                }
+                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TioSpacing.md),
+    ) {
+        Text(
+            text = "−",
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.headlineMedium,
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(category.name, style = MaterialTheme.typography.bodyLarge)
+            if (category.isDefault) {
+                Text(
+                    text = "Default category",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+        Text("✎", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("☰", color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
