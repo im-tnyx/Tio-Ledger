@@ -87,6 +87,78 @@ class TransactionEntryViewModelTest {
     }
 
     @Test
+    fun saveTransferPersistsTransactionAndEmitsSuccessEvent() {
+        val transactions = FakeTransactionRepository()
+        val viewModel = transactionEntryViewModel(transactionRepository = transactions)
+
+        viewModel.onAction(TransactionEntryAction.TypeChanged(TransactionType.Transfer))
+        viewModel.onAction(TransactionEntryAction.SourceAccountClicked)
+        viewModel.onAction(TransactionEntryAction.AccountSelected("cash"))
+        viewModel.onAction(TransactionEntryAction.TargetAccountClicked)
+        viewModel.onAction(TransactionEntryAction.AccountSelected("bank"))
+        viewModel.onAction(TransactionEntryAction.AmountChanged("500.00"))
+        viewModel.onAction(TransactionEntryAction.NoteChanged("ATM deposit"))
+        viewModel.onAction(TransactionEntryAction.SaveClicked)
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isSaving)
+        assertEquals("Transaction saved successfully.", state.saveSuccessMessage)
+        assertEquals("", state.amount)
+        assertEquals(1, transactions.records.size)
+        val record = transactions.records.single()
+        assertEquals(com.tioledger.domain.model.TransactionType.TRANSFER, record.transaction.type)
+        assertEquals(50000L, record.splits.first().amount.amount)
+        assertEquals("ATM deposit", record.transaction.description)
+        assertIs<TransactionEntryEvent.TransactionSaved>(viewModel.event.value)
+    }
+
+    @Test
+    fun saveExpensePersistsTransactionAndEmitsSuccessEvent() {
+        val transactions = FakeTransactionRepository()
+        val viewModel = transactionEntryViewModel(transactionRepository = transactions)
+
+        viewModel.onAction(TransactionEntryAction.TypeChanged(TransactionType.Expense))
+        viewModel.onAction(TransactionEntryAction.SourceAccountClicked)
+        viewModel.onAction(TransactionEntryAction.AccountSelected("cash"))
+        viewModel.onAction(TransactionEntryAction.CategoryClicked)
+        viewModel.onAction(TransactionEntryAction.CategorySelected("food"))
+        viewModel.onAction(TransactionEntryAction.AmountChanged("45.50"))
+        viewModel.onAction(TransactionEntryAction.NoteChanged("Lunch"))
+        viewModel.onAction(TransactionEntryAction.SaveClicked)
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isSaving)
+        assertEquals("Transaction saved successfully.", state.saveSuccessMessage)
+        assertEquals("", state.amount)
+        assertEquals(1, transactions.records.size)
+        val record = transactions.records.single()
+        assertEquals(com.tioledger.domain.model.TransactionType.EXPENSE, record.transaction.type)
+        assertEquals(4550L, record.splits.first().amount.amount)
+        assertEquals("Lunch", record.transaction.description)
+        assertIs<TransactionEntryEvent.TransactionSaved>(viewModel.event.value)
+    }
+
+    @Test
+    fun switchingBetweenTransferAndExpenseClearsIrrelevantSelections() {
+        val viewModel = transactionEntryViewModel()
+
+        viewModel.onAction(TransactionEntryAction.TypeChanged(TransactionType.Transfer))
+        viewModel.onAction(TransactionEntryAction.TargetAccountClicked)
+        viewModel.onAction(TransactionEntryAction.AccountSelected("bank"))
+        assertEquals("bank", viewModel.uiState.value.selectedTargetAccountId)
+
+        viewModel.onAction(TransactionEntryAction.TypeChanged(TransactionType.Expense))
+        assertEquals(null, viewModel.uiState.value.selectedTargetAccountId)
+
+        viewModel.onAction(TransactionEntryAction.CategoryClicked)
+        viewModel.onAction(TransactionEntryAction.CategorySelected("food"))
+        assertEquals("food", viewModel.uiState.value.selectedCategoryId)
+
+        viewModel.onAction(TransactionEntryAction.TypeChanged(TransactionType.Transfer))
+        assertEquals(null, viewModel.uiState.value.selectedCategoryId)
+    }
+
+    @Test
     fun persistenceFailureIsSurfacedInUiState() {
         val transactions =
             FakeTransactionRepository().apply {
