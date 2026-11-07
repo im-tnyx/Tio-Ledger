@@ -34,6 +34,12 @@ sealed interface MainRoute : AppRoute {
         override val icon: TioIconToken = TioIconToken.Account
     }
 
+    data object AddAccount : MainRoute {
+        override val path: String = "accounts/add"
+        override val title: String = "Add"
+        override val icon: TioIconToken = TioIconToken.Add
+    }
+
     data object Transactions : MainRoute {
         override val path: String = "transactions"
         override val title: String = "Transactions"
@@ -237,6 +243,7 @@ object TioNavigationGraphs {
                 listOf(
                     MainRoute.Dashboard,
                     MainRoute.Accounts,
+                    MainRoute.AddAccount,
                     MainRoute.Transactions,
                     MainRoute.SmsTransactionReview,
                     MainRoute.Categories,

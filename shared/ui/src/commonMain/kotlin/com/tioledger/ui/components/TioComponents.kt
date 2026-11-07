@@ -2,6 +2,7 @@
 
 package com.tioledger.ui.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +44,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -74,7 +80,10 @@ fun TioAppBar(
                 overflow = TextOverflow.Ellipsis,
             )
         },
-        modifier = modifier,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .heightIn(min = TioDimensions.appBarHeight),
         navigationIcon = { navigationIcon?.invoke() },
         actions = { actions() },
         colors =
@@ -786,6 +795,91 @@ fun TioIconAvatar(
         Box(contentAlignment = Alignment.Center) {
             TioIcon(token = token)
         }
+    }
+}
+
+@Composable
+fun TioBackIcon(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Canvas(modifier = modifier.size(24.dp)) {
+        val stroke = 2.dp.toPx()
+        val path =
+            Path().apply {
+                moveTo(size.width * 0.82f, size.height * 0.5f)
+                lineTo(size.width * 0.22f, size.height * 0.5f)
+                moveTo(size.width * 0.5f, size.height * 0.22f)
+                lineTo(size.width * 0.22f, size.height * 0.5f)
+                lineTo(size.width * 0.5f, size.height * 0.78f)
+            }
+        drawPath(
+            path = path,
+            color = color,
+            style =
+                Stroke(
+                    width = stroke,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round,
+                ),
+        )
+    }
+}
+
+@Composable
+fun TioAddIcon(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Canvas(modifier = modifier.size(24.dp)) {
+        val stroke = 2.dp.toPx()
+        drawLine(
+            color = color,
+            start = Offset(size.width * 0.22f, size.height * 0.5f),
+            end = Offset(size.width * 0.78f, size.height * 0.5f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color = color,
+            start = Offset(size.width * 0.5f, size.height * 0.22f),
+            end = Offset(size.width * 0.5f, size.height * 0.78f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+        )
+    }
+}
+
+@Composable
+fun TioReorderHandleIcon(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+) {
+    Canvas(modifier = modifier.size(24.dp)) {
+        val stroke = 2.dp.toPx()
+        val startX = size.width * 0.15f
+        val endX = size.width * 0.85f
+        drawLine(
+            color = color,
+            start = Offset(startX, size.height * 0.28f),
+            end = Offset(endX, size.height * 0.28f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color = color,
+            start = Offset(startX, size.height * 0.50f),
+            end = Offset(endX, size.height * 0.50f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color = color,
+            start = Offset(startX, size.height * 0.72f),
+            end = Offset(endX, size.height * 0.72f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+        )
     }
 }
 
