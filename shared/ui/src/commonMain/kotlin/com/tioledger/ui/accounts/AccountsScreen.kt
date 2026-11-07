@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import com.tioledger.domain.model.AccountType
+import com.tioledger.ui.components.TioAddIcon
 import com.tioledger.ui.components.TioAmountText
 import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
@@ -82,8 +84,11 @@ fun AccountsScreen(
             TioAppBar(
                 title = "Accounts",
                 actions = {
-                    TextButton(onClick = { onAction(AccountsAction.AddClicked) }) {
-                        Text("+")
+                    IconButton(
+                        onClick = { onNavigate(MainRoute.AddAccount) },
+                        modifier = Modifier.semantics { contentDescription = "Add account" },
+                    ) {
+                        TioAddIcon()
                     }
                 },
             )

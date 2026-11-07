@@ -31,7 +31,7 @@ private data class AccountSettingEntry(
 private val accountSettings =
     listOf(
         AccountSettingEntry("Account Group", route = MainRoute.AccountGroup),
-        AccountSettingEntry("Accounts Setting"),
+        AccountSettingEntry("Accounts Setting", route = MainRoute.AddAccount),
         AccountSettingEntry("Include in totals"),
         AccountSettingEntry("Transfer-Expense setting"),
         AccountSettingEntry("Deleted accounts"),

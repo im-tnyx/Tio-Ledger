@@ -191,6 +191,8 @@ internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
                 MainRoute.Help,
                 MainRoute.Feedback,
                 -> RootRoute.Main(MainRoute.More)
+                MainRoute.AddAccount,
+                -> RootRoute.Main(MainRoute.Accounts)
                 MainRoute.SmsTransactionReview,
                 -> RootRoute.Main(MainRoute.Transactions)
                 is MainRoute.LoanDetails -> RootRoute.Main(MainRoute.Loans)
