@@ -6,6 +6,8 @@
         android:name=".TioAndroidApplication"
         android:allowBackup="true"
         android:label="Tio Ledger"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.TioLedger"
         android:supportsRtl="true">
         <activity
