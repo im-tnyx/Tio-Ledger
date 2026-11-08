@@ -37,14 +37,6 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun systemBackFromAddAccountReturnsAccounts() {
-        assertEquals(
-            RootRoute.Main(MainRoute.Accounts),
-            systemBackTargetOrNull(RootRoute.Main(MainRoute.AddAccount)),
-        )
-    }
-
-    @Test
     fun systemBackFromSmsReviewReturnsTransactions() {
         assertEquals(
             RootRoute.Main(MainRoute.Transactions),

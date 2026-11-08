@@ -112,6 +112,9 @@ fun AccountGroupScreen(
                     }
                 },
                 actions = {
+                    TextButton(onClick = { onNavigate(MainRoute.Loans) }) {
+                        Text("Loans")
+                    }
                     IconButton(
                         onClick = { isAddDialogVisible = true },
                         modifier = Modifier.semantics { contentDescription = "Add account group" },
@@ -263,11 +266,7 @@ fun AccountGroupScreen(
                         }
                     },
                     onClick = {
-                        if (entry.policy == AccountGroupPolicy.LOAN) {
-                            onNavigate(MainRoute.Loans)
-                        } else {
-                            itemToEdit = entry
-                        }
+                        itemToEdit = entry
                     },
                 )
                 HorizontalDivider()

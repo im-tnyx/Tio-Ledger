@@ -2,6 +2,8 @@ package com.tioledger.ui.accounts
 
 import com.tioledger.core.model.Money
 import com.tioledger.domain.model.AccountType
+import com.tioledger.ui.more.AccountGroupEntry
+import com.tioledger.ui.more.DEFAULT_ACCOUNT_GROUPS
 
 data class AccountsUiState(
     val isLoading: Boolean = true,
@@ -12,6 +14,8 @@ data class AccountsUiState(
     val isCreateDialogVisible: Boolean = false,
     val draftName: String = "",
     val draftType: AccountType = AccountType.CASH,
+    val availableGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
+    val draftGroupId: String = DEFAULT_ACCOUNT_GROUPS.first().id,
     val draftCurrencyCode: String = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
     val isSaving: Boolean = false,
     val createErrorMessage: String? = null,
@@ -80,6 +84,8 @@ sealed interface AccountsAction {
     data class NameChanged(val name: String) : AccountsAction
 
     data class TypeChanged(val type: AccountType) : AccountsAction
+
+    data class GroupChanged(val groupId: String) : AccountsAction
 
     data class CurrencyChanged(val currencyCode: String) : AccountsAction
 

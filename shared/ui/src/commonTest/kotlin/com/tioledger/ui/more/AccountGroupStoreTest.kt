@@ -66,6 +66,16 @@ class AccountGroupStoreTest {
     }
 
     @Test
+    fun removingGroupAlsoRemovesAccountAssignments() {
+        val store = AccountGroupStore()
+        val custom = store.addGroup("Emergency Savings", AccountGroupPolicy.BANK)
+        store.assignAccount("account-1", custom.id)
+
+        assertTrue(store.removeGroup(custom.id))
+        assertEquals(null, store.groupIdForAccount("account-1"))
+    }
+
+    @Test
     fun updateGroupChangesTitleOnly() {
         val store = AccountGroupStore()
         val custom = store.addGroup("Initial Name", AccountGroupPolicy.BANK)

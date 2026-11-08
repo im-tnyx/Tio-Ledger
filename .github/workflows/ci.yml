@@ -97,7 +97,10 @@ jobs:
 
       - name: Ktlint
         id: ktlint
-        run: ./gradlew ktlintCheck --no-daemon --console=plain --stacktrace 2>&1 | tee ktlint-output.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew ktlintCheck --no-daemon --console=plain --stacktrace 2>&1 | tee ktlint-output.txt
 
       - name: Upload ktlint diagnostics
         if: failure() && steps.ktlint.outcome == 'failure'
@@ -110,7 +113,10 @@ jobs:
 
       - name: Detekt
         id: detekt
-        run: ./gradlew detekt --no-daemon --console=plain --stacktrace 2>&1 | tee detekt-output.txt
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew detekt --no-daemon --console=plain --stacktrace 2>&1 | tee detekt-output.txt
 
       - name: Upload detekt diagnostics
         if: failure() && steps.detekt.outcome == 'failure'

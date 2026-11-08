@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tioledger.domain.model.CategoryType
 import com.tioledger.ui.accounts.AccountsRoute
-import com.tioledger.ui.accounts.AddAccountRoute
 import com.tioledger.ui.budgets.BudgetsRoute
 import com.tioledger.ui.categories.CategoriesRoute
 import com.tioledger.ui.components.TioAppBar
@@ -58,15 +57,6 @@ fun RootNavigationHost(
                         AccountsRoute(
                             onNavigate = { target ->
                                 onNavigate(RootRoute.Main(target))
-                            },
-                        )
-                    MainRoute.AddAccount ->
-                        AddAccountRoute(
-                            onNavigate = { target ->
-                                onNavigate(RootRoute.Main(target))
-                            },
-                            onNavigateBack = {
-                                onNavigate(RootRoute.Main(MainRoute.Accounts))
                             },
                         )
                     MainRoute.Budgets ->

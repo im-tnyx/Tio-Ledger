@@ -98,7 +98,11 @@ class AccountGroupStore(
         val target = current.find { it.id == id } ?: return false
         if (target.isPermanent) return false
         _groups.value = current.filter { it.id != id }
+        val retainedAssignments = accountGroupIds.filterValues { it != id }
+        accountGroupIds.clear()
+        accountGroupIds.putAll(retainedAssignments)
         persistence.save(_groups.value)
+        persistence.saveAccountGroupIds(accountGroupIds)
         return true
     }
 

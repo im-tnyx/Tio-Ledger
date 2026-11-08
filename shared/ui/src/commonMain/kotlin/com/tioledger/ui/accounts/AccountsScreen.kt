@@ -85,7 +85,7 @@ fun AccountsScreen(
                 title = "Accounts",
                 actions = {
                     IconButton(
-                        onClick = { onNavigate(MainRoute.AddAccount) },
+                        onClick = { onAction(AccountsAction.AddClicked) },
                         modifier = Modifier.semantics { contentDescription = "Add account" },
                     ) {
                         TioAddIcon()
@@ -147,27 +147,19 @@ fun AccountsScreen(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
                     ) {
-                        CREATABLE_ACCOUNT_GROUPS.forEach { group ->
+                        state.availableGroups.forEach { group ->
                             TioFilterChip(
                                 label = group.title,
-                                selected = state.draftType == group.type,
-                                onClick = { onAction(AccountsAction.TypeChanged(group.type)) },
+                                selected = state.draftGroupId == group.id,
+                                onClick = { onAction(AccountsAction.GroupChanged(group.id)) },
                             )
                         }
                     }
-                    Text("Currency", style = MaterialTheme.typography.labelLarge)
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
-                    ) {
-                        SUPPORTED_ACCOUNT_CURRENCY_CODES.forEach { currencyCode ->
-                            TioFilterChip(
-                                label = currencyCode,
-                                selected = state.draftCurrencyCode == currencyCode,
-                                onClick = { onAction(AccountsAction.CurrencyChanged(currencyCode)) },
-                            )
-                        }
-                    }
+                    Text(
+                        text = "Currency: ${state.draftCurrencyCode}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },

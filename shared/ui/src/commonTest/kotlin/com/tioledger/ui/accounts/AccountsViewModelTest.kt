@@ -16,6 +16,8 @@ import com.tioledger.domain.model.PostingTarget
 import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.LedgerRepository
 import com.tioledger.finance.engine.BalanceCalculator
+import com.tioledger.ui.more.AccountGroupPolicy
+import com.tioledger.ui.more.AccountGroupStore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -431,18 +433,35 @@ class AccountsViewModelTest {
 
         assertEquals(1, accounts.created.size)
     }
+
+    @Test
+    fun assignedCustomGroupControlsAccountListingTitle() {
+        val bank = account("bank", "Emergency Reserve", AccountType.BANK)
+        val accounts = FakeAccountRepository(listOf(bank))
+        val ledger = FakeLedgerRepository()
+        val groupStore = AccountGroupStore()
+        val custom = groupStore.addGroup("Emergency Savings", AccountGroupPolicy.BANK)
+        groupStore.assignAccount(bank.id, custom.id)
+
+        val state = testViewModel(accounts, ledger, accountGroupStore = groupStore).uiState.value
+
+        assertEquals("Emergency Savings", state.groups.single().title)
+        assertEquals(listOf(bank.id), state.groups.single().accounts.map { it.id })
+    }
 }
 
 private fun testViewModel(
     accounts: FakeAccountRepository,
     ledger: FakeLedgerRepository,
     idGenerator: IdGenerator = FixedIdGenerator("unused-id"),
+    accountGroupStore: AccountGroupStore? = null,
 ): AccountsViewModel =
     AccountsViewModel(
         listAccountSummariesUseCase = ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
         createAccountUseCase = CreateAccountUseCase(accounts),
         idGenerator = idGenerator,
         nowProvider = { 1_700_000_000_000L },
+        accountGroupStore = accountGroupStore,
     )
 
 private fun account(

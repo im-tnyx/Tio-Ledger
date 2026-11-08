@@ -93,8 +93,8 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 
 ## Loan-linked Contract
 
-- `LOAN_LINKED` is exposed in Account Creation v2 **only** because the already-approved Loans workflow (`CreateLoanUseCase`, `LoansScreen.kt`) requires an existing, active `LOAN_LINKED` account as a precondition, and Account Creation v2 is currently the only production caller of `CreateAccountUseCase`. Without this, a fresh install has no way to satisfy that precondition.
-- This is a narrow, evidence-backed exposure, not a general policy of surfacing every `AccountType` value. `CREDIT_CARD`, `WALLET`, and `INVESTMENT` remain out of scope for v2 because no existing approved workflow currently depends on being able to create them from this dialog.
+- `LOAN_LINKED` is included in Account Creation v2 because the already-approved Loans workflow (`CreateLoanUseCase`, `LoansScreen.kt`) requires an existing, active `LOAN_LINKED` account as a precondition, and Account Creation v2 is currently the only production caller of `CreateAccountUseCase`. Without this, a fresh install has no way to satisfy that precondition.
+- Every persisted `AccountGroupPolicy` remains selectable from the dialog, including `CREDIT_CARD`, `WALLET`, and `INVESTMENT`; the selected policy supplies the stored `AccountType`. Group-specific financial detail fields remain out of scope until supported application contracts exist.
 - This note does not alter Loan Engine semantics, `CreateLoanUseCase` validation, amortization rules, or any loan calculation. Creating a `LOAN_LINKED` account here produces an ordinary account record; it does not create a loan, a disbursement, or any ledger entry.
 
 ## Tio UI Specification

@@ -24,7 +24,6 @@ class TioNavigationGraphsTest {
             listOf(
                 MainRoute.Dashboard,
                 MainRoute.Accounts,
-                MainRoute.AddAccount,
                 MainRoute.Transactions,
                 MainRoute.SmsTransactionReview,
                 MainRoute.Categories,
