@@ -2,24 +2,24 @@
 
 package com.tioledger.ui.accounts
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +30,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -39,16 +42,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import com.tioledger.domain.model.AccountType
-import com.tioledger.ui.components.TioAddIcon
 import com.tioledger.ui.components.TioAmountText
 import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
-import com.tioledger.ui.components.TioEditIcon
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioFilterChip
 import com.tioledger.ui.components.TioIcon
-import com.tioledger.ui.components.TioSearchField
 import com.tioledger.ui.design.TioDimensions
 import com.tioledger.ui.design.TioIconToken
 import com.tioledger.ui.design.TioSpacing
@@ -79,6 +79,8 @@ fun AccountsScreen(
 ) {
     val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Accounts)
 
+    var showMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -86,22 +88,29 @@ fun AccountsScreen(
                 title = MainRoute.Accounts.title,
                 actions = {
                     IconButton(
-                        onClick = { onNavigate(MainRoute.Loans) },
-                        modifier = Modifier.semantics { contentDescription = "Loans" },
+                        onClick = { showMenu = true },
+                        modifier = Modifier.semantics { contentDescription = "More options" },
                     ) {
-                        TioIcon(TioIconToken.Loan)
+                        TioIcon(TioIconToken.More)
                     }
-                    IconButton(
-                        onClick = { onNavigate(MainRoute.AccountManager) },
-                        modifier = Modifier.semantics { contentDescription = "Manage accounts" },
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
                     ) {
-                        TioEditIcon()
-                    }
-                    IconButton(
-                        onClick = { onAction(AccountsAction.AddClicked) },
-                        modifier = Modifier.semantics { contentDescription = "Add account" },
-                    ) {
-                        TioAddIcon()
+                        DropdownMenuItem(
+                            text = { Text("Accounts Setting") },
+                            onClick = {
+                                showMenu = false
+                                onNavigate(MainRoute.AccountManager)
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Add Account") },
+                            onClick = {
+                                showMenu = false
+                                onNavigate(MainRoute.AccountAdd)
+                            },
+                        )
                     }
                 },
             )
@@ -119,16 +128,10 @@ fun AccountsScreen(
             modifier =
                 Modifier
                     .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .fillMaxSize(),
         ) {
             AccountsSummaryRow(state.summary)
-            TioSearchField(
-                value = state.searchQuery,
-                onValueChange = { onAction(AccountsAction.SearchChanged(it)) },
-                modifier = Modifier.padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
-                placeholder = "Search accounts",
-            )
+            HorizontalDivider()
             when {
                 state.isLoading -> AccountsLoading()
                 state.errorMessage != null -> AccountsError(state.errorMessage) { onAction(AccountsAction.Retry) }
@@ -138,12 +141,21 @@ fun AccountsScreen(
                         message = "Accounts will appear here after they are added.",
                     )
                 }
-                else -> AccountsGroupedList(groups = state.groups)
+                else ->
+                    AccountsGroupedList(
+                        groups = state.groups,
+                        onAccountClick = { account ->
+                            if (account.isLoan) {
+                                if (account.loanId != null) {
+                                    onNavigate(MainRoute.LoanDetails(account.loanId))
+                                } else {
+                                    onNavigate(MainRoute.Loans)
+                                }
+                            }
+                        },
+                    )
             }
         }
-    }
-    if (state.isCreateDialogVisible) {
-        AddAccountDialog(state = state, onAction = onAction)
     }
 }
 
@@ -177,11 +189,6 @@ internal fun AddAccountDialog(
                         )
                     }
                 }
-                Text(
-                    text = "Currency: ${state.draftCurrencyCode}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
                 state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
         },
@@ -272,14 +279,20 @@ private fun SummaryColumn(
 }
 
 @Composable
-private fun AccountsGroupedList(groups: List<AccountGroupUiModel>) {
+private fun AccountsGroupedList(
+    groups: List<AccountGroupUiModel>,
+    onAccountClick: (AccountRowUiModel) -> Unit,
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         groups.forEach { group ->
             item(key = "header-${group.id}") {
                 AccountGroupHeader(group)
             }
             items(group.accounts, key = { it.id }) { account ->
-                AccountRow(account)
+                AccountRow(
+                    account = account,
+                    onClick = { onAccountClick(account) },
+                )
                 HorizontalDivider()
             }
         }
@@ -341,36 +354,28 @@ private fun AccountGroupTotals(
 }
 
 @Composable
-private fun AccountRow(account: AccountRowUiModel) {
+private fun AccountRow(
+    account: AccountRowUiModel,
+    onClick: () -> Unit = {},
+) {
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = TioDimensions.accountRowHeight)
+                .clickable(enabled = account.isLoan, onClick = onClick)
                 .semantics {
                     contentDescription = "${account.name}, ${account.typeLabel}, ${account.balance}"
                 }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TioIcon(TioIconToken.Account, contentDescription = "${account.typeLabel} account")
-        Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .padding(horizontal = TioSpacing.md),
-        ) {
-            Text(
-                text = account.name,
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-            )
-            Text(
-                text = account.currencyCode,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Text(
+            text = account.name,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+        )
         TioAmountText(
             amount = account.balance,
             tone = if (account.isLiability) TioAmountTone.Negative else TioAmountTone.Neutral,
