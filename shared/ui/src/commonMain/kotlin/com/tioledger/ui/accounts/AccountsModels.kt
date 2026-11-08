@@ -14,6 +14,10 @@ data class AccountsUiState(
     val isCreateDialogVisible: Boolean = false,
     val editingAccountId: String? = null,
     val draftName: String = "",
+    val draftOpeningBalance: String = "",
+    val draftPaymentAccount: String? = null,
+    val draftSettlementDate: String = "Every 1",
+    val draftPaymentDate: String = "Every 1",
     val availableGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
     val draftGroupId: String = DEFAULT_ACCOUNT_GROUPS.first().id,
     val draftCurrencyCode: String = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
@@ -77,6 +81,14 @@ sealed interface AccountsAction {
     data object CreateDismissed : AccountsAction
 
     data class NameChanged(val name: String) : AccountsAction
+
+    data class OpeningBalanceChanged(val amount: String) : AccountsAction
+
+    data class PaymentAccountChanged(val account: String) : AccountsAction
+
+    data class SettlementDateChanged(val day: String) : AccountsAction
+
+    data class PaymentDateChanged(val day: String) : AccountsAction
 
     data class GroupChanged(val groupId: String) : AccountsAction
 

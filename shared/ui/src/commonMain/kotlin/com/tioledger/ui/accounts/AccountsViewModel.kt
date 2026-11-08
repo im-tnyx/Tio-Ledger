@@ -13,6 +13,8 @@ import com.tioledger.application.usecase.account.UpdateAccountCommand
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.account.withSearchQuery
 import com.tioledger.application.usecase.loan.ListLoansUseCase
+import com.tioledger.application.usecase.transaction.RecordOpeningBalanceCommand
+import com.tioledger.application.usecase.transaction.RecordOpeningBalanceUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
@@ -36,6 +38,7 @@ class AccountsViewModel(
     private val currencyPreferenceStore: CurrencyPreferenceStore? = null,
     private val listLoansUseCase: ListLoansUseCase? = null,
     private val updateAccountUseCase: UpdateAccountUseCase? = null,
+    private val recordOpeningBalanceUseCase: RecordOpeningBalanceUseCase? = null,
 ) {
     private val _uiState =
         MutableStateFlow(
@@ -101,6 +104,14 @@ class AccountsViewModel(
             AccountsAction.CreateDismissed -> dismissCreateDialog()
             is AccountsAction.NameChanged ->
                 _uiState.value = _uiState.value.copy(draftName = action.name, createErrorMessage = null)
+            is AccountsAction.OpeningBalanceChanged ->
+                _uiState.value = _uiState.value.copy(draftOpeningBalance = action.amount, createErrorMessage = null)
+            is AccountsAction.PaymentAccountChanged ->
+                _uiState.value = _uiState.value.copy(draftPaymentAccount = action.account, createErrorMessage = null)
+            is AccountsAction.SettlementDateChanged ->
+                _uiState.value = _uiState.value.copy(draftSettlementDate = action.day, createErrorMessage = null)
+            is AccountsAction.PaymentDateChanged ->
+                _uiState.value = _uiState.value.copy(draftPaymentDate = action.day, createErrorMessage = null)
             is AccountsAction.GroupChanged -> {
                 accountGroupStore.groupForId(action.groupId)?.let { group ->
                     _uiState.value =
@@ -213,6 +224,20 @@ class AccountsViewModel(
         }
         when (val result = createAccountUseCase(command)) {
             is ApplicationResult.Success -> {
+                val created = result.outcome.value
+                val minor = parseAmountToMinor(current.draftOpeningBalance)
+                if (minor > 0L && recordOpeningBalanceUseCase != null) {
+                    val now = nowProvider()
+                    recordOpeningBalanceUseCase(
+                        RecordOpeningBalanceCommand(
+                            timestamp = now,
+                            description = "Opening balance",
+                            amount = Money(minor, CurrencyCode(created.currencyCode)),
+                            accountId = created.id,
+                            createdAt = now,
+                        ),
+                    )
+                }
                 _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
                 loadAccounts()
             }
@@ -481,6 +506,10 @@ private fun resetCreateDraft(
         isCreateDialogVisible = false,
         editingAccountId = null,
         draftName = "",
+        draftOpeningBalance = "",
+        draftPaymentAccount = null,
+        draftSettlementDate = "Every 1",
+        draftPaymentDate = "Every 1",
         draftGroupId = state.availableGroups.firstOrNull()?.id.orEmpty(),
         draftCurrencyCode =
             currencyPreferenceStore?.getConfig()?.currency?.code?.normalized
@@ -491,3 +520,18 @@ private fun resetCreateDraft(
         isSaving = false,
         createErrorMessage = null,
     )
+
+internal fun parseAmountToMinor(input: String): Long {
+    val clean = input.trim().replace(",", "").replace(" ", "").replace("₹", "").replace("$", "")
+    if (clean.isBlank()) return 0L
+    val parts = clean.split(".")
+    val major = parts[0].toLongOrNull() ?: 0L
+    val minor =
+        if (parts.size > 1) {
+            val frac = parts[1].padEnd(2, '0').take(2)
+            frac.toLongOrNull() ?: 0L
+        } else {
+            0L
+        }
+    return major * 100L + minor
+}

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +26,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -46,6 +48,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tioledger.domain.model.AccountType
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.components.TioIcon
@@ -95,6 +98,11 @@ fun AccountEditScreen(
     val isCreditCard = selectedGroup?.policy == AccountGroupPolicy.CREDIT_CARD
 
     var showGroupPicker by remember { mutableStateOf(false) }
+    var showAmountDialog by remember { mutableStateOf(false) }
+    var tempAmountInput by remember { mutableStateOf("") }
+    var showPaymentPicker by remember { mutableStateOf(false) }
+    var showSettlementPicker by remember { mutableStateOf(false) }
+    var showPaymentDatePicker by remember { mutableStateOf(false) }
     var description by remember { mutableStateOf("") }
     var includeInTotals by remember { mutableStateOf(true) }
     var showHideSetting by remember { mutableStateOf(true) }
@@ -179,7 +187,11 @@ fun AccountEditScreen(
             AccountFormRow(label = "Amount") {
                 val amountText =
                     if (isAddMode) {
-                        "${state.currencySymbol} 0.00"
+                        if (state.draftOpeningBalance.isBlank()) {
+                            "${state.currencySymbol} 0.00"
+                        } else {
+                            "${state.currencySymbol} ${state.draftOpeningBalance}"
+                        }
                     } else {
                         accountRow?.balance ?: "${state.currencySymbol} 0.00"
                     }
@@ -187,7 +199,14 @@ fun AccountEditScreen(
                     text = amountText,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 15.sp,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = isAddMode) {
+                                tempAmountInput = state.draftOpeningBalance
+                                showAmountDialog = true
+                            }
+                            .padding(vertical = 12.dp),
                 )
             }
 
@@ -195,10 +214,14 @@ fun AccountEditScreen(
                 // Payment Row
                 AccountFormRow(label = "Payment") {
                     Text(
-                        text = "",
+                        text = state.draftPaymentAccount.orEmpty(),
                         color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 15.sp,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { showPaymentPicker = true }
+                                .padding(vertical = 12.dp),
                     )
                 }
 
@@ -224,20 +247,28 @@ fun AccountEditScreen(
                 // Settlement Date Row
                 AccountFormRow(label = "Settlement\nDate") {
                     Text(
-                        text = "Every 1",
+                        text = state.draftSettlementDate,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 15.sp,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { showSettlementPicker = true }
+                                .padding(vertical = 12.dp),
                     )
                 }
 
                 // Payment Date Row
                 AccountFormRow(label = "Payment\nDate") {
                     Text(
-                        text = "Every 1",
+                        text = state.draftPaymentDate,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 15.sp,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { showPaymentDatePicker = true }
+                                .padding(vertical = 12.dp),
                     )
                 }
 
@@ -441,6 +472,230 @@ fun AccountEditScreen(
                 onNavigateBack()
             },
             onDismiss = { onAction(AccountsAction.ArchiveDismissed) },
+        )
+    }
+
+    if (showAmountDialog) {
+        AlertDialog(
+            onDismissRequest = { showAmountDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(12.dp),
+            title = {
+                Text(
+                    text = "Amount",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+            },
+            text = {
+                OutlinedTextField(
+                    value = tempAmountInput,
+                    onValueChange = { tempAmountInput = it },
+                    label = { Text("Initial amount (${state.currencySymbol})") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onAction(AccountsAction.OpeningBalanceChanged(tempAmountInput.trim()))
+                        showAmountDialog = false
+                    },
+                ) {
+                    Text("OK", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAmountDialog = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+        )
+    }
+
+    if (showPaymentPicker) {
+        val eligiblePaymentAccounts =
+            state.groups
+                .filter { it.type != AccountType.CREDIT_CARD }
+                .flatMap { it.accounts }
+        AlertDialog(
+            onDismissRequest = { showPaymentPicker = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(12.dp),
+            title = {
+                Text(
+                    text = "Payment Account",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+            },
+            text = {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState()),
+                ) {
+                    if (eligiblePaymentAccounts.isEmpty()) {
+                        Text(
+                            text = "No eligible bank or cash accounts available.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 12.dp),
+                        )
+                    } else {
+                        eligiblePaymentAccounts.forEach { acc ->
+                            val isSelected = acc.name == state.draftPaymentAccount
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onAction(AccountsAction.PaymentAccountChanged(acc.name))
+                                            showPaymentPicker = false
+                                        }
+                                        .padding(vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = acc.name,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                if (isSelected) {
+                                    Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                }
+                            }
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showPaymentPicker = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+        )
+    }
+
+    if (showSettlementPicker) {
+        val days = (1..31).map { "Every $it" } + "End of month"
+        AlertDialog(
+            onDismissRequest = { showSettlementPicker = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(12.dp),
+            title = {
+                Text(
+                    text = "Date of Settlement",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+            },
+            text = {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState()),
+                ) {
+                    days.forEach { day ->
+                        val isSelected = day == state.draftSettlementDate
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onAction(AccountsAction.SettlementDateChanged(day))
+                                        showSettlementPicker = false
+                                    }
+                                    .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = day,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                fontSize = 16.sp,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (isSelected) {
+                                Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            }
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showSettlementPicker = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+        )
+    }
+
+    if (showPaymentDatePicker) {
+        val days = (1..31).map { "Every $it" } + "End of month"
+        AlertDialog(
+            onDismissRequest = { showPaymentDatePicker = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(12.dp),
+            title = {
+                Text(
+                    text = "Date of Payment",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+            },
+            text = {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState()),
+                ) {
+                    days.forEach { day ->
+                        val isSelected = day == state.draftPaymentDate
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onAction(AccountsAction.PaymentDateChanged(day))
+                                        showPaymentDatePicker = false
+                                    }
+                                    .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = day,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                fontSize = 16.sp,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (isSelected) {
+                                Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            }
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showPaymentDatePicker = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                }
+            },
         )
     }
 }

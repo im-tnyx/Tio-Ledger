@@ -209,6 +209,25 @@ class AccountsViewModelTest {
     }
 
     @Test
+    fun openingBalanceAndCardDraftActionsUpdateState() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val ledger = FakeLedgerRepository()
+        val viewModel = testViewModel(accounts, ledger)
+
+        viewModel.onAction(AccountsAction.OpeningBalanceChanged("1500.50"))
+        viewModel.onAction(AccountsAction.PaymentAccountChanged("Cash"))
+        viewModel.onAction(AccountsAction.SettlementDateChanged("15"))
+        viewModel.onAction(AccountsAction.PaymentDateChanged("25"))
+
+        val state = viewModel.uiState.value
+        assertEquals("1500.50", state.draftOpeningBalance)
+        assertEquals("Cash", state.draftPaymentAccount)
+        assertEquals("15", state.draftSettlementDate)
+        assertEquals("25", state.draftPaymentDate)
+    }
+
+    @Test
     fun validationFailureSurfacesThroughExistingErrorMapping() {
         val cash = account("cash", "Cash", AccountType.CASH)
         val accounts = FakeAccountRepository(listOf(cash))
