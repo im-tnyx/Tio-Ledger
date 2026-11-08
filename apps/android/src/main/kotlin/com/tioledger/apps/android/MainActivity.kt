@@ -189,16 +189,20 @@ internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
                 MainRoute.Help,
                 MainRoute.Feedback,
                 -> RootRoute.Main(MainRoute.More)
-                MainRoute.AccountSettings -> RootRoute.Main(MainRoute.Configuration)
+                MainRoute.AccountSettings -> RootRoute.Main(MainRoute.More)
                 MainRoute.AccountManager,
                 MainRoute.AccountGroup,
                 -> RootRoute.Main(MainRoute.AccountSettings)
+                MainRoute.AccountGroupAdd,
+                is MainRoute.AccountGroupEdit,
+                -> RootRoute.Main(MainRoute.AccountGroup)
+                MainRoute.AccountAdd,
                 is MainRoute.AccountEdit,
                 -> RootRoute.Main(MainRoute.AccountManager)
                 MainRoute.SmsTransactionReview,
                 -> RootRoute.Main(MainRoute.Transactions)
-                is MainRoute.LoanDetails -> RootRoute.Main(MainRoute.Loans)
+                is MainRoute.LoanDetails,
                 MainRoute.Loans,
-                -> TioNavigationGraphs.root.mainEntry
+                -> RootRoute.Main(MainRoute.Accounts)
             }
     }

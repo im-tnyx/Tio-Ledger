@@ -2,7 +2,6 @@ package com.tioledger.apps.android
 
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.RootRoute
-import com.tioledger.ui.navigation.TioNavigationGraphs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -39,7 +38,7 @@ class MainActivityNavigationTest {
     @Test
     fun systemBackPreservesAccountSettingsHierarchy() {
         assertEquals(
-            RootRoute.Main(MainRoute.Configuration),
+            RootRoute.Main(MainRoute.More),
             systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountSettings)),
         )
         assertEquals(
@@ -51,8 +50,20 @@ class MainActivityNavigationTest {
             systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountEdit("acc-1"))),
         )
         assertEquals(
+            RootRoute.Main(MainRoute.AccountManager),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountAdd)),
+        )
+        assertEquals(
             RootRoute.Main(MainRoute.AccountSettings),
             systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountGroup)),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.AccountGroup),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountGroupAdd)),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.AccountGroup),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountGroupEdit("grp-1"))),
         )
     }
 
@@ -65,9 +76,9 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun systemBackFromLoanDetailsReturnsLoans() {
+    fun systemBackFromLoanDetailsReturnsAccounts() {
         assertEquals(
-            RootRoute.Main(MainRoute.Loans),
+            RootRoute.Main(MainRoute.Accounts),
             systemBackTargetOrNull(RootRoute.Main(MainRoute.LoanDetails("loan-1"))),
         )
     }
@@ -85,13 +96,9 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun systemBackFromLoansReturnsAccountsMainEntry() {
+    fun systemBackFromLoansReturnsAccounts() {
         assertEquals(
-            RootRoute.Main(MainRoute.Transactions),
-            TioNavigationGraphs.root.mainEntry,
-        )
-        assertEquals(
-            TioNavigationGraphs.root.mainEntry,
+            RootRoute.Main(MainRoute.Accounts),
             systemBackTargetOrNull(RootRoute.Main(MainRoute.Loans)),
         )
     }

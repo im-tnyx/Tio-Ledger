@@ -100,6 +100,12 @@ sealed interface MainRoute : AppRoute {
         override val icon: TioIconToken = TioIconToken.Account
     }
 
+    data object AccountAdd : MainRoute {
+        override val path: String = "settings/accounts/add"
+        override val title: String = "Add Account"
+        override val icon: TioIconToken = TioIconToken.Account
+    }
+
     data class AccountEdit(
         val accountId: String,
     ) : MainRoute {
@@ -110,6 +116,20 @@ sealed interface MainRoute : AppRoute {
 
     data object AccountGroup : MainRoute {
         override val path: String = "settings/account-group"
+        override val title: String = "Account Group"
+        override val icon: TioIconToken = TioIconToken.Account
+    }
+
+    data object AccountGroupAdd : MainRoute {
+        override val path: String = "settings/account-group/add"
+        override val title: String = "Account Group"
+        override val icon: TioIconToken = TioIconToken.Account
+    }
+
+    data class AccountGroupEdit(
+        val groupId: String,
+    ) : MainRoute {
+        override val path: String = "settings/account-group/edit/$groupId"
         override val title: String = "Account Group"
         override val icon: TioIconToken = TioIconToken.Account
     }
@@ -262,7 +282,9 @@ object TioNavigationGraphs {
                     MainRoute.Configuration,
                     MainRoute.AccountSettings,
                     MainRoute.AccountManager,
+                    MainRoute.AccountAdd,
                     MainRoute.AccountGroup,
+                    MainRoute.AccountGroupAdd,
                     MainRoute.BudgetSettings,
                     MainRoute.TransactionSettings,
                     MainRoute.RepeatSettings,

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -32,6 +33,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.tioledger.ui.components.TioAppBar
+import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioCard
 import com.tioledger.ui.components.TioEmptyState
@@ -86,8 +88,11 @@ fun LoansScreen(
                 navigationIcon =
                     onNavigateBack?.let { navigateBack ->
                         {
-                            TextButton(onClick = navigateBack) {
-                                Text("‹ Account Group")
+                            IconButton(
+                                onClick = navigateBack,
+                                modifier = Modifier.semantics { contentDescription = "Navigate back" },
+                            ) {
+                                TioBackIcon()
                             }
                         }
                     },
@@ -221,8 +226,11 @@ fun LoanDetailsScreen(
             TioAppBar(
                 title = state.details?.name ?: "Loan details",
                 navigationIcon = {
-                    TextButton(onClick = onNavigateBack) {
-                        Text("Back")
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.semantics { contentDescription = "Navigate back" },
+                    ) {
+                        TioBackIcon()
                     }
                 },
             )
@@ -234,7 +242,6 @@ fun LoanDetailsScreen(
                     modifier =
                         Modifier
                             .padding(padding)
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
                             .fillMaxSize(),
                 ) {
                     TioLoadingState(label = "Loading loan details")
@@ -245,7 +252,6 @@ fun LoanDetailsScreen(
                     modifier =
                         Modifier
                             .padding(padding)
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
                             .fillMaxSize(),
                 ) {
                     TioErrorState(
@@ -267,7 +273,6 @@ fun LoanDetailsScreen(
                     modifier =
                         Modifier
                             .padding(padding)
-                            .windowInsetsPadding(WindowInsets.safeDrawing)
                             .fillMaxSize(),
                 ) {
                     TioEmptyState(
