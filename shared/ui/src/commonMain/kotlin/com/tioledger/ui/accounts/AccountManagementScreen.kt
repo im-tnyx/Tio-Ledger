@@ -28,6 +28,7 @@ import com.tioledger.ui.components.TioAddIcon
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.components.TioBottomNavigation
+import com.tioledger.ui.components.TioChevronRightIcon
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.design.TioDimensions
 import com.tioledger.ui.design.TioSpacing
@@ -165,5 +166,6 @@ private fun AccountManagementRow(
                     .padding(horizontal = TioSpacing.md),
             maxLines = 1,
         )
+        TioChevronRightIcon()
     }
 }
