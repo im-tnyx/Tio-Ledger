@@ -4,6 +4,8 @@ import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
 import com.tioledger.application.usecase.account.AccountBalanceSummary
 import com.tioledger.application.usecase.account.AccountsBalanceOverview
+import com.tioledger.application.usecase.account.ArchiveAccountCommand
+import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountCommand
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
@@ -24,6 +26,7 @@ import kotlinx.datetime.Clock
 class AccountsViewModel(
     private val listAccountSummariesUseCase: ListAccountSummariesUseCase,
     private val createAccountUseCase: CreateAccountUseCase,
+    private val archiveAccountUseCase: ArchiveAccountUseCase,
     private val idGenerator: IdGenerator,
     private val nowProvider: () -> Long = { Clock.System.now().toEpochMilliseconds() },
     private val accountGroupStore: AccountGroupStore,
@@ -77,6 +80,16 @@ class AccountsViewModel(
                 }
             }
             AccountsAction.SaveClicked -> createAccount()
+            is AccountsAction.ArchiveRequested -> {
+                _uiState.value =
+                    _uiState.value.copy(
+                        archiveAccountId = action.accountId,
+                        archiveAccountName = action.accountName,
+                        archiveErrorMessage = null,
+                    )
+            }
+            AccountsAction.ArchiveDismissed -> dismissArchiveDialog()
+            AccountsAction.ArchiveConfirmed -> archiveAccount()
         }
     }
 
@@ -135,6 +148,50 @@ class AccountsViewModel(
                         "Account was not saved. Temporary group assignment cleanup failed."
                     }
                 _uiState.value = _uiState.value.copy(isSaving = false, createErrorMessage = message)
+            }
+        }
+    }
+
+    private fun dismissArchiveDialog() {
+        if (_uiState.value.isArchiving) return
+        _uiState.value =
+            _uiState.value.copy(
+                archiveAccountId = null,
+                archiveAccountName = null,
+                archiveErrorMessage = null,
+            )
+    }
+
+    private fun archiveAccount() {
+        val current = _uiState.value
+        val accountId = current.archiveAccountId ?: return
+        if (current.isArchiving) return
+        _uiState.value = current.copy(isArchiving = true, archiveErrorMessage = null)
+        when (
+            val result =
+                archiveAccountUseCase(
+                    ArchiveAccountCommand(
+                        accountId = accountId,
+                        archivedAt = nowProvider(),
+                    ),
+                )
+        ) {
+            is ApplicationResult.Success -> {
+                _uiState.value =
+                    _uiState.value.copy(
+                        archiveAccountId = null,
+                        archiveAccountName = null,
+                        isArchiving = false,
+                        archiveErrorMessage = null,
+                    )
+                loadAccounts()
+            }
+            is ApplicationResult.Failure -> {
+                _uiState.value =
+                    current.copy(
+                        isArchiving = false,
+                        archiveErrorMessage = result.error.toArchiveMessage(),
+                    )
             }
         }
     }
@@ -276,6 +333,13 @@ private fun ApplicationError.toCreateMessage(): String =
         is ApplicationError.Validation -> "$field: $reason"
         is ApplicationError.Repository -> "Unable to save this account. Try again."
         is ApplicationError.Ledger -> "Unable to save this account. Try again."
+    }
+
+private fun ApplicationError.toArchiveMessage(): String =
+    when (this) {
+        is ApplicationError.Validation -> "$field: $reason"
+        is ApplicationError.Repository -> "Unable to archive this account. Try again."
+        is ApplicationError.Ledger -> "Unable to archive this account. Try again."
     }
 
 private fun resetCreateDraft(state: AccountsUiState): AccountsUiState =

@@ -24,6 +24,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 5. Account creation requires a persisted Account Group. The selected group policy is the only source of `AccountType`; there is no independent type selector.
 6. A group-to-account assignment is synchronously persisted and validated before the existing `CreateAccountUseCase` is invoked. If assignment preparation fails, no account save is attempted.
 7. A custom group that still has assigned accounts cannot be deleted. Reassignment or archival is intentionally deferred until a separately approved design exists.
+8. Only the Account Settings management destination exposes an account archive action. Its confirmation makes the account inactive through the existing `ArchiveAccountUseCase`; it does not delete or reassign transaction splits, ledger entries, loans, or balances.
 
 ## Information Hierarchy
 
@@ -40,6 +41,8 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 - The existing persisted Main Currency reaches `CreateAccountCommand.currencyCode` unchanged.
 - Account creation continues to use `CreateAccountUseCase`; Account Settings has no second account repository, balance source, or ledger write path.
 - Existing accounts without an assignment remain visible through the established type-based fallback. Their type, ledger class, balances, and historical ledger entries are never changed.
+- **Account deletion intent:** the visible action is implemented as archive, not a destructive database delete or a transfer to a shared "Deleted Account". The account keeps its ID and historical attribution; it disappears from active account lists while transactions and ledger entries remain attached to it. The user must explicitly confirm the archive action.
+- An archive failure leaves the account active, keeps the confirmation visible, and shows an error. Repeated confirmation while an archive is in flight is ignored.
 - No SQLDelight schema, ledger, loan-engine, balance, payment, or transaction contract changes in this slice.
 
 ## Navigation Definition
@@ -59,11 +62,13 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 - Repeated Save: while saving, further submissions are ignored.
 - Cancel/dismiss: persist neither an account nor a group assignment.
 - Group in use: reject deletion and explain that the group contains accounts.
+- Account archive: explain that active-list visibility changes only; historical transactions, ledger entries, balances, group assignment, and loan references are preserved without reassignment.
 
 ## Tio UI Specification
 
 - Reuse the existing Tio Ledger Accounts list and dialog; do not redesign the Accounts tab.
 - The management destination has a back affordance with an accessible description and uses theme-driven colors only.
+- An account archive affordance is available only from the management destination, has an accessible account-specific label, and opens a confirmation dialog that explains history preservation before persistence.
 - Group options expose their selected state in text/semantics, support keyboard/switch access, and remain reachable at large text sizes.
 - Save/Cancel, loading, validation, and save failures remain visible and accessible in light and dark themes.
 
@@ -83,6 +88,8 @@ This slice does **not** add those fields, mutable balances, billing formulas, au
 - [ ] A new account is not saved unless its validated assignment is persisted first.
 - [ ] In-use custom-group deletion is rejected without losing assignment data.
 - [ ] Failed and repeated saves preserve account/ledger invariants.
+- [ ] Archiving an account requires confirmation, removes it only from active lists, and preserves its ID, group assignment, transactions, ledger entries, and derived balance.
+- [ ] Archive failure and repeated confirmation preserve the active account and show an actionable error/loading state.
 - [ ] Legacy unassigned accounts remain compatible without reclassification.
 - [ ] No ledger entry, balance mutation, Loan Engine change, or schema migration occurs.
 - [ ] Pixel, theme, responsive, and accessibility review are recorded separately after a real device/screenshot pass.
@@ -92,6 +99,7 @@ This slice does **not** add those fields, mutable balances, billing formulas, au
 - The management destination reuses the existing Accounts list instead of copying a separate reference list implementation.
 - Credit Card financial detail fields are deferred because the current financial contract does not support them.
 - Group assignment remains in the existing Account Group persisted infrastructure. Moving it into frozen SQLDelight persistence would require a versioned migration and separate architecture approval.
+- A common "Deleted Account" was intentionally not introduced: reassigning historical records would violate the immutable-ledger and historical-attribution rules. Archive retains the original account identity instead.
 
 ## Accessibility Considerations
 

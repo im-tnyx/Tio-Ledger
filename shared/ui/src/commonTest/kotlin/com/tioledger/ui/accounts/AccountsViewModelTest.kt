@@ -1,5 +1,6 @@
 package com.tioledger.ui.accounts
 
+import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
 import com.tioledger.application.usecase.currency.GetMainCurrencyConfigUseCase
@@ -499,6 +500,58 @@ class AccountsViewModelTest {
     }
 
     @Test
+    fun archivePreservesHistoricalLedgerEntriesAndGroupAssignment() {
+        val bank = account("bank", "Primary Bank", AccountType.BANK)
+        val accounts = FakeAccountRepository(listOf(bank))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[bank.id] = listOf(entry("bank-entry", bank, 2_500L))
+        val ledgerBefore = ledger.entriesByAccount.toMap()
+        val groupStore = AccountGroupStore()
+        assertTrue(groupStore.assignAccount(bank.id, "accounts"))
+        val viewModel = testViewModel(accounts, ledger, accountGroupStore = groupStore)
+
+        viewModel.onAction(AccountsAction.ArchiveRequested(bank.id, bank.name))
+        viewModel.onAction(AccountsAction.ArchiveConfirmed)
+
+        val archived = (accounts.findById(bank.id) as LedgerResult.Success).value
+        assertTrue(archived.isArchived)
+        assertTrue(viewModel.uiState.value.isEmpty)
+        assertEquals(ledgerBefore, ledger.entriesByAccount)
+        assertEquals("accounts", groupStore.groupIdForAccount(bank.id))
+    }
+
+    @Test
+    fun archiveFailureKeepsAccountActiveAndConfirmationVisible() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        accounts.updateResult = { LedgerResult.Failure(LedgerError.StorageUnavailable) }
+        val viewModel = testViewModel(accounts, FakeLedgerRepository())
+
+        viewModel.onAction(AccountsAction.ArchiveRequested(cash.id, cash.name))
+        viewModel.onAction(AccountsAction.ArchiveConfirmed)
+
+        val stored = (accounts.findById(cash.id) as LedgerResult.Success).value
+        assertFalse(stored.isArchived)
+        assertEquals(cash.id, viewModel.uiState.value.archiveAccountId)
+        assertEquals("Unable to archive this account. Try again.", viewModel.uiState.value.archiveErrorMessage)
+    }
+
+    @Test
+    fun repeatedArchiveConfirmationOnlyUpdatesOnce() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        lateinit var viewModel: AccountsViewModel
+        viewModel = testViewModel(accounts, FakeLedgerRepository())
+        accounts.beforeUpdate = { viewModel.onAction(AccountsAction.ArchiveConfirmed) }
+
+        viewModel.onAction(AccountsAction.ArchiveRequested(cash.id, cash.name))
+        viewModel.onAction(AccountsAction.ArchiveConfirmed)
+
+        assertEquals(1, accounts.updateCount)
+        assertTrue((accounts.findById(cash.id) as LedgerResult.Success).value.isArchived)
+    }
+
+    @Test
     fun legacyUnassignedAccountRemainsVisibleWithItsExistingType() {
         val legacyBank = account("legacy-bank", "Legacy bank", AccountType.BANK)
         val groupStore = AccountGroupStore()
@@ -561,6 +614,7 @@ private fun testViewModel(
     AccountsViewModel(
         listAccountSummariesUseCase = ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
         createAccountUseCase = CreateAccountUseCase(accounts),
+        archiveAccountUseCase = ArchiveAccountUseCase(accounts),
         idGenerator = idGenerator,
         nowProvider = { 1_700_000_000_000L },
         accountGroupStore = accountGroupStore,
@@ -630,6 +684,9 @@ private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRep
     val created: List<Account> get() = createdAccounts
     var beforeCreate: (() -> Unit)? = null
     var createResult: ((Account) -> LedgerResult<Account>)? = null
+    var beforeUpdate: (() -> Unit)? = null
+    var updateResult: ((Account) -> LedgerResult<Account>)? = null
+    var updateCount = 0
 
     override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> {
         readCount++
@@ -650,7 +707,16 @@ private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRep
         return result
     }
 
-    override fun update(account: Account): LedgerResult<Account> = LedgerResult.Success(account)
+    override fun update(account: Account): LedgerResult<Account> {
+        beforeUpdate?.invoke()
+        updateCount++
+        val result = updateResult?.invoke(account) ?: LedgerResult.Success(account)
+        if (result is LedgerResult.Success) {
+            val index = accounts.indexOfFirst { it.id == account.id }
+            if (index >= 0) accounts[index] = account
+        }
+        return result
+    }
 }
 
 private class FakeLedgerRepository : LedgerRepository {

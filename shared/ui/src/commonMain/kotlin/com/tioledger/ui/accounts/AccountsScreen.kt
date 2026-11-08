@@ -142,7 +142,18 @@ fun AccountsScreen(
                         message = "Accounts will appear here after they are added.",
                     )
                 }
-                else -> AccountsGroupedList(state.groups)
+                else ->
+                    AccountsGroupedList(
+                        groups = state.groups,
+                        onArchiveRequested =
+                            if (destination == MainRoute.AccountManager) {
+                                { account ->
+                                    onAction(AccountsAction.ArchiveRequested(account.id, account.name))
+                                }
+                            } else {
+                                null
+                            },
+                    )
             }
         }
     }
@@ -190,6 +201,37 @@ fun AccountsScreen(
             },
         )
     }
+    state.archiveAccountId?.let {
+        AlertDialog(
+            onDismissRequest = { onAction(AccountsAction.ArchiveDismissed) },
+            title = { Text("Archive account?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.md)) {
+                    Text(
+                        "${state.archiveAccountName.orEmpty()} will be removed from active accounts. " +
+                            "Its transactions, ledger history, balance, and account identity will be preserved.",
+                    )
+                    state.archiveErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { onAction(AccountsAction.ArchiveConfirmed) },
+                    enabled = !state.isArchiving,
+                ) {
+                    Text(if (state.isArchiving) "Archiving" else "Archive")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { onAction(AccountsAction.ArchiveDismissed) },
+                    enabled = !state.isArchiving,
+                ) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -229,14 +271,17 @@ private fun SummaryColumn(
 }
 
 @Composable
-private fun AccountsGroupedList(groups: List<AccountGroupUiModel>) {
+private fun AccountsGroupedList(
+    groups: List<AccountGroupUiModel>,
+    onArchiveRequested: ((AccountRowUiModel) -> Unit)?,
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         groups.forEach { group ->
             item(key = "header-${group.id}") {
                 AccountGroupHeader(group)
             }
             items(group.accounts, key = { it.id }) { account ->
-                AccountRow(account)
+                AccountRow(account, onArchiveRequested)
                 HorizontalDivider()
             }
         }
@@ -298,7 +343,10 @@ private fun AccountGroupTotals(
 }
 
 @Composable
-private fun AccountRow(account: AccountRowUiModel) {
+private fun AccountRow(
+    account: AccountRowUiModel,
+    onArchiveRequested: ((AccountRowUiModel) -> Unit)?,
+) {
     Row(
         modifier =
             Modifier
@@ -332,6 +380,14 @@ private fun AccountRow(account: AccountRowUiModel) {
             amount = account.balance,
             tone = if (account.isLiability) TioAmountTone.Negative else TioAmountTone.Neutral,
         )
+        onArchiveRequested?.let { archive ->
+            IconButton(
+                onClick = { archive(account) },
+                modifier = Modifier.semantics { contentDescription = "Archive ${account.name}" },
+            ) {
+                TioIcon(TioIconToken.Delete, contentDescription = null)
+            }
+        }
     }
 }
 

@@ -18,6 +18,10 @@ data class AccountsUiState(
     val draftCurrencyCode: String = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
     val isSaving: Boolean = false,
     val createErrorMessage: String? = null,
+    val archiveAccountId: String? = null,
+    val archiveAccountName: String? = null,
+    val isArchiving: Boolean = false,
+    val archiveErrorMessage: String? = null,
 ) {
     val isEmpty: Boolean
         get() = !isLoading && errorMessage == null && groups.all { it.accounts.isEmpty() }
@@ -70,6 +74,15 @@ sealed interface AccountsAction {
     data class GroupChanged(val groupId: String) : AccountsAction
 
     data object SaveClicked : AccountsAction
+
+    data class ArchiveRequested(
+        val accountId: String,
+        val accountName: String,
+    ) : AccountsAction
+
+    data object ArchiveDismissed : AccountsAction
+
+    data object ArchiveConfirmed : AccountsAction
 }
 
 sealed interface AccountsEvent

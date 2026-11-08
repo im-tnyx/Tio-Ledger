@@ -23,7 +23,7 @@ fun tioUiModule(): Module =
         single { AccountGroupStore(persistence = get()) }
         single { CurrencyPreferenceStore(get(), get()) }
         factory { CurrencySettingsViewModel(get()) }
-        factory { AccountsViewModel(get(), get(), get(), accountGroupStore = get(), currencyPreferenceStore = get()) }
+        factory { AccountsViewModel(get(), get(), get(), get(), accountGroupStore = get(), currencyPreferenceStore = get()) }
         factory { BudgetsViewModel(get(), get(), get(), get(), get()) }
         factory { CategoriesViewModel(get(), get(), get()) }
         factory { LoansViewModel(get(), get(), get(), get()) }
