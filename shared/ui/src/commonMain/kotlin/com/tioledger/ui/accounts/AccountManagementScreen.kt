@@ -5,13 +5,10 @@ package com.tioledger.ui.accounts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
@@ -32,9 +29,7 @@ import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
-import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.design.TioDimensions
-import com.tioledger.ui.design.TioIconToken
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
@@ -85,7 +80,7 @@ fun AccountManagementScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = { onAction(AccountsAction.AddClicked) },
+                        onClick = { onNavigate(MainRoute.AccountAdd) },
                         modifier = Modifier.semantics { contentDescription = "Add account" },
                     ) {
                         TioAddIcon()
@@ -106,7 +101,6 @@ fun AccountManagementScreen(
             modifier =
                 Modifier
                     .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .fillMaxSize(),
         ) {
             when {
@@ -135,7 +129,6 @@ fun AccountManagementScreen(
                                 AccountManagementRow(
                                     accountName = account.name,
                                     onClick = { onAccountClick(account.id) },
-                                    onArchive = { onAction(AccountsAction.ArchiveRequested(account.id, account.name)) },
                                 )
                                 HorizontalDivider()
                             }
@@ -145,27 +138,12 @@ fun AccountManagementScreen(
             }
         }
     }
-
-    if (state.isCreateDialogVisible) {
-        AddAccountDialog(state = state, onAction = onAction)
-    }
-
-    state.archiveAccountId?.let {
-        ArchiveAccountConfirmationDialog(
-            accountName = state.archiveAccountName.orEmpty(),
-            errorMessage = state.archiveErrorMessage,
-            isArchiving = state.isArchiving,
-            onConfirm = { onAction(AccountsAction.ArchiveConfirmed) },
-            onDismiss = { onAction(AccountsAction.ArchiveDismissed) },
-        )
-    }
 }
 
 @Composable
 private fun AccountManagementRow(
     accountName: String,
     onClick: () -> Unit,
-    onArchive: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -178,7 +156,6 @@ private fun AccountManagementRow(
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TioIcon(TioIconToken.Account, contentDescription = null)
         Text(
             text = accountName,
             style = MaterialTheme.typography.bodyLarge,
@@ -188,11 +165,5 @@ private fun AccountManagementRow(
                     .padding(horizontal = TioSpacing.md),
             maxLines = 1,
         )
-        IconButton(
-            onClick = onArchive,
-            modifier = Modifier.semantics { contentDescription = "Archive $accountName" },
-        ) {
-            TioIcon(TioIconToken.Delete, contentDescription = null)
-        }
     }
 }

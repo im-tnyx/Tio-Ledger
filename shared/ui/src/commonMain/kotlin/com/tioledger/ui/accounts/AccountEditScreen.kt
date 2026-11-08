@@ -2,75 +2,118 @@
 
 package com.tioledger.ui.accounts
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBackIcon
-import com.tioledger.ui.components.TioBottomNavigation
-import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.design.TioIconToken
-import com.tioledger.ui.design.TioSpacing
-import com.tioledger.ui.navigation.MainRoute
-import com.tioledger.ui.navigation.TioNavigationGraphs
-import com.tioledger.ui.navigation.bottomNavigationModel
+import com.tioledger.ui.more.AccountGroupPolicy
 import org.koin.compose.koinInject
 
 @Composable
 fun AccountEditRoute(
-    accountId: String,
+    accountId: String? = null,
     viewModel: AccountsViewModel = koinInject(),
-    onNavigate: (MainRoute) -> Unit = {},
     onNavigateBack: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(accountId) {
+        if (accountId == null) {
+            viewModel.onAction(AccountsAction.AddClicked)
+        } else {
+            viewModel.onAction(AccountsAction.EditAccountRequested(accountId))
+        }
+    }
+
     AccountEditScreen(
         accountId = accountId,
         state = state,
         onAction = viewModel::onAction,
-        onNavigate = onNavigate,
         onNavigateBack = onNavigateBack,
     )
 }
 
 @Composable
 fun AccountEditScreen(
-    accountId: String,
+    accountId: String?,
     state: AccountsUiState,
     onAction: (AccountsAction) -> Unit,
-    onNavigate: (MainRoute) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val destination = MainRoute.AccountEdit(accountId)
-    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(destination)
-    val accountRow = state.groups.flatMap { it.accounts }.firstOrNull { it.id == accountId }
-    val group = state.groups.firstOrNull { it.accounts.any { acc -> acc.id == accountId } }
+    val isAddMode = accountId == null
+    val accountRow = if (!isAddMode) state.groups.flatMap { it.accounts }.firstOrNull { it.id == accountId } else null
+
+    val selectedGroup =
+        state.availableGroups.firstOrNull { it.id == state.draftGroupId }
+            ?: state.availableGroups.firstOrNull()
+
+    val isCreditCard = selectedGroup?.policy == AccountGroupPolicy.CREDIT_CARD
+
+    var showGroupPicker by remember { mutableStateOf(false) }
+    var description by remember { mutableStateOf("") }
+    var includeInTotals by remember { mutableStateOf(true) }
+    var showHideSetting by remember { mutableStateOf(true) }
+
+    var wasSaving by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.isSaving, state.createErrorMessage) {
+        if (wasSaving && !state.isSaving && state.createErrorMessage == null) {
+            onNavigateBack()
+        }
+        wasSaving = state.isSaving
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TioAppBar(
-                title = destination.title,
+                title = if (isAddMode) "Add Account" else "Edit Account",
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,
@@ -80,24 +123,16 @@ fun AccountEditScreen(
                     }
                 },
                 actions = {
-                    if (accountRow != null) {
+                    if (!isAddMode && accountRow != null) {
                         IconButton(
                             onClick = {
                                 onAction(AccountsAction.ArchiveRequested(accountRow.id, accountRow.name))
                             },
                             modifier = Modifier.semantics { contentDescription = "Archive ${accountRow.name}" },
                         ) {
-                            TioIcon(TioIconToken.Delete, contentDescription = null)
+                            TioIcon(TioIconToken.Delete)
                         }
                     }
-                },
-            )
-        },
-        bottomBar = {
-            TioBottomNavigation(
-                items = bottomNavigation.items,
-                onItemSelected = { selectedItem ->
-                    bottomNavigation.navigate(selectedItem, onNavigate)
                 },
             )
         },
@@ -106,82 +141,294 @@ fun AccountEditScreen(
             modifier =
                 Modifier
                     .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(TioSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TioSpacing.md),
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
-            if (accountRow == null) {
-                TioEmptyState(
-                    title = "Account unavailable",
-                    message = "The selected account could not be found or has been archived.",
-                    action = {
-                        TextButton(onClick = onNavigateBack) {
-                            Text("Back to accounts")
-                        }
-                    },
-                )
-            } else {
-                OutlinedTextField(
-                    value = group?.title.orEmpty(),
-                    onValueChange = {},
-                    label = { Text("Group") },
-                    readOnly = true,
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = accountRow.name,
-                    onValueChange = {},
-                    label = { Text("Name") },
-                    readOnly = true,
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = "${accountRow.currencyCode} ${accountRow.balance}",
-                    onValueChange = {},
-                    label = { Text("Amount (Ledger-derived)") },
-                    readOnly = true,
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
-                    supportingText = {
-                        Text("Ledger-first balance. Amount adjustment workflow is deferred to Stage C.")
-                    },
-                )
-                OutlinedTextField(
-                    value = "Pending Stage B metadata specification",
-                    onValueChange = {},
-                    label = { Text("Description") },
-                    readOnly = true,
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = "Enabled (Default)",
-                    onValueChange = {},
-                    label = { Text("Include in totals") },
-                    readOnly = true,
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
-                    supportingText = {
-                        Text("Include in totals setting is pending Stage B persistence approval.")
-                    },
-                )
-                OutlinedTextField(
-                    value = "Visible",
-                    onValueChange = {},
-                    label = { Text("Show/Hide Setting") },
-                    readOnly = true,
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth(),
-                    supportingText = {
-                        Text("Visibility settings are pending Stage B persistence approval.")
-                    },
+            // Group Row
+            AccountFormRow(
+                label = "Group",
+                isUnderlineActive = showGroupPicker,
+            ) {
+                Text(
+                    text = selectedGroup?.title.orEmpty().ifEmpty { "Select Group" },
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { showGroupPicker = true }
+                            .padding(vertical = 12.dp),
                 )
             }
+
+            // Name Row
+            AccountFormRow(label = "Name") {
+                BasicTextField(
+                    value = state.draftName,
+                    onValueChange = { onAction(AccountsAction.NameChanged(it)) },
+                    textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                )
+            }
+
+            // Amount Row
+            AccountFormRow(label = "Amount") {
+                val amountText =
+                    if (isAddMode) {
+                        "${state.currencySymbol} 0.00"
+                    } else {
+                        accountRow?.balance ?: "${state.currencySymbol} 0.00"
+                    }
+                Text(
+                    text = amountText,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 15.sp,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                )
+            }
+
+            if (isCreditCard) {
+                // Payment Row
+                AccountFormRow(label = "Payment") {
+                    Text(
+                        text = "",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 15.sp,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    )
+                }
+
+                // Description Row
+                AccountFormRow(label = "Description") {
+                    BasicTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    thickness = 1.dp,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Settlement Date Row
+                AccountFormRow(label = "Settlement\nDate") {
+                    Text(
+                        text = "Every 1",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 15.sp,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    )
+                }
+
+                // Payment Date Row
+                AccountFormRow(label = "Payment\nDate") {
+                    Text(
+                        text = "Every 1",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 15.sp,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Card Outstanding Summary Box
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+                            .padding(16.dp),
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(text = "Balance Payable", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                            Text(text = "10/01 ~ 10/31 (Pay: 11/01)", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(text = "Outst. Balance", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                            Text(text = "11/01 ~ 11/30 (Pay: 12/01)", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
+                        }
+                    }
+                }
+            } else {
+                // Description Row
+                AccountFormRow(label = "Description") {
+                    BasicTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Include in totals Row
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Include in totals",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 15.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(
+                        checked = includeInTotals,
+                        onCheckedChange = { includeInTotals = it },
+                        colors =
+                            SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            ),
+                    )
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                // Show/Hide Setting Row
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Show/Hide Setting",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 15.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(
+                        checked = showHideSetting,
+                        onCheckedChange = { showHideSetting = it },
+                        colors =
+                            SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            ),
+                    )
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            state.createErrorMessage?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+            }
+
+            // Save Button
+            Button(
+                onClick = { onAction(AccountsAction.SaveClicked) },
+                enabled = !state.isSaving,
+                shape = RoundedCornerShape(8.dp),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+            ) {
+                Text(
+                    text = if (state.isSaving) "Saving..." else "Save",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    // Account Group Modal Selection Dialog
+    if (showGroupPicker) {
+        AlertDialog(
+            onDismissRequest = { showGroupPicker = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(12.dp),
+            title = {
+                Text(
+                    text = "Account Group",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    state.availableGroups.forEach { group ->
+                        val isSelected = group.id == state.draftGroupId
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onAction(AccountsAction.GroupChanged(group.id))
+                                        showGroupPicker = false
+                                    }
+                                    .padding(vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = group.title,
+                                color =
+                                    if (isSelected) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                fontSize = 16.sp,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (isSelected) {
+                                Text(
+                                    text = "✓",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                )
+                            }
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showGroupPicker = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+        )
     }
 
     state.archiveAccountId?.let {
@@ -195,5 +442,32 @@ fun AccountEditScreen(
             },
             onDismiss = { onAction(AccountsAction.ArchiveDismissed) },
         )
+    }
+}
+
+@Composable
+private fun AccountFormRow(
+    label: String,
+    isUnderlineActive: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 15.sp,
+            lineHeight = 18.sp,
+            modifier = Modifier.width(95.dp),
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            content()
+            HorizontalDivider(
+                color = if (isUnderlineActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp,
+            )
+        }
     }
 }
