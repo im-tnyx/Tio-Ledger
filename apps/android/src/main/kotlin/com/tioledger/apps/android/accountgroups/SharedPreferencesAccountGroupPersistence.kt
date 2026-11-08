@@ -17,7 +17,7 @@ class SharedPreferencesAccountGroupPersistence(
     }
 
     override fun save(groups: List<AccountGroupEntry>) {
-        preferences.edit().putString(GROUPS_KEY, groups.joinToString("\n", transform = ::encode)).apply()
+        preferences.edit().putString(GROUPS_KEY, groups.joinToString("\n", transform = ::encode)).commit()
     }
 
     override fun loadAccountGroupIds(): Map<String, String> {
