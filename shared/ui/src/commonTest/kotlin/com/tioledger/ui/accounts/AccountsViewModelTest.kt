@@ -267,7 +267,7 @@ class AccountsViewModelTest {
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
         val groupStore = AccountGroupStore()
-        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)
+        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)!!
         val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("loan-linked-id"), groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
@@ -288,7 +288,7 @@ class AccountsViewModelTest {
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
         val groupStore = AccountGroupStore()
-        val investmentGroup = groupStore.addGroup("My investments", AccountGroupPolicy.INVESTMENT)
+        val investmentGroup = groupStore.addGroup("My investments", AccountGroupPolicy.INVESTMENT)!!
         val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("investment-id"), groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
@@ -366,7 +366,7 @@ class AccountsViewModelTest {
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
         val groupStore = AccountGroupStore()
-        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)
+        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)!!
         val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("reset-id"), groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
@@ -388,7 +388,7 @@ class AccountsViewModelTest {
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
         val groupStore = AccountGroupStore()
-        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)
+        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)!!
         val viewModel = testViewModel(accounts, ledger, accountGroupStore = groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
@@ -468,7 +468,7 @@ class AccountsViewModelTest {
         val cash = account("cash", "Cash", AccountType.CASH)
         val accounts = FakeAccountRepository(listOf(cash))
         val groupStore = AccountGroupStore()
-        val custom = groupStore.addGroup("Temporary", AccountGroupPolicy.BANK)
+        val custom = groupStore.addGroup("Temporary", AccountGroupPolicy.BANK)!!
         val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("blocked-id"), groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
@@ -592,7 +592,7 @@ class AccountsViewModelTest {
         val accounts = FakeAccountRepository(listOf(defaultBank, bank))
         val ledger = FakeLedgerRepository()
         val groupStore = AccountGroupStore()
-        val custom = groupStore.addGroup("Emergency Savings", AccountGroupPolicy.BANK)
+        val custom = groupStore.addGroup("Emergency Savings", AccountGroupPolicy.BANK)!!
         groupStore.assignAccount(bank.id, custom.id)
 
         val state = testViewModel(accounts, ledger, accountGroupStore = groupStore).uiState.value

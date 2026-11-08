@@ -44,6 +44,7 @@ import com.tioledger.ui.components.TioAmountText
 import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
+import com.tioledger.ui.components.TioEditIcon
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioFilterChip
 import com.tioledger.ui.components.TioIcon
@@ -60,16 +61,12 @@ import org.koin.compose.koinInject
 fun AccountsRoute(
     viewModel: AccountsViewModel = koinInject(),
     onNavigate: (MainRoute) -> Unit = {},
-    onNavigateBack: (() -> Unit)? = null,
-    destination: MainRoute = MainRoute.Accounts,
 ) {
     val state by viewModel.uiState.collectAsState()
     AccountsScreen(
         state = state,
         onAction = viewModel::onAction,
         onNavigate = onNavigate,
-        onNavigateBack = onNavigateBack,
-        destination = destination,
     )
 }
 
@@ -78,29 +75,28 @@ fun AccountsScreen(
     state: AccountsUiState,
     onAction: (AccountsAction) -> Unit,
     onNavigate: (MainRoute) -> Unit,
-    onNavigateBack: (() -> Unit)? = null,
-    destination: MainRoute = MainRoute.Accounts,
     modifier: Modifier = Modifier,
 ) {
-    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(destination)
+    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Accounts)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TioAppBar(
-                title = destination.title,
-                navigationIcon =
-                    onNavigateBack?.let { navigateBack ->
-                        {
-                            IconButton(
-                                onClick = navigateBack,
-                                modifier = Modifier.semantics { contentDescription = "Navigate back" },
-                            ) {
-                                com.tioledger.ui.components.TioBackIcon()
-                            }
-                        }
-                    },
+                title = MainRoute.Accounts.title,
                 actions = {
+                    IconButton(
+                        onClick = { onNavigate(MainRoute.Loans) },
+                        modifier = Modifier.semantics { contentDescription = "Loans" },
+                    ) {
+                        TioIcon(TioIconToken.Loan)
+                    }
+                    IconButton(
+                        onClick = { onNavigate(MainRoute.AccountManager) },
+                        modifier = Modifier.semantics { contentDescription = "Manage accounts" },
+                    ) {
+                        TioEditIcon()
+                    }
                     IconButton(
                         onClick = { onAction(AccountsAction.AddClicked) },
                         modifier = Modifier.semantics { contentDescription = "Add account" },
@@ -142,96 +138,101 @@ fun AccountsScreen(
                         message = "Accounts will appear here after they are added.",
                     )
                 }
-                else ->
-                    AccountsGroupedList(
-                        groups = state.groups,
-                        onArchiveRequested =
-                            if (destination == MainRoute.AccountManager) {
-                                { account ->
-                                    onAction(AccountsAction.ArchiveRequested(account.id, account.name))
-                                }
-                            } else {
-                                null
-                            },
-                    )
+                else -> AccountsGroupedList(groups = state.groups)
             }
         }
     }
     if (state.isCreateDialogVisible) {
-        AlertDialog(
-            onDismissRequest = { onAction(AccountsAction.CreateDismissed) },
-            title = { Text("Add account") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.md)) {
-                    OutlinedTextField(
-                        value = state.draftName,
-                        onValueChange = { onAction(AccountsAction.NameChanged(it)) },
-                        label = { Text("Name") },
-                        singleLine = true,
-                        enabled = !state.isSaving,
-                    )
-                    Text("Account Group", style = MaterialTheme.typography.labelLarge)
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
-                    ) {
-                        state.availableGroups.forEach { group ->
-                            TioFilterChip(
-                                label = group.title,
-                                selected = state.draftGroupId == group.id,
-                                onClick = { onAction(AccountsAction.GroupChanged(group.id)) },
-                            )
-                        }
+        AddAccountDialog(state = state, onAction = onAction)
+    }
+}
+
+@Composable
+internal fun AddAccountDialog(
+    state: AccountsUiState,
+    onAction: (AccountsAction) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { onAction(AccountsAction.CreateDismissed) },
+        title = { Text("Add account") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.md)) {
+                OutlinedTextField(
+                    value = state.draftName,
+                    onValueChange = { onAction(AccountsAction.NameChanged(it)) },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    enabled = !state.isSaving,
+                )
+                Text("Account Group", style = MaterialTheme.typography.labelLarge)
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
+                ) {
+                    state.availableGroups.forEach { group ->
+                        TioFilterChip(
+                            label = group.title,
+                            selected = state.draftGroupId == group.id,
+                            onClick = { onAction(AccountsAction.GroupChanged(group.id)) },
+                        )
                     }
-                    Text(
-                        text = "Currency: ${state.draftCurrencyCode}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { onAction(AccountsAction.SaveClicked) }, enabled = !state.isSaving) {
-                    Text(if (state.isSaving) "Saving" else "Add")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { onAction(AccountsAction.CreateDismissed) }, enabled = !state.isSaving) { Text("Cancel") }
-            },
-        )
-    }
-    state.archiveAccountId?.let {
-        AlertDialog(
-            onDismissRequest = { onAction(AccountsAction.ArchiveDismissed) },
-            title = { Text("Archive account?") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.md)) {
-                    Text(
-                        "${state.archiveAccountName.orEmpty()} will be removed from active accounts. " +
-                            "Its transactions, ledger history, balance, and account identity will be preserved.",
-                    )
-                    state.archiveErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { onAction(AccountsAction.ArchiveConfirmed) },
-                    enabled = !state.isArchiving,
-                ) {
-                    Text(if (state.isArchiving) "Archiving" else "Archive")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { onAction(AccountsAction.ArchiveDismissed) },
-                    enabled = !state.isArchiving,
-                ) {
-                    Text("Cancel")
-                }
-            },
-        )
-    }
+                Text(
+                    text = "Currency: ${state.draftCurrencyCode}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onAction(AccountsAction.SaveClicked) }, enabled = !state.isSaving) {
+                Text(if (state.isSaving) "Saving" else "Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onAction(AccountsAction.CreateDismissed) }, enabled = !state.isSaving) { Text("Cancel") }
+        },
+    )
+}
+
+@Composable
+internal fun ArchiveAccountConfirmationDialog(
+    accountName: String,
+    errorMessage: String?,
+    isArchiving: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Archive account?") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.md)) {
+                Text(
+                    "$accountName will be removed from active accounts. " +
+                        "Its transactions, ledger history, balance, and account identity will be preserved.",
+                )
+                errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                enabled = !isArchiving,
+            ) {
+                Text(if (isArchiving) "Archiving" else "Archive")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isArchiving,
+            ) {
+                Text("Cancel")
+            }
+        },
+    )
 }
 
 @Composable
@@ -271,17 +272,14 @@ private fun SummaryColumn(
 }
 
 @Composable
-private fun AccountsGroupedList(
-    groups: List<AccountGroupUiModel>,
-    onArchiveRequested: ((AccountRowUiModel) -> Unit)?,
-) {
+private fun AccountsGroupedList(groups: List<AccountGroupUiModel>) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         groups.forEach { group ->
             item(key = "header-${group.id}") {
                 AccountGroupHeader(group)
             }
             items(group.accounts, key = { it.id }) { account ->
-                AccountRow(account, onArchiveRequested)
+                AccountRow(account)
                 HorizontalDivider()
             }
         }
@@ -343,10 +341,7 @@ private fun AccountGroupTotals(
 }
 
 @Composable
-private fun AccountRow(
-    account: AccountRowUiModel,
-    onArchiveRequested: ((AccountRowUiModel) -> Unit)?,
-) {
+private fun AccountRow(account: AccountRowUiModel) {
     Row(
         modifier =
             Modifier
@@ -380,19 +375,11 @@ private fun AccountRow(
             amount = account.balance,
             tone = if (account.isLiability) TioAmountTone.Negative else TioAmountTone.Neutral,
         )
-        onArchiveRequested?.let { archive ->
-            IconButton(
-                onClick = { archive(account) },
-                modifier = Modifier.semantics { contentDescription = "Archive ${account.name}" },
-            ) {
-                TioIcon(TioIconToken.Delete, contentDescription = null)
-            }
-        }
     }
 }
 
 @Composable
-private fun AccountsLoading() {
+internal fun AccountsLoading() {
     Column(
         modifier = Modifier.fillMaxWidth().padding(TioSpacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -407,7 +394,7 @@ private fun AccountsLoading() {
 }
 
 @Composable
-private fun AccountsError(
+internal fun AccountsError(
     message: String,
     onRetry: () -> Unit,
 ) {

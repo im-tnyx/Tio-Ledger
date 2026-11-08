@@ -851,6 +851,35 @@ fun TioAddIcon(
 }
 
 @Composable
+fun TioEditIcon(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Canvas(modifier = modifier.size(24.dp)) {
+        val stroke = 2.dp.toPx()
+        val path =
+            Path().apply {
+                moveTo(size.width * 0.65f, size.height * 0.22f)
+                lineTo(size.width * 0.78f, size.height * 0.35f)
+                lineTo(size.width * 0.35f, size.height * 0.78f)
+                lineTo(size.width * 0.22f, size.height * 0.78f)
+                lineTo(size.width * 0.22f, size.height * 0.65f)
+                close()
+            }
+        drawPath(
+            path = path,
+            color = color,
+            style =
+                Stroke(
+                    width = stroke,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round,
+                ),
+        )
+    }
+}
+
+@Composable
 fun TioReorderHandleIcon(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,

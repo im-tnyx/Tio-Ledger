@@ -20,7 +20,7 @@ import org.koin.dsl.module
 fun tioUiModule(): Module =
     module {
         single<AccountGroupPersistence> { InMemoryAccountGroupPersistence() }
-        single { AccountGroupStore(persistence = get()) }
+        single { AccountGroupStore(persistence = get(), accountRepository = getOrNull()) }
         single { CurrencyPreferenceStore(get(), get()) }
         factory { CurrencySettingsViewModel(get()) }
         factory { AccountsViewModel(get(), get(), get(), get(), accountGroupStore = get(), currencyPreferenceStore = get()) }

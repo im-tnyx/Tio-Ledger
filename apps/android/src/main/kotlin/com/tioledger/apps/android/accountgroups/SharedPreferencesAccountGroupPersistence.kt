@@ -16,9 +16,8 @@ class SharedPreferencesAccountGroupPersistence(
         return encoded.lineSequence().mapNotNull(::decode).toList().ifEmpty { null }
     }
 
-    override fun save(groups: List<AccountGroupEntry>) {
+    override fun save(groups: List<AccountGroupEntry>): Boolean =
         preferences.edit().putString(GROUPS_KEY, groups.joinToString("\n", transform = ::encode)).commit()
-    }
 
     override fun loadAccountGroupIds(): Map<String, String> {
         val encoded = preferences.getString(ACCOUNT_GROUP_IDS_KEY, null) ?: return emptyMap()

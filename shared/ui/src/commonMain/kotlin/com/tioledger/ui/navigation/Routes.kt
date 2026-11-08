@@ -100,6 +100,14 @@ sealed interface MainRoute : AppRoute {
         override val icon: TioIconToken = TioIconToken.Account
     }
 
+    data class AccountEdit(
+        val accountId: String,
+    ) : MainRoute {
+        override val path: String = "settings/accounts/edit/$accountId"
+        override val title: String = "Edit Account"
+        override val icon: TioIconToken = TioIconToken.Account
+    }
+
     data object AccountGroup : MainRoute {
         override val path: String = "settings/account-group"
         override val title: String = "Account Group"

@@ -10,6 +10,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tioledger.domain.model.CategoryType
+import com.tioledger.ui.accounts.AccountEditRoute
+import com.tioledger.ui.accounts.AccountManagementRoute
 import com.tioledger.ui.accounts.AccountsRoute
 import com.tioledger.ui.budgets.BudgetsRoute
 import com.tioledger.ui.categories.CategoriesRoute
@@ -92,7 +94,7 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(target))
                             },
                             onNavigateBack = {
-                                onNavigate(RootRoute.Main(MainRoute.AccountGroup))
+                                onNavigate(RootRoute.Main(MainRoute.Accounts))
                             },
                         )
                     is MainRoute.LoanDetails ->
@@ -139,14 +141,23 @@ fun RootNavigationHost(
                             },
                         )
                     MainRoute.AccountManager ->
-                        AccountsRoute(
+                        AccountManagementRoute(
                             onNavigate = { target ->
                                 onNavigate(RootRoute.Main(target))
                             },
                             onNavigateBack = {
                                 onNavigate(RootRoute.Main(MainRoute.AccountSettings))
                             },
-                            destination = MainRoute.AccountManager,
+                        )
+                    is MainRoute.AccountEdit ->
+                        AccountEditRoute(
+                            accountId = destination.accountId,
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountManager))
+                            },
                         )
                     MainRoute.AccountGroup ->
                         AccountGroupRoute(

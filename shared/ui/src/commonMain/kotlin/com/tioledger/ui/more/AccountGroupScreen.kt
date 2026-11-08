@@ -84,8 +84,8 @@ fun AccountGroupScreen(
     modifier: Modifier = Modifier,
     initialGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
     groups: List<AccountGroupEntry>? = null,
-    onAddGroup: ((String, AccountGroupPolicy) -> Unit)? = null,
-    onUpdateGroup: ((String, String) -> Unit)? = null,
+    onAddGroup: ((String, AccountGroupPolicy) -> AccountGroupEntry?)? = null,
+    onUpdateGroup: ((String, String) -> Boolean)? = null,
     onDeleteGroup: ((String) -> AccountGroupRemovalResult)? = null,
     onReorder: ((Int, Int) -> Unit)? = null,
 ) {
@@ -94,7 +94,9 @@ fun AccountGroupScreen(
     val currentGroups = groups ?: localGroups
 
     var isAddDialogVisible by remember { mutableStateOf(false) }
+    var addErrorMessage by remember { mutableStateOf<String?>(null) }
     var itemToEdit by remember { mutableStateOf<AccountGroupEntry?>(null) }
+    var editErrorMessage by remember { mutableStateOf<String?>(null) }
     var itemToDelete by remember { mutableStateOf<AccountGroupEntry?>(null) }
     var deleteErrorMessage by remember { mutableStateOf<String?>(null) }
     val stepPx = with(LocalDensity.current) { 48.dp.toPx() }
@@ -278,10 +280,20 @@ fun AccountGroupScreen(
     if (isAddDialogVisible) {
         AddAccountGroupDialog(
             existingGroups = currentGroups,
-            onDismiss = { isAddDialogVisible = false },
+            serverErrorMessage = addErrorMessage,
+            onDismiss = {
+                addErrorMessage = null
+                isAddDialogVisible = false
+            },
             onConfirm = { newName, selectedPolicy ->
                 if (onAddGroup != null) {
-                    onAddGroup(newName, selectedPolicy)
+                    val result = onAddGroup(newName, selectedPolicy)
+                    if (result != null) {
+                        addErrorMessage = null
+                        isAddDialogVisible = false
+                    } else {
+                        addErrorMessage = "Unable to save account group. Try again."
+                    }
                 } else {
                     val newEntry =
                         AccountGroupEntry(
@@ -292,8 +304,9 @@ fun AccountGroupScreen(
                             isPermanent = false,
                         )
                     localGroups = localGroups + newEntry
+                    addErrorMessage = null
+                    isAddDialogVisible = false
                 }
-                isAddDialogVisible = false
             },
         )
     }
@@ -302,17 +315,27 @@ fun AccountGroupScreen(
         EditAccountGroupDialog(
             entry = entry,
             existingGroups = currentGroups,
-            onDismiss = { itemToEdit = null },
+            serverErrorMessage = editErrorMessage,
+            onDismiss = {
+                editErrorMessage = null
+                itemToEdit = null
+            },
             onConfirm = { updatedName ->
                 if (onUpdateGroup != null) {
-                    onUpdateGroup(entry.id, updatedName)
+                    if (onUpdateGroup(entry.id, updatedName)) {
+                        editErrorMessage = null
+                        itemToEdit = null
+                    } else {
+                        editErrorMessage = "Unable to update account group. Try again."
+                    }
                 } else {
                     localGroups =
                         localGroups.map { current ->
                             if (current.id == entry.id) current.copy(title = updatedName) else current
                         }
+                    editErrorMessage = null
+                    itemToEdit = null
                 }
-                itemToEdit = null
             },
         )
     }
@@ -344,6 +367,9 @@ fun AccountGroupScreen(
                             AccountGroupRemovalResult.GroupNotFound -> {
                                 deleteErrorMessage = "This account group is no longer available."
                             }
+                            AccountGroupRemovalResult.PersistenceFailure -> {
+                                deleteErrorMessage = "Unable to delete account group. Try again."
+                            }
                         }
                     } else {
                         localGroups = localGroups.filterNot { it.id == entry.id }
@@ -362,12 +388,14 @@ fun AccountGroupScreen(
 @Composable
 private fun AddAccountGroupDialog(
     existingGroups: List<AccountGroupEntry>,
+    serverErrorMessage: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (String, AccountGroupPolicy) -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var selectedPolicy by remember { mutableStateOf(AccountGroupPolicy.LOAN) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val displayError = errorMessage ?: serverErrorMessage
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -382,7 +410,7 @@ private fun AddAccountGroupDialog(
                     },
                     label = { Text("Group name") },
                     singleLine = true,
-                    isError = errorMessage != null,
+                    isError = displayError != null,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -433,7 +461,7 @@ private fun AddAccountGroupDialog(
                     }
                 }
 
-                errorMessage?.let { error ->
+                displayError?.let { error ->
                     Text(
                         text = error,
                         color = MaterialTheme.colorScheme.error,
@@ -470,11 +498,13 @@ private fun AddAccountGroupDialog(
 private fun EditAccountGroupDialog(
     entry: AccountGroupEntry,
     existingGroups: List<AccountGroupEntry>,
+    serverErrorMessage: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
     var name by remember { mutableStateOf(entry.title) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val displayError = errorMessage ?: serverErrorMessage
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -489,10 +519,10 @@ private fun EditAccountGroupDialog(
                     },
                     label = { Text("Group name") },
                     singleLine = true,
-                    isError = errorMessage != null,
+                    isError = displayError != null,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                errorMessage?.let { error ->
+                displayError?.let { error ->
                     Text(
                         text = error,
                         color = MaterialTheme.colorScheme.error,

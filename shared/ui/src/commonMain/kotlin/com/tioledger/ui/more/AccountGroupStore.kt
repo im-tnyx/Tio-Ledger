@@ -1,8 +1,10 @@
 package com.tioledger.ui.more
 
+import com.tioledger.core.model.LedgerResult
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.core.util.UuidGenerator
 import com.tioledger.domain.model.AccountType
+import com.tioledger.domain.repository.AccountRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,6 +59,7 @@ class AccountGroupStore(
     private val idGenerator: IdGenerator = UuidGenerator(),
     initialGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
     private val persistence: AccountGroupPersistence = InMemoryAccountGroupPersistence(initialGroups),
+    private val accountRepository: AccountRepository? = null,
 ) {
     private val _groups = MutableStateFlow(persistence.load() ?: initialGroups)
     val groups: StateFlow<List<AccountGroupEntry>> = _groups.asStateFlow()
@@ -67,7 +70,7 @@ class AccountGroupStore(
     fun addGroup(
         title: String,
         policy: AccountGroupPolicy,
-    ): AccountGroupEntry {
+    ): AccountGroupEntry? {
         val entry =
             AccountGroupEntry(
                 id = "group_${idGenerator.nextId()}",
@@ -76,8 +79,11 @@ class AccountGroupStore(
                 policy = policy,
                 isPermanent = false,
             )
-        _groups.value = _groups.value + entry
-        persistence.save(_groups.value)
+        val updated = _groups.value + entry
+        if (!persistence.save(updated)) {
+            return null
+        }
+        _groups.value = updated
         return entry
     }
 
@@ -90,8 +96,10 @@ class AccountGroupStore(
         if (index == -1) return false
         val updated = current.toMutableList()
         updated[index] = updated[index].copy(title = newTitle)
+        if (!persistence.save(updated)) {
+            return false
+        }
         _groups.value = updated
-        persistence.save(_groups.value)
         return true
     }
 
@@ -99,9 +107,44 @@ class AccountGroupStore(
         val current = _groups.value
         val target = current.find { it.id == id } ?: return AccountGroupRemovalResult.GroupNotFound
         if (target.isPermanent) return AccountGroupRemovalResult.PermanentGroup
-        if (accountGroupIds.any { it.value == id }) return AccountGroupRemovalResult.GroupContainsAccounts
-        _groups.value = current.filter { it.id != id }
-        persistence.save(_groups.value)
+
+        val assignedAccountIds = accountGroupIds.filter { it.value == id }.keys
+        if (assignedAccountIds.isNotEmpty()) {
+            if (accountRepository != null) {
+                when (val result = accountRepository.findAll(includeArchived = true)) {
+                    is LedgerResult.Success -> {
+                        val existingIds = result.value.map { it.id }.toSet()
+                        val validAssigned = assignedAccountIds.filter { it in existingIds }
+                        if (validAssigned.isNotEmpty()) {
+                            return AccountGroupRemovalResult.GroupContainsAccounts
+                        }
+                        // Interrupted account creation recovery: clean up orphaned IDs that do not exist in the database.
+                        val orphanedIds = assignedAccountIds.filter { it !in existingIds }
+                        val updatedAssignments =
+                            accountGroupIds.toMutableMap().apply {
+                                orphanedIds.forEach { remove(it) }
+                            }
+                        if (!persistence.saveAccountGroupIds(updatedAssignments)) {
+                            return AccountGroupRemovalResult.PersistenceFailure
+                        }
+                        accountGroupIds.clear()
+                        accountGroupIds.putAll(updatedAssignments)
+                    }
+                    is LedgerResult.Failure -> {
+                        // Repository read failed; do not assume accounts do not exist.
+                        return AccountGroupRemovalResult.GroupContainsAccounts
+                    }
+                }
+            } else {
+                return AccountGroupRemovalResult.GroupContainsAccounts
+            }
+        }
+
+        val updated = current.filter { it.id != id }
+        if (!persistence.save(updated)) {
+            return AccountGroupRemovalResult.PersistenceFailure
+        }
+        _groups.value = updated
         return AccountGroupRemovalResult.Removed
     }
 
@@ -113,8 +156,9 @@ class AccountGroupStore(
         if (fromIndex in current.indices && toIndex in current.indices && fromIndex != toIndex) {
             val item = current.removeAt(fromIndex)
             current.add(toIndex, item)
-            _groups.value = current
-            persistence.save(_groups.value)
+            if (persistence.save(current)) {
+                _groups.value = current
+            }
         }
     }
 
@@ -176,12 +220,14 @@ sealed interface AccountGroupRemovalResult {
     data object PermanentGroup : AccountGroupRemovalResult
 
     data object GroupContainsAccounts : AccountGroupRemovalResult
+
+    data object PersistenceFailure : AccountGroupRemovalResult
 }
 
 interface AccountGroupPersistence {
     fun load(): List<AccountGroupEntry>?
 
-    fun save(groups: List<AccountGroupEntry>)
+    fun save(groups: List<AccountGroupEntry>): Boolean
 
     fun loadAccountGroupIds(): Map<String, String> = emptyMap()
 
@@ -190,13 +236,16 @@ interface AccountGroupPersistence {
 
 class InMemoryAccountGroupPersistence(
     initialGroups: List<AccountGroupEntry>? = null,
+    var saveShouldSucceed: Boolean = true,
 ) : AccountGroupPersistence {
     private var groups: List<AccountGroupEntry>? = initialGroups
 
     override fun load(): List<AccountGroupEntry>? = groups
 
-    override fun save(groups: List<AccountGroupEntry>) {
+    override fun save(groups: List<AccountGroupEntry>): Boolean {
+        if (!saveShouldSucceed) return false
         this.groups = groups.toList()
+        return true
     }
 
     private var accountGroupIds: Map<String, String> = emptyMap()
@@ -204,6 +253,7 @@ class InMemoryAccountGroupPersistence(
     override fun loadAccountGroupIds(): Map<String, String> = accountGroupIds
 
     override fun saveAccountGroupIds(accountGroupIds: Map<String, String>): Boolean {
+        if (!saveShouldSucceed) return false
         this.accountGroupIds = accountGroupIds.toMap()
         return true
     }

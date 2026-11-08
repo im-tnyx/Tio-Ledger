@@ -46,6 +46,7 @@ private fun MainRoute.bottomNavigationParent(): MainRoute =
         MainRoute.Configuration,
         MainRoute.AccountSettings,
         MainRoute.AccountManager,
+        is MainRoute.AccountEdit,
         MainRoute.AccountGroup,
         MainRoute.BudgetSettings,
         MainRoute.TransactionSettings,
