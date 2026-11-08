@@ -4,29 +4,20 @@ package com.tioledger.ui.more
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,7 +44,6 @@ import com.tioledger.ui.components.TioIconAvatar
 import com.tioledger.ui.components.TioListItem
 import com.tioledger.ui.components.TioReorderHandleIcon
 import com.tioledger.ui.design.TioIconToken
-import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 import com.tioledger.ui.navigation.bottomNavigationModel
@@ -93,10 +83,6 @@ fun AccountGroupScreen(
     var localGroups by remember(initialGroups) { mutableStateOf(initialGroups) }
     val currentGroups = groups ?: localGroups
 
-    var isAddDialogVisible by remember { mutableStateOf(false) }
-    var addErrorMessage by remember { mutableStateOf<String?>(null) }
-    var itemToEdit by remember { mutableStateOf<AccountGroupEntry?>(null) }
-    var editErrorMessage by remember { mutableStateOf<String?>(null) }
     var itemToDelete by remember { mutableStateOf<AccountGroupEntry?>(null) }
     var deleteErrorMessage by remember { mutableStateOf<String?>(null) }
     val stepPx = with(LocalDensity.current) { 48.dp.toPx() }
@@ -116,7 +102,7 @@ fun AccountGroupScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = { isAddDialogVisible = true },
+                        onClick = { onNavigate(MainRoute.AccountGroupAdd) },
                         modifier = Modifier.semantics { contentDescription = "Add account group" },
                     ) {
                         TioAddIcon()
@@ -269,75 +255,12 @@ fun AccountGroupScreen(
                         }
                     },
                     onClick = {
-                        itemToEdit = entry
+                        onNavigate(MainRoute.AccountGroupEdit(entry.id))
                     },
                 )
                 HorizontalDivider()
             }
         }
-    }
-
-    if (isAddDialogVisible) {
-        AddAccountGroupDialog(
-            existingGroups = currentGroups,
-            serverErrorMessage = addErrorMessage,
-            onDismiss = {
-                addErrorMessage = null
-                isAddDialogVisible = false
-            },
-            onConfirm = { newName, selectedPolicy ->
-                if (onAddGroup != null) {
-                    val result = onAddGroup(newName, selectedPolicy)
-                    if (result != null) {
-                        addErrorMessage = null
-                        isAddDialogVisible = false
-                    } else {
-                        addErrorMessage = "Unable to save account group. Try again."
-                    }
-                } else {
-                    val newEntry =
-                        AccountGroupEntry(
-                            id = "group_${newName.lowercase().replace(" ", "_")}_${localGroups.size + 1}",
-                            title = newName,
-                            subtitle = selectedPolicy.subtitle,
-                            policy = selectedPolicy,
-                            isPermanent = false,
-                        )
-                    localGroups = localGroups + newEntry
-                    addErrorMessage = null
-                    isAddDialogVisible = false
-                }
-            },
-        )
-    }
-
-    itemToEdit?.let { entry ->
-        EditAccountGroupDialog(
-            entry = entry,
-            existingGroups = currentGroups,
-            serverErrorMessage = editErrorMessage,
-            onDismiss = {
-                editErrorMessage = null
-                itemToEdit = null
-            },
-            onConfirm = { updatedName ->
-                if (onUpdateGroup != null) {
-                    if (onUpdateGroup(entry.id, updatedName)) {
-                        editErrorMessage = null
-                        itemToEdit = null
-                    } else {
-                        editErrorMessage = "Unable to update account group. Try again."
-                    }
-                } else {
-                    localGroups =
-                        localGroups.map { current ->
-                            if (current.id == entry.id) current.copy(title = updatedName) else current
-                        }
-                    editErrorMessage = null
-                    itemToEdit = null
-                }
-            },
-        )
     }
 
     itemToDelete?.let { entry ->
@@ -383,174 +306,4 @@ fun AccountGroupScreen(
             },
         )
     }
-}
-
-@Composable
-private fun AddAccountGroupDialog(
-    existingGroups: List<AccountGroupEntry>,
-    serverErrorMessage: String? = null,
-    onDismiss: () -> Unit,
-    onConfirm: (String, AccountGroupPolicy) -> Unit,
-) {
-    var name by remember { mutableStateOf("") }
-    var selectedPolicy by remember { mutableStateOf(AccountGroupPolicy.LOAN) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val displayError = errorMessage ?: serverErrorMessage
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Account Group") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        errorMessage = null
-                    },
-                    label = { Text("Group name") },
-                    singleLine = true,
-                    isError = displayError != null,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                Text(
-                    text = "Policy",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    AccountGroupPolicy.entries.chunked(3).forEach { rowPolicies ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            rowPolicies.forEach { policy ->
-                                val isSelected = policy == selectedPolicy
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color =
-                                        if (isSelected) {
-                                            MaterialTheme.colorScheme.primaryContainer
-                                        } else {
-                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                        },
-                                    contentColor =
-                                        if (isSelected) {
-                                            MaterialTheme.colorScheme.onPrimaryContainer
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                    modifier =
-                                        Modifier
-                                            .weight(1f)
-                                            .clickable { selectedPolicy = policy }
-                                            .padding(vertical = 2.dp),
-                                ) {
-                                    Text(
-                                        text = policy.title,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(vertical = 8.dp),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                displayError?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val trimmed = name.trim()
-                    when {
-                        trimmed.isBlank() -> errorMessage = "Group name cannot be blank"
-                        existingGroups.any { it.title.equals(trimmed, ignoreCase = true) } -> {
-                            errorMessage = "Group name already exists"
-                        }
-                        else -> onConfirm(trimmed, selectedPolicy)
-                    }
-                },
-            ) {
-                Text("Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-    )
-}
-
-@Composable
-private fun EditAccountGroupDialog(
-    entry: AccountGroupEntry,
-    existingGroups: List<AccountGroupEntry>,
-    serverErrorMessage: String? = null,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
-    var name by remember { mutableStateOf(entry.title) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val displayError = errorMessage ?: serverErrorMessage
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit Account Group") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        errorMessage = null
-                    },
-                    label = { Text("Group name") },
-                    singleLine = true,
-                    isError = displayError != null,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                displayError?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val trimmed = name.trim()
-                    when {
-                        trimmed.isBlank() -> errorMessage = "Group name cannot be blank"
-                        existingGroups.any { it.id != entry.id && it.title.equals(trimmed, ignoreCase = true) } -> {
-                            errorMessage = "Group name already exists"
-                        }
-                        else -> onConfirm(trimmed)
-                    }
-                },
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-    )
 }

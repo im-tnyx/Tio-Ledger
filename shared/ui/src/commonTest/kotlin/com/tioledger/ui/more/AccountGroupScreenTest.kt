@@ -41,4 +41,46 @@ class AccountGroupScreenTest {
         assertEquals("Credit Card", creditCard.title)
         assertEquals("Card", creditCard.subtitle)
     }
+
+    @Test
+    fun accountGroupPolicyOptionsMatchRealbyteReference() {
+        assertEquals(3, AccountGroupPolicyOption.entries.size)
+        assertEquals(AccountGroupPolicy.BANK, AccountGroupPolicyOption.DEFAULT.policy)
+        assertEquals("Default", AccountGroupPolicyOption.DEFAULT.label)
+
+        assertEquals(AccountGroupPolicy.CREDIT_CARD, AccountGroupPolicyOption.CREDIT_CARD.policy)
+        assertEquals("Account group for credit cards", AccountGroupPolicyOption.CREDIT_CARD.label)
+
+        assertEquals(AccountGroupPolicy.DEBIT_CARD, AccountGroupPolicyOption.DEBIT_CARD.policy)
+        assertEquals("Account group for debit cards", AccountGroupPolicyOption.DEBIT_CARD.label)
+    }
+
+    @Test
+    fun updateGroupUpdatesTitleAndPolicyForCustomGroup() {
+        val store = AccountGroupStore()
+        val custom = store.addGroup("My Loans", AccountGroupPolicy.LOAN)!!
+        assertEquals("Loan", custom.subtitle)
+
+        val updated = store.updateGroup(custom.id, "My Card", AccountGroupPolicy.CREDIT_CARD)
+        assertTrue(updated)
+
+        val retrieved = store.groupForId(custom.id)!!
+        assertEquals("My Card", retrieved.title)
+        assertEquals(AccountGroupPolicy.CREDIT_CARD, retrieved.policy)
+        assertEquals("Card", retrieved.subtitle)
+    }
+
+    @Test
+    fun updateGroupDoesNotChangePolicyForPermanentGroup() {
+        val store = AccountGroupStore()
+        val cash = store.groupForId("cash")!!
+        assertTrue(cash.isPermanent)
+
+        val updated = store.updateGroup(cash.id, "Petty Cash", AccountGroupPolicy.CREDIT_CARD)
+        assertTrue(updated)
+
+        val retrieved = store.groupForId("cash")!!
+        assertEquals("Petty Cash", retrieved.title)
+        assertEquals(AccountGroupPolicy.CASH, retrieved.policy)
+    }
 }

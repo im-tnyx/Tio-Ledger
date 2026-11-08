@@ -17,6 +17,7 @@ enum class AccountGroupPolicy(
     CASH("Cash", "Cash", AccountType.CASH),
     BANK("Accounts", "Bank", AccountType.BANK),
     CREDIT_CARD("Card", "Card", AccountType.CREDIT_CARD),
+    DEBIT_CARD("Card", "Debit Card", AccountType.BANK),
     LOAN("Loan", "Loan", AccountType.LOAN_LINKED),
     INVESTMENT("Investments", "Investments", AccountType.INVESTMENT),
     OTHER("Others", "Others", AccountType.WALLET),
@@ -71,11 +72,17 @@ class AccountGroupStore(
         title: String,
         policy: AccountGroupPolicy,
     ): AccountGroupEntry? {
+        val subtitle =
+            if (policy == AccountGroupPolicy.BANK || policy == AccountGroupPolicy.CASH) {
+                null
+            } else {
+                policy.subtitle
+            }
         val entry =
             AccountGroupEntry(
                 id = "group_${idGenerator.nextId()}",
                 title = title,
-                subtitle = policy.subtitle,
+                subtitle = subtitle,
                 policy = policy,
                 isPermanent = false,
             )
@@ -90,12 +97,26 @@ class AccountGroupStore(
     fun updateGroup(
         id: String,
         newTitle: String,
+        newPolicy: AccountGroupPolicy? = null,
     ): Boolean {
         val current = _groups.value
         val index = current.indexOfFirst { it.id == id }
         if (index == -1) return false
+        val existing = current[index]
+        val policy = if (existing.isPermanent) existing.policy else (newPolicy ?: existing.policy)
+        val subtitle =
+            if (policy == AccountGroupPolicy.BANK || policy == AccountGroupPolicy.CASH) {
+                null
+            } else {
+                policy.subtitle
+            }
         val updated = current.toMutableList()
-        updated[index] = updated[index].copy(title = newTitle)
+        updated[index] =
+            existing.copy(
+                title = newTitle,
+                policy = policy,
+                subtitle = subtitle,
+            )
         if (!persistence.save(updated)) {
             return false
         }
