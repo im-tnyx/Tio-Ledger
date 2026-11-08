@@ -3,6 +3,7 @@
 package com.tioledger.ui.accounts
 
 import androidx.compose.runtime.Composable
+import com.tioledger.domain.model.MainCurrencyConfig
 import com.tioledger.ui.design.TioLedgerTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -13,6 +14,7 @@ private fun AddAccountScreenLightPreview() {
         AddAccountScreen(
             onNavigateBack = {},
             onAccountCreated = {},
+            currencyCode = MainCurrencyConfig().currency.code.normalized,
         )
     }
 }
@@ -24,6 +26,7 @@ private fun AddAccountScreenDarkPreview() {
         AddAccountScreen(
             onNavigateBack = {},
             onAccountCreated = {},
+            currencyCode = MainCurrencyConfig().currency.code.normalized,
         )
     }
 }

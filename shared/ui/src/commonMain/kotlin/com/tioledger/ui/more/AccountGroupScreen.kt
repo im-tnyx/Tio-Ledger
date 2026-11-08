@@ -32,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -174,13 +175,14 @@ fun AccountGroupScreen(
                     trailing = {
                         var accumulatedDrag by remember { mutableStateOf(0f) }
                         var showMenu by remember { mutableStateOf(false) }
+                        val latestGroups by rememberUpdatedState(currentGroups)
 
                         Box(
                             modifier =
                                 Modifier
                                     .size(44.dp)
                                     .clickable { showMenu = true }
-                                    .pointerInput(currentGroups) {
+                                    .pointerInput(entry.id) {
                                         detectVerticalDragGestures(
                                             onDragStart = { accumulatedDrag = 0f },
                                             onDragEnd = { accumulatedDrag = 0f },
@@ -188,24 +190,24 @@ fun AccountGroupScreen(
                                             onVerticalDrag = { change, dragAmount ->
                                                 change.consume()
                                                 accumulatedDrag += dragAmount
-                                                val currentIndex = currentGroups.indexOfFirst { it.id == entry.id }
+                                                val currentIndex = latestGroups.indexOfFirst { it.id == entry.id }
                                                 if (accumulatedDrag <= -stepPx && currentIndex > 0) {
                                                     val targetIndex = currentIndex - 1
                                                     if (onReorder != null) {
                                                         onReorder(currentIndex, targetIndex)
                                                     } else {
-                                                        val mutable = currentGroups.toMutableList()
+                                                        val mutable = latestGroups.toMutableList()
                                                         val item = mutable.removeAt(currentIndex)
                                                         mutable.add(targetIndex, item)
                                                         localGroups = mutable
                                                     }
                                                     accumulatedDrag = 0f
-                                                } else if (accumulatedDrag >= stepPx && currentIndex < currentGroups.lastIndex) {
+                                                } else if (accumulatedDrag >= stepPx && currentIndex < latestGroups.lastIndex) {
                                                     val targetIndex = currentIndex + 1
                                                     if (onReorder != null) {
                                                         onReorder(currentIndex, targetIndex)
                                                     } else {
-                                                        val mutable = currentGroups.toMutableList()
+                                                        val mutable = latestGroups.toMutableList()
                                                         val item = mutable.removeAt(currentIndex)
                                                         mutable.add(targetIndex, item)
                                                         localGroups = mutable
@@ -260,7 +262,13 @@ fun AccountGroupScreen(
                             }
                         }
                     },
-                    onClick = { itemToEdit = entry },
+                    onClick = {
+                        if (entry.policy == AccountGroupPolicy.LOAN) {
+                            onNavigate(MainRoute.Loans)
+                        } else {
+                            itemToEdit = entry
+                        }
+                    },
                 )
                 HorizontalDivider()
             }

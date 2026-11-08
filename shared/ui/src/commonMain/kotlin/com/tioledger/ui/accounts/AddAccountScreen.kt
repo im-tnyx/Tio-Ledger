@@ -12,30 +12,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,8 +56,8 @@ import com.tioledger.core.util.UuidGenerator
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.more.AccountGroupEntry
-import com.tioledger.ui.more.AccountGroupPolicy
 import com.tioledger.ui.more.AccountGroupStore
+import com.tioledger.ui.more.CurrencyPreferenceStore
 import com.tioledger.ui.more.DEFAULT_ACCOUNT_GROUPS
 import com.tioledger.ui.navigation.MainRoute
 import kotlinx.datetime.Clock
@@ -69,13 +69,17 @@ fun AddAccountRoute(
     onNavigateBack: () -> Unit = {},
     createAccountUseCase: CreateAccountUseCase = koinInject(),
     groupStore: AccountGroupStore = koinInject(),
+    currencyPreferenceStore: CurrencyPreferenceStore = koinInject(),
 ) {
     val groups by groupStore.groups.collectAsState()
+    val currencyConfig by currencyPreferenceStore.config.collectAsState()
     AddAccountScreen(
         onNavigateBack = onNavigateBack,
         onAccountCreated = onNavigateBack,
         onCreateAccount = { command -> createAccountUseCase(command) },
+        onAccountGroupAssigned = { accountId, groupId -> groupStore.assignAccount(accountId, groupId) },
         availableGroups = groups,
+        currencyCode = currencyConfig.currency.code.normalized,
     )
 }
 
@@ -84,52 +88,20 @@ fun AddAccountScreen(
     onNavigateBack: () -> Unit,
     onAccountCreated: () -> Unit = {},
     onCreateAccount: (CreateAccountCommand) -> ApplicationResult<*> = { ApplicationResult.Success(UseCaseOutcome(Unit)) },
+    onAccountGroupAssigned: (accountId: String, groupId: String) -> Unit = { _, _ -> },
     availableGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
+    currencyCode: String,
     modifier: Modifier = Modifier,
 ) {
     val idGenerator: IdGenerator = remember { UuidGenerator() }
     var selectedGroup by remember { mutableStateOf<AccountGroupEntry?>(null) }
     var name by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
-    // Policy specific fields
-    var paymentAccount by remember { mutableStateOf("") }
-    var settlementDate by remember { mutableIntStateOf(1) }
-    var paymentDate by remember { mutableIntStateOf(1) }
-    var isAutoPayEnabled by remember { mutableStateOf(false) }
-
-    // Loan specific fields
-    var loanInterestRate by remember { mutableStateOf("") }
-    var loanTenorMonths by remember { mutableStateOf("") }
-
-    // Bank specific fields
-    var bankName by remember { mutableStateOf("") }
-    var accountNumber by remember { mutableStateOf("") }
-
-    // Investment specific fields
-    var investmentBroker by remember { mutableStateOf("") }
-    var investmentExpectedReturn by remember { mutableStateOf("") }
 
     var isGroupSheetVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
 
     val groupSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    val currentPolicy = selectedGroup?.policy
-    val isCreditCard = currentPolicy == AccountGroupPolicy.CREDIT_CARD
-    val isLoan = currentPolicy == AccountGroupPolicy.LOAN
-    val isBank = currentPolicy == AccountGroupPolicy.BANK
-    val isInvestment = currentPolicy == AccountGroupPolicy.INVESTMENT
-
-    val cyclePreview =
-        remember(settlementDate, paymentDate) {
-            CreditCardCycleCalculator.calculate(
-                settlementDay = settlementDate,
-                paymentDueDay = paymentDate,
-            )
-        }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -194,218 +166,6 @@ fun AddAccountScreen(
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-            // Amount Row
-            AddAccountTextFieldRow(
-                label = "Amount",
-                value = amount,
-                onValueChange = { amount = it },
-                keyboardType = KeyboardType.Decimal,
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-            // Dynamic Payment Account Row (for Credit Card or Loan)
-            if (isCreditCard || isLoan) {
-                AddAccountTextFieldRow(
-                    label = "Payment",
-                    value = paymentAccount,
-                    onValueChange = { paymentAccount = it },
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            }
-
-            // Dynamic Bank Fields
-            if (isBank) {
-                AddAccountTextFieldRow(
-                    label = "Bank Name",
-                    value = bankName,
-                    onValueChange = { bankName = it },
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                AddAccountTextFieldRow(
-                    label = "Account No.",
-                    value = accountNumber,
-                    onValueChange = { accountNumber = it },
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            }
-
-            // Dynamic Investment Fields
-            if (isInvestment) {
-                AddAccountTextFieldRow(
-                    label = "Broker",
-                    value = investmentBroker,
-                    onValueChange = { investmentBroker = it },
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                AddAccountTextFieldRow(
-                    label = "Return (%)",
-                    value = investmentExpectedReturn,
-                    onValueChange = { investmentExpectedReturn = it },
-                    keyboardType = KeyboardType.Decimal,
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            }
-
-            // Description Row
-            AddAccountTextFieldRow(
-                label = "Description",
-                value = description,
-                onValueChange = { description = it },
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-            // Dynamic Credit Card Section
-            if (isCreditCard) {
-                Spacer(modifier = Modifier.height(TioSpacing.lg))
-
-                // Settlement Date Row
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = TioSpacing.sm),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Settlement\nDate",
-                        modifier = Modifier.width(110.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedTextField(
-                        value = settlementDate.toString(),
-                        onValueChange = {
-                            val parsed = it.filter(Char::isDigit).toIntOrNull()
-                            if (parsed != null && parsed in 1..31) {
-                                settlementDate = parsed
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        colors = transparentTextFieldColors(),
-                    )
-                    Text(
-                        text = "ⓘ",
-                        modifier =
-                            Modifier
-                                .padding(horizontal = TioSpacing.sm)
-                                .semantics { contentDescription = "Statement generation day of month" },
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                // Payment Date Row
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = TioSpacing.sm),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Payment\nDate",
-                        modifier = Modifier.width(110.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedTextField(
-                        value = paymentDate.toString(),
-                        onValueChange = {
-                            val parsed = it.filter(Char::isDigit).toIntOrNull()
-                            if (parsed != null && parsed in 1..31) {
-                                paymentDate = parsed
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        colors = transparentTextFieldColors(),
-                    )
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                // Statement Cycle Preview Box (Matching Screenshot 2)
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = TioSpacing.md),
-                    shape = RoundedCornerShape(8.dp),
-                    colors =
-                        CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                        ),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(TioSpacing.md),
-                        verticalArrangement = Arrangement.spacedBy(TioSpacing.sm),
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Text(
-                                text = "Balance Payable",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                text = cyclePreview.payablePeriod,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Text(
-                                text = "Outst. Balance",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                text = cyclePreview.outstandingPeriod,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-                }
-
-                // Automatic Payment Row
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = TioSpacing.md),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = "Automatic Payment",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Switch(
-                        checked = isAutoPayEnabled,
-                        onCheckedChange = { isAutoPayEnabled = it },
-                    )
-                }
-            }
-
-            // Dynamic Loan Section
-            if (isLoan) {
-                Spacer(modifier = Modifier.height(TioSpacing.lg))
-                AddAccountTextFieldRow(
-                    label = "Interest Rate",
-                    value = loanInterestRate,
-                    onValueChange = { loanInterestRate = it },
-                    keyboardType = KeyboardType.Decimal,
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                AddAccountTextFieldRow(
-                    label = "Tenor (mo.)",
-                    value = loanTenorMonths,
-                    onValueChange = { loanTenorMonths = it },
-                    keyboardType = KeyboardType.Number,
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            }
-
             errorMessage?.let { error ->
                 Text(
                     text = error,
@@ -434,12 +194,13 @@ fun AddAccountScreen(
                                     id = idGenerator.nextId(),
                                     name = trimmedName,
                                     type = mappedType,
-                                    currencyCode = "USD",
+                                    currencyCode = currencyCode,
                                     createdAt = Clock.System.now().toEpochMilliseconds(),
                                 )
                             when (val result = onCreateAccount(command)) {
                                 is ApplicationResult.Success -> {
                                     isSaving = false
+                                    onAccountGroupAssigned(command.id, group.id)
                                     onAccountCreated()
                                 }
                                 is ApplicationResult.Failure -> {
@@ -490,33 +251,44 @@ fun AddAccountScreen(
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
-                availableGroups.forEach { group ->
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable {
+                LazyColumn(modifier = Modifier.heightIn(max = 420.dp)) {
+                    items(availableGroups, key = AccountGroupEntry::id) { group ->
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedGroup = group
+                                        isGroupSheetVisible = false
+                                    }
+                                    .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = group.title,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                group.subtitle?.let { sub ->
+                                    Text(
+                                        text = sub,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            RadioButton(
+                                selected = selectedGroup?.id == group.id,
+                                onClick = {
                                     selectedGroup = group
                                     isGroupSheetVisible = false
-                                }
-                                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = group.title,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        group.subtitle?.let { sub ->
-                            Text(
-                                text = sub,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                },
                             )
                         }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
                     }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
                 }
 
                 Spacer(modifier = Modifier.height(TioSpacing.md))

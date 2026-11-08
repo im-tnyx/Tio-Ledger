@@ -96,4 +96,17 @@ class AccountGroupStoreTest {
         assertEquals(AccountType.INVESTMENT, AccountGroupPolicy.INVESTMENT.accountType)
         assertEquals(AccountType.WALLET, AccountGroupPolicy.OTHER.accountType)
     }
+
+    @Test
+    fun groupsAndAccountAssignmentsSurviveStoreRecreation() {
+        val persistence = InMemoryAccountGroupPersistence()
+        val firstStore = AccountGroupStore(TestIdGenerator("persisted"), persistence = persistence)
+        val custom = firstStore.addGroup("Investments", AccountGroupPolicy.INVESTMENT)
+        firstStore.assignAccount("account-1", custom.id)
+
+        val secondStore = AccountGroupStore(TestIdGenerator(), persistence = persistence)
+
+        assertEquals(custom, secondStore.groups.value.last())
+        assertEquals(custom.id, secondStore.groupIdForAccount("account-1"))
+    }
 }

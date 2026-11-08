@@ -56,9 +56,11 @@ val DEFAULT_ACCOUNT_GROUPS: List<AccountGroupEntry> =
 class AccountGroupStore(
     private val idGenerator: IdGenerator = UuidGenerator(),
     initialGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
+    private val persistence: AccountGroupPersistence = InMemoryAccountGroupPersistence(initialGroups),
 ) {
-    private val _groups = MutableStateFlow(initialGroups)
+    private val _groups = MutableStateFlow(persistence.load() ?: initialGroups)
     val groups: StateFlow<List<AccountGroupEntry>> = _groups.asStateFlow()
+    private val accountGroupIds = persistence.loadAccountGroupIds().toMutableMap()
 
     fun addGroup(
         title: String,
@@ -73,6 +75,7 @@ class AccountGroupStore(
                 isPermanent = false,
             )
         _groups.value = _groups.value + entry
+        persistence.save(_groups.value)
         return entry
     }
 
@@ -86,6 +89,7 @@ class AccountGroupStore(
         val updated = current.toMutableList()
         updated[index] = updated[index].copy(title = newTitle)
         _groups.value = updated
+        persistence.save(_groups.value)
         return true
     }
 
@@ -94,6 +98,7 @@ class AccountGroupStore(
         val target = current.find { it.id == id } ?: return false
         if (target.isPermanent) return false
         _groups.value = current.filter { it.id != id }
+        persistence.save(_groups.value)
         return true
     }
 
@@ -106,6 +111,48 @@ class AccountGroupStore(
             val item = current.removeAt(fromIndex)
             current.add(toIndex, item)
             _groups.value = current
+            persistence.save(_groups.value)
         }
+    }
+
+    fun assignAccount(
+        accountId: String,
+        groupId: String,
+    ) {
+        if (_groups.value.none { it.id == groupId }) return
+        accountGroupIds[accountId] = groupId
+        persistence.saveAccountGroupIds(accountGroupIds)
+    }
+
+    fun groupIdForAccount(accountId: String): String? = accountGroupIds[accountId]
+}
+
+interface AccountGroupPersistence {
+    fun load(): List<AccountGroupEntry>?
+
+    fun save(groups: List<AccountGroupEntry>)
+
+    fun loadAccountGroupIds(): Map<String, String> = emptyMap()
+
+    fun saveAccountGroupIds(accountGroupIds: Map<String, String>) = Unit
+}
+
+class InMemoryAccountGroupPersistence(
+    initialGroups: List<AccountGroupEntry>? = null,
+) : AccountGroupPersistence {
+    private var groups: List<AccountGroupEntry>? = initialGroups
+
+    override fun load(): List<AccountGroupEntry>? = groups
+
+    override fun save(groups: List<AccountGroupEntry>) {
+        this.groups = groups.toList()
+    }
+
+    private var accountGroupIds: Map<String, String> = emptyMap()
+
+    override fun loadAccountGroupIds(): Map<String, String> = accountGroupIds
+
+    override fun saveAccountGroupIds(accountGroupIds: Map<String, String>) {
+        this.accountGroupIds = accountGroupIds.toMap()
     }
 }
