@@ -45,9 +45,10 @@ enum class AccountGroupPolicyOption(
     val policy: AccountGroupPolicy,
     val label: String,
 ) {
-    DEFAULT(AccountGroupPolicy.BANK, "Default"),
-    CREDIT_CARD(AccountGroupPolicy.CREDIT_CARD, "Account group for credit cards"),
-    DEBIT_CARD(AccountGroupPolicy.DEBIT_CARD, "Account group for debit cards"),
+    GENERAL(AccountGroupPolicy.BANK, "General"),
+    CARD(AccountGroupPolicy.CREDIT_CARD, "Card"),
+    LOAN(AccountGroupPolicy.LOAN, "Loan"),
+    INVESTMENT(AccountGroupPolicy.INVESTMENT, "Investment"),
 }
 
 @Composable
@@ -161,10 +162,16 @@ fun AccountGroupEditScreen(
             AccountGroupPolicyOption.entries.forEach { option ->
                 val isSelected =
                     when (option) {
-                        AccountGroupPolicyOption.DEFAULT ->
-                            selectedPolicy == AccountGroupPolicy.BANK || selectedPolicy == AccountGroupPolicy.CASH
-                        AccountGroupPolicyOption.CREDIT_CARD -> selectedPolicy == AccountGroupPolicy.CREDIT_CARD
-                        AccountGroupPolicyOption.DEBIT_CARD -> selectedPolicy == AccountGroupPolicy.DEBIT_CARD
+                        AccountGroupPolicyOption.GENERAL ->
+                            selectedPolicy == AccountGroupPolicy.BANK ||
+                                selectedPolicy == AccountGroupPolicy.CASH ||
+                                selectedPolicy == AccountGroupPolicy.OTHER
+                        AccountGroupPolicyOption.CARD ->
+                            selectedPolicy == AccountGroupPolicy.CREDIT_CARD || selectedPolicy == AccountGroupPolicy.DEBIT_CARD
+                        AccountGroupPolicyOption.LOAN ->
+                            selectedPolicy == AccountGroupPolicy.LOAN
+                        AccountGroupPolicyOption.INVESTMENT ->
+                            selectedPolicy == AccountGroupPolicy.INVESTMENT
                     }
 
                 Row(

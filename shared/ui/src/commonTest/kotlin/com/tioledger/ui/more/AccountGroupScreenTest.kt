@@ -43,16 +43,19 @@ class AccountGroupScreenTest {
     }
 
     @Test
-    fun accountGroupPolicyOptionsMatchRealbyteReference() {
-        assertEquals(3, AccountGroupPolicyOption.entries.size)
-        assertEquals(AccountGroupPolicy.BANK, AccountGroupPolicyOption.DEFAULT.policy)
-        assertEquals("Default", AccountGroupPolicyOption.DEFAULT.label)
+    fun accountGroupPolicyOptionsSupportRequiredTypes() {
+        assertEquals(4, AccountGroupPolicyOption.entries.size)
+        assertEquals(AccountGroupPolicy.BANK, AccountGroupPolicyOption.GENERAL.policy)
+        assertEquals("General", AccountGroupPolicyOption.GENERAL.label)
 
-        assertEquals(AccountGroupPolicy.CREDIT_CARD, AccountGroupPolicyOption.CREDIT_CARD.policy)
-        assertEquals("Account group for credit cards", AccountGroupPolicyOption.CREDIT_CARD.label)
+        assertEquals(AccountGroupPolicy.CREDIT_CARD, AccountGroupPolicyOption.CARD.policy)
+        assertEquals("Card", AccountGroupPolicyOption.CARD.label)
 
-        assertEquals(AccountGroupPolicy.DEBIT_CARD, AccountGroupPolicyOption.DEBIT_CARD.policy)
-        assertEquals("Account group for debit cards", AccountGroupPolicyOption.DEBIT_CARD.label)
+        assertEquals(AccountGroupPolicy.LOAN, AccountGroupPolicyOption.LOAN.policy)
+        assertEquals("Loan", AccountGroupPolicyOption.LOAN.label)
+
+        assertEquals(AccountGroupPolicy.INVESTMENT, AccountGroupPolicyOption.INVESTMENT.policy)
+        assertEquals("Investment", AccountGroupPolicyOption.INVESTMENT.label)
     }
 
     @Test
