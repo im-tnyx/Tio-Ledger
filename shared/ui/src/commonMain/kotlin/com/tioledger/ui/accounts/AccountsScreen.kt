@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import com.tioledger.domain.model.AccountType
+import com.tioledger.ui.components.TioAddIcon
 import com.tioledger.ui.components.TioAmountText
 import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
@@ -82,8 +84,11 @@ fun AccountsScreen(
             TioAppBar(
                 title = "Accounts",
                 actions = {
-                    TextButton(onClick = { onAction(AccountsAction.AddClicked) }) {
-                        Text("+")
+                    IconButton(
+                        onClick = { onAction(AccountsAction.AddClicked) },
+                        modifier = Modifier.semantics { contentDescription = "Add account" },
+                    ) {
+                        TioAddIcon()
                     }
                 },
             )
@@ -142,27 +147,19 @@ fun AccountsScreen(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
                     ) {
-                        CREATABLE_ACCOUNT_GROUPS.forEach { group ->
+                        state.availableGroups.forEach { group ->
                             TioFilterChip(
                                 label = group.title,
-                                selected = state.draftType == group.type,
-                                onClick = { onAction(AccountsAction.TypeChanged(group.type)) },
+                                selected = state.draftGroupId == group.id,
+                                onClick = { onAction(AccountsAction.GroupChanged(group.id)) },
                             )
                         }
                     }
-                    Text("Currency", style = MaterialTheme.typography.labelLarge)
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
-                    ) {
-                        SUPPORTED_ACCOUNT_CURRENCY_CODES.forEach { currencyCode ->
-                            TioFilterChip(
-                                label = currencyCode,
-                                selected = state.draftCurrencyCode == currencyCode,
-                                onClick = { onAction(AccountsAction.CurrencyChanged(currencyCode)) },
-                            )
-                        }
-                    }
+                    Text(
+                        text = "Currency: ${state.draftCurrencyCode}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },
@@ -218,7 +215,7 @@ private fun SummaryColumn(
 private fun AccountsGroupedList(groups: List<AccountGroupUiModel>) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         groups.forEach { group ->
-            item(key = "header-${group.type}") {
+            item(key = "header-${group.id}") {
                 AccountGroupHeader(group)
             }
             items(group.accounts, key = { it.id }) { account ->

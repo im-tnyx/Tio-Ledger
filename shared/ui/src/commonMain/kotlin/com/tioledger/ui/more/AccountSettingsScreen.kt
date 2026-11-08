@@ -2,20 +2,20 @@
 
 package com.tioledger.ui.more
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.tioledger.ui.components.TioAppBar
+import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioListItem
 import com.tioledger.ui.navigation.MainRoute
@@ -63,8 +63,11 @@ fun AccountSettingsScreen(
             TioAppBar(
                 title = "Accounts",
                 navigationIcon = {
-                    TextButton(onClick = onNavigateBack) {
-                        Text("‹ Settings")
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.semantics { contentDescription = "Navigate back" },
+                    ) {
+                        TioBackIcon()
                     }
                 },
             )
@@ -82,7 +85,6 @@ fun AccountSettingsScreen(
             modifier =
                 Modifier
                     .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .fillMaxSize(),
         ) {
             items(accountSettings, key = AccountSettingEntry::title) { entry ->

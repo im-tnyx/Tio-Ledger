@@ -1,6 +1,7 @@
 package com.tioledger.apps.android
 
 import android.app.Application
+import com.tioledger.apps.android.accountgroups.SharedPreferencesAccountGroupPersistence
 import com.tioledger.apps.android.currency.SharedPreferencesCurrencyPreferenceRepository
 import com.tioledger.apps.android.reminders.ReminderDataChangeDriverFactory
 import com.tioledger.apps.android.reminders.ReminderNotificationChannels
@@ -11,6 +12,7 @@ import com.tioledger.bootstrap.TioApplicationBootstrap
 import com.tioledger.bootstrap.database.AndroidDatabaseDriverFactory
 import com.tioledger.domain.repository.CurrencyPreferenceRepository
 import com.tioledger.ui.di.tioUiModule
+import com.tioledger.ui.more.AccountGroupPersistence
 import org.koin.core.KoinApplication
 import org.koin.dsl.module
 
@@ -35,6 +37,9 @@ class TioAndroidApplication : Application() {
                             tioUiModule(),
                             androidReminderModule(this),
                             module {
+                                single<AccountGroupPersistence> {
+                                    SharedPreferencesAccountGroupPersistence(this@TioAndroidApplication)
+                                }
                                 single<CurrencyPreferenceRepository> {
                                     SharedPreferencesCurrencyPreferenceRepository(this@TioAndroidApplication)
                                 }

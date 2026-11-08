@@ -4,25 +4,20 @@
 package com.tioledger.ui.more
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.components.TioListItem
@@ -76,11 +71,6 @@ private fun buildMoreSections(currencySubtitle: String): List<MoreSection> =
                 listOf(
                     MoreEntry("Income Category Setting", MainRoute.IncomeCategories),
                     MoreEntry("Expenses Category Setting", MainRoute.ExpenseCategories),
-                    MoreEntry(
-                        title = "Accounts Setting",
-                        route = MainRoute.AccountSettings,
-                        subtitle = "Account Group, Accounts, Include in totals, Transfer-Expense setting",
-                    ),
                     MoreEntry("Budget Setting", MainRoute.BudgetSettings),
                 ),
         ),
@@ -93,7 +83,6 @@ private fun buildMoreSections(currencySubtitle: String): List<MoreSection> =
                         route = MainRoute.CurrencySettings,
                         subtitle = currencySubtitle,
                     ),
-                    MoreEntry("Alarm Setting", MainRoute.AlarmSettings),
                     MoreEntry("Style", MainRoute.Style),
                 ),
         ),
@@ -123,15 +112,8 @@ fun MoreScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = {
-                    androidx.compose.foundation.layout.Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("Settings")
-                    }
-                },
+            TioAppBar(
+                title = "Settings",
                 actions = {
                     Text(
                         text = "0.1.0",
@@ -140,10 +122,6 @@ fun MoreScreen(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
             )
         },
         bottomBar = {
@@ -156,11 +134,8 @@ fun MoreScreen(
         },
     ) { padding ->
         LazyColumn(
-            modifier =
-                Modifier
-                    .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = padding,
         ) {
             sections.forEach { section ->
                 section.title?.let { title ->
