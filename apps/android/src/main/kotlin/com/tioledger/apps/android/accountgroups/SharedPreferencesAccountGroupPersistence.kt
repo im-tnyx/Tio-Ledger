@@ -32,12 +32,12 @@ class SharedPreferencesAccountGroupPersistence(
         }.toMap()
     }
 
-    override fun saveAccountGroupIds(accountGroupIds: Map<String, String>) {
+    override fun saveAccountGroupIds(accountGroupIds: Map<String, String>): Boolean {
         val encoded =
             accountGroupIds.entries.joinToString("\n") { (accountId, groupId) ->
                 listOf(accountId, groupId).joinToString(FIELD_SEPARATOR, transform = ::encodeField)
             }
-        preferences.edit().putString(ACCOUNT_GROUP_IDS_KEY, encoded).apply()
+        return preferences.edit().putString(ACCOUNT_GROUP_IDS_KEY, encoded).commit()
     }
 
     private fun encode(group: AccountGroupEntry): String =

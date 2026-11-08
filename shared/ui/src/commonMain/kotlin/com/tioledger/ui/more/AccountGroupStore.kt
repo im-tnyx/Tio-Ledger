@@ -62,6 +62,8 @@ class AccountGroupStore(
     val groups: StateFlow<List<AccountGroupEntry>> = _groups.asStateFlow()
     private val accountGroupIds = persistence.loadAccountGroupIds().toMutableMap()
 
+    fun groupForId(id: String): AccountGroupEntry? = _groups.value.firstOrNull { it.id == id }
+
     fun addGroup(
         title: String,
         policy: AccountGroupPolicy,
@@ -93,17 +95,14 @@ class AccountGroupStore(
         return true
     }
 
-    fun removeGroup(id: String): Boolean {
+    fun removeGroup(id: String): AccountGroupRemovalResult {
         val current = _groups.value
-        val target = current.find { it.id == id } ?: return false
-        if (target.isPermanent) return false
+        val target = current.find { it.id == id } ?: return AccountGroupRemovalResult.GroupNotFound
+        if (target.isPermanent) return AccountGroupRemovalResult.PermanentGroup
+        if (accountGroupIds.any { it.value == id }) return AccountGroupRemovalResult.GroupContainsAccounts
         _groups.value = current.filter { it.id != id }
-        val retainedAssignments = accountGroupIds.filterValues { it != id }
-        accountGroupIds.clear()
-        accountGroupIds.putAll(retainedAssignments)
         persistence.save(_groups.value)
-        persistence.saveAccountGroupIds(accountGroupIds)
-        return true
+        return AccountGroupRemovalResult.Removed
     }
 
     fun reorder(
@@ -119,16 +118,64 @@ class AccountGroupStore(
         }
     }
 
+    fun prepareAccountAssignment(
+        accountId: String,
+        groupId: String,
+        accountType: AccountType,
+    ): AccountGroupAssignmentResult {
+        val group = groupForId(groupId) ?: return AccountGroupAssignmentResult.GroupNotFound
+        if (group.policy.accountType != accountType) return AccountGroupAssignmentResult.PolicyMismatch
+        val updatedAssignments = accountGroupIds.toMutableMap().apply { put(accountId, groupId) }
+        if (!persistence.saveAccountGroupIds(updatedAssignments)) {
+            return AccountGroupAssignmentResult.PersistenceFailure
+        }
+        accountGroupIds.clear()
+        accountGroupIds.putAll(updatedAssignments)
+        return AccountGroupAssignmentResult.Prepared(group)
+    }
+
+    /** Test/support helper for assigning an already persisted legacy account. */
     fun assignAccount(
         accountId: String,
         groupId: String,
-    ) {
-        if (_groups.value.none { it.id == groupId }) return
-        accountGroupIds[accountId] = groupId
-        persistence.saveAccountGroupIds(accountGroupIds)
+    ): Boolean {
+        val group = groupForId(groupId) ?: return false
+        return prepareAccountAssignment(accountId, groupId, group.policy.accountType) is AccountGroupAssignmentResult.Prepared
+    }
+
+    fun removePreparedAccountAssignment(
+        accountId: String,
+        groupId: String,
+    ): Boolean {
+        if (accountGroupIds[accountId] != groupId) return true
+        val updatedAssignments = accountGroupIds.toMutableMap().apply { remove(accountId) }
+        if (!persistence.saveAccountGroupIds(updatedAssignments)) return false
+        accountGroupIds.clear()
+        accountGroupIds.putAll(updatedAssignments)
+        return true
     }
 
     fun groupIdForAccount(accountId: String): String? = accountGroupIds[accountId]
+}
+
+sealed interface AccountGroupAssignmentResult {
+    data class Prepared(val group: AccountGroupEntry) : AccountGroupAssignmentResult
+
+    data object GroupNotFound : AccountGroupAssignmentResult
+
+    data object PolicyMismatch : AccountGroupAssignmentResult
+
+    data object PersistenceFailure : AccountGroupAssignmentResult
+}
+
+sealed interface AccountGroupRemovalResult {
+    data object Removed : AccountGroupRemovalResult
+
+    data object GroupNotFound : AccountGroupRemovalResult
+
+    data object PermanentGroup : AccountGroupRemovalResult
+
+    data object GroupContainsAccounts : AccountGroupRemovalResult
 }
 
 interface AccountGroupPersistence {
@@ -138,7 +185,7 @@ interface AccountGroupPersistence {
 
     fun loadAccountGroupIds(): Map<String, String> = emptyMap()
 
-    fun saveAccountGroupIds(accountGroupIds: Map<String, String>) = Unit
+    fun saveAccountGroupIds(accountGroupIds: Map<String, String>): Boolean = true
 }
 
 class InMemoryAccountGroupPersistence(
@@ -156,7 +203,8 @@ class InMemoryAccountGroupPersistence(
 
     override fun loadAccountGroupIds(): Map<String, String> = accountGroupIds
 
-    override fun saveAccountGroupIds(accountGroupIds: Map<String, String>) {
+    override fun saveAccountGroupIds(accountGroupIds: Map<String, String>): Boolean {
         this.accountGroupIds = accountGroupIds.toMap()
+        return true
     }
 }

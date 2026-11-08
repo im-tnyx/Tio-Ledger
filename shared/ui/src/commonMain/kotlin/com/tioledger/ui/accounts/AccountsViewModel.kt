@@ -12,10 +12,10 @@ import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.AccountType
+import com.tioledger.ui.more.AccountGroupAssignmentResult
 import com.tioledger.ui.more.AccountGroupEntry
 import com.tioledger.ui.more.AccountGroupStore
 import com.tioledger.ui.more.CurrencyPreferenceStore
-import com.tioledger.ui.more.DEFAULT_ACCOUNT_GROUPS
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +26,7 @@ class AccountsViewModel(
     private val createAccountUseCase: CreateAccountUseCase,
     private val idGenerator: IdGenerator,
     private val nowProvider: () -> Long = { Clock.System.now().toEpochMilliseconds() },
-    private val accountGroupStore: AccountGroupStore? = null,
+    private val accountGroupStore: AccountGroupStore,
     private val currencyPreferenceStore: CurrencyPreferenceStore? = null,
 ) {
     private val _uiState = MutableStateFlow(AccountsUiState())
@@ -53,32 +53,29 @@ class AccountsViewModel(
                 }
             }
             AccountsAction.AddClicked -> {
-                val groups = accountGroupStore?.groups?.value ?: DEFAULT_ACCOUNT_GROUPS
+                val groups = accountGroupStore.groups.value
                 val firstGroup = groups.firstOrNull()
                 _uiState.value =
                     _uiState.value.copy(
                         isCreateDialogVisible = true,
-                        createErrorMessage = null,
+                        createErrorMessage = if (firstGroup == null) "A valid Account Group is required." else null,
                         availableGroups = groups,
                         draftGroupId = firstGroup?.id.orEmpty(),
-                        draftType = firstGroup?.policy?.accountType ?: AccountType.CASH,
                         draftCurrencyCode = currentCurrencyCode(),
                     )
             }
             AccountsAction.CreateDismissed -> dismissCreateDialog()
             is AccountsAction.NameChanged ->
                 _uiState.value = _uiState.value.copy(draftName = action.name, createErrorMessage = null)
-            is AccountsAction.TypeChanged -> _uiState.value = _uiState.value.copy(draftType = action.type)
             is AccountsAction.GroupChanged -> {
-                _uiState.value.availableGroups.firstOrNull { it.id == action.groupId }?.let { group ->
+                accountGroupStore.groupForId(action.groupId)?.let { group ->
                     _uiState.value =
                         _uiState.value.copy(
                             draftGroupId = group.id,
-                            draftType = group.policy.accountType,
+                            createErrorMessage = null,
                         )
                 }
             }
-            is AccountsAction.CurrencyChanged -> _uiState.value = _uiState.value.copy(draftCurrencyCode = action.currencyCode)
             AccountsAction.SaveClicked -> createAccount()
         }
     }
@@ -92,22 +89,53 @@ class AccountsViewModel(
         val current = _uiState.value
         if (current.isSaving) return
         _uiState.value = current.copy(isSaving = true, createErrorMessage = null)
+        val group = accountGroupStore.groupForId(current.draftGroupId)
+        if (group == null) {
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "A valid Account Group is required.")
+            return
+        }
         val command =
             CreateAccountCommand(
                 id = idGenerator.nextId(),
                 name = current.draftName,
-                type = current.draftType,
+                type = group.policy.accountType,
                 currencyCode = current.draftCurrencyCode,
                 createdAt = nowProvider(),
             )
+        when (accountGroupStore.prepareAccountAssignment(command.id, group.id, command.type)) {
+            is AccountGroupAssignmentResult.Prepared -> Unit
+            AccountGroupAssignmentResult.GroupNotFound -> {
+                _uiState.value = current.copy(isSaving = false, createErrorMessage = "A valid Account Group is required.")
+                return
+            }
+            AccountGroupAssignmentResult.PolicyMismatch -> {
+                _uiState.value = current.copy(isSaving = false, createErrorMessage = "The selected group policy is invalid.")
+                return
+            }
+            AccountGroupAssignmentResult.PersistenceFailure -> {
+                _uiState.value =
+                    current.copy(
+                        isSaving = false,
+                        createErrorMessage = "Unable to save the account group assignment. Try again.",
+                    )
+                return
+            }
+        }
         when (val result = createAccountUseCase(command)) {
             is ApplicationResult.Success -> {
-                accountGroupStore?.assignAccount(command.id, current.draftGroupId)
                 _uiState.value = resetCreateDraft(_uiState.value)
                 loadAccounts()
             }
-            is ApplicationResult.Failure ->
-                _uiState.value = _uiState.value.copy(isSaving = false, createErrorMessage = result.error.toCreateMessage())
+            is ApplicationResult.Failure -> {
+                val cleanupSucceeded = accountGroupStore.removePreparedAccountAssignment(command.id, group.id)
+                val message =
+                    if (cleanupSucceeded) {
+                        result.error.toCreateMessage()
+                    } else {
+                        "Account was not saved. Temporary group assignment cleanup failed."
+                    }
+                _uiState.value = _uiState.value.copy(isSaving = false, createErrorMessage = message)
+            }
         }
     }
 
@@ -137,22 +165,11 @@ class AccountsViewModel(
 
 private fun AccountsBalanceOverview.toUiState(
     searchQuery: String,
-    accountGroupStore: AccountGroupStore? = null,
+    accountGroupStore: AccountGroupStore,
     currencyPreferenceStore: CurrencyPreferenceStore? = null,
 ): AccountsUiState {
-    val uiGroups =
-        accountGroupStore?.let { store ->
-            toAccountGroupUiModels(searchQuery, store.groups.value, store)
-        } ?: groups.map { group ->
-            AccountGroupUiModel(
-                type = group.type,
-                id = group.type.name,
-                title = group.type.toGroupTitle(),
-                totals = group.totals.map { it.toDisplayAmount() },
-                accounts = group.accounts.map { it.toRow() },
-            )
-        }
-    val availableGroups = accountGroupStore?.groups?.value ?: DEFAULT_ACCOUNT_GROUPS
+    val uiGroups = toAccountGroupUiModels(searchQuery, accountGroupStore.groups.value, accountGroupStore)
+    val availableGroups = accountGroupStore.groups.value
     return AccountsUiState(
         isLoading = false,
         searchQuery = searchQuery,
@@ -168,7 +185,6 @@ private fun AccountsBalanceOverview.toUiState(
         groups = uiGroups,
         availableGroups = availableGroups,
         draftGroupId = availableGroups.firstOrNull()?.id.orEmpty(),
-        draftType = availableGroups.firstOrNull()?.policy?.accountType ?: AccountType.CASH,
         draftCurrencyCode =
             currencyPreferenceStore?.getConfig()?.currency?.code?.normalized
                 ?: SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
@@ -266,7 +282,6 @@ private fun resetCreateDraft(state: AccountsUiState): AccountsUiState =
     state.copy(
         isCreateDialogVisible = false,
         draftName = "",
-        draftType = AccountType.CASH,
         draftGroupId = state.availableGroups.firstOrNull()?.id.orEmpty(),
         draftCurrencyCode = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
         isSaving = false,

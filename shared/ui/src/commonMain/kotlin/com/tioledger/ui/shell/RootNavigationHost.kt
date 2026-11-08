@@ -135,8 +135,18 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(target))
                             },
                             onNavigateBack = {
-                                onNavigate(RootRoute.Main(MainRoute.More))
+                                onNavigate(RootRoute.Main(MainRoute.Configuration))
                             },
+                        )
+                    MainRoute.AccountManager ->
+                        AccountsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountSettings))
+                            },
+                            destination = MainRoute.AccountManager,
                         )
                     MainRoute.AccountGroup ->
                         AccountGroupRoute(

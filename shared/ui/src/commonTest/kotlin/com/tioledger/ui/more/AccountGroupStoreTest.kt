@@ -49,7 +49,7 @@ class AccountGroupStoreTest {
         val cashGroup = store.groups.value.first { it.id == "cash" }
 
         val removed = store.removeGroup(cashGroup.id)
-        assertFalse(removed)
+        assertEquals(AccountGroupRemovalResult.PermanentGroup, removed)
         assertEquals(3, store.groups.value.size)
     }
 
@@ -60,19 +60,19 @@ class AccountGroupStoreTest {
         assertEquals(4, store.groups.value.size)
 
         val removed = store.removeGroup(custom.id)
-        assertTrue(removed)
+        assertEquals(AccountGroupRemovalResult.Removed, removed)
         assertEquals(3, store.groups.value.size)
         assertFalse(store.groups.value.any { it.id == custom.id })
     }
 
     @Test
-    fun removingGroupAlsoRemovesAccountAssignments() {
+    fun groupContainingAccountsCannotBeRemovedOrUnassignAccounts() {
         val store = AccountGroupStore()
         val custom = store.addGroup("Emergency Savings", AccountGroupPolicy.BANK)
         store.assignAccount("account-1", custom.id)
 
-        assertTrue(store.removeGroup(custom.id))
-        assertEquals(null, store.groupIdForAccount("account-1"))
+        assertEquals(AccountGroupRemovalResult.GroupContainsAccounts, store.removeGroup(custom.id))
+        assertEquals(custom.id, store.groupIdForAccount("account-1"))
     }
 
     @Test
@@ -118,5 +118,40 @@ class AccountGroupStoreTest {
 
         assertEquals(custom, secondStore.groups.value.last())
         assertEquals(custom.id, secondStore.groupIdForAccount("account-1"))
+    }
+
+    @Test
+    fun assignmentRejectsMissingGroupAndMismatchedPolicy() {
+        val store = AccountGroupStore()
+
+        assertEquals(
+            AccountGroupAssignmentResult.GroupNotFound,
+            store.prepareAccountAssignment("missing-group-account", "missing", AccountType.CASH),
+        )
+        assertEquals(
+            AccountGroupAssignmentResult.PolicyMismatch,
+            store.prepareAccountAssignment("mismatch-account", "cash", AccountType.BANK),
+        )
+        assertEquals(null, store.groupIdForAccount("missing-group-account"))
+        assertEquals(null, store.groupIdForAccount("mismatch-account"))
+    }
+
+    @Test
+    fun assignmentDoesNotMutateStoreWhenPersistenceFails() {
+        val persistence =
+            object : AccountGroupPersistence {
+                override fun load(): List<AccountGroupEntry>? = DEFAULT_ACCOUNT_GROUPS
+
+                override fun save(groups: List<AccountGroupEntry>) = Unit
+
+                override fun saveAccountGroupIds(accountGroupIds: Map<String, String>): Boolean = false
+            }
+        val store = AccountGroupStore(persistence = persistence)
+
+        assertEquals(
+            AccountGroupAssignmentResult.PersistenceFailure,
+            store.prepareAccountAssignment("account-1", "cash", AccountType.CASH),
+        )
+        assertEquals(null, store.groupIdForAccount("account-1"))
     }
 }

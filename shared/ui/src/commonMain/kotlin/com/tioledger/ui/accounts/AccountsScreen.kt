@@ -60,12 +60,16 @@ import org.koin.compose.koinInject
 fun AccountsRoute(
     viewModel: AccountsViewModel = koinInject(),
     onNavigate: (MainRoute) -> Unit = {},
+    onNavigateBack: (() -> Unit)? = null,
+    destination: MainRoute = MainRoute.Accounts,
 ) {
     val state by viewModel.uiState.collectAsState()
     AccountsScreen(
         state = state,
         onAction = viewModel::onAction,
         onNavigate = onNavigate,
+        onNavigateBack = onNavigateBack,
+        destination = destination,
     )
 }
 
@@ -74,15 +78,28 @@ fun AccountsScreen(
     state: AccountsUiState,
     onAction: (AccountsAction) -> Unit,
     onNavigate: (MainRoute) -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
+    destination: MainRoute = MainRoute.Accounts,
     modifier: Modifier = Modifier,
 ) {
-    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Accounts)
+    val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(destination)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TioAppBar(
-                title = "Accounts",
+                title = destination.title,
+                navigationIcon =
+                    onNavigateBack?.let { navigateBack ->
+                        {
+                            IconButton(
+                                onClick = navigateBack,
+                                modifier = Modifier.semantics { contentDescription = "Navigate back" },
+                            ) {
+                                com.tioledger.ui.components.TioBackIcon()
+                            }
+                        }
+                    },
                 actions = {
                     IconButton(
                         onClick = { onAction(AccountsAction.AddClicked) },

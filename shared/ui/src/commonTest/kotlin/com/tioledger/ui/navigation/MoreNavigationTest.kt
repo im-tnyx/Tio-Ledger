@@ -21,6 +21,7 @@ class MoreNavigationTest {
         assertTrue(MainRoute.IncomeCategories in TioNavigationGraphs.main.routes)
         assertTrue(MainRoute.ExpenseCategories in TioNavigationGraphs.main.routes)
         assertTrue(MainRoute.AccountSettings in TioNavigationGraphs.main.routes)
+        assertTrue(MainRoute.AccountManager in TioNavigationGraphs.main.routes)
         assertTrue(MainRoute.AccountGroup in TioNavigationGraphs.main.routes)
         assertTrue(MainRoute.TransactionSettings in TioNavigationGraphs.main.routes)
         assertTrue(MainRoute.CurrencySettings in TioNavigationGraphs.main.routes)

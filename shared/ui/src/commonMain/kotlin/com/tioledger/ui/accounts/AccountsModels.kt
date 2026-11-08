@@ -13,7 +13,6 @@ data class AccountsUiState(
     val errorMessage: String? = null,
     val isCreateDialogVisible: Boolean = false,
     val draftName: String = "",
-    val draftType: AccountType = AccountType.CASH,
     val availableGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
     val draftGroupId: String = DEFAULT_ACCOUNT_GROUPS.first().id,
     val draftCurrencyCode: String = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
@@ -24,24 +23,8 @@ data class AccountsUiState(
         get() = !isLoading && errorMessage == null && groups.all { it.accounts.isEmpty() }
 }
 
-// Narrow, deterministic currency/type choices for Account Creation v2 — see account-creation-v2.md.
+// Fallback only when Main Currency has not been configured — see account-creation-v2.md.
 val SUPPORTED_ACCOUNT_CURRENCY_CODES: List<String> = listOf("USD", "INR", "EUR", "GBP")
-
-/**
- * Account creation is selected by the visible Account Group. The mapped
- * AccountType is retained underneath because it controls ledger semantics.
- */
-data class AccountGroupOption(
-    val type: AccountType,
-    val title: String,
-)
-
-val CREATABLE_ACCOUNT_GROUPS: List<AccountGroupOption> =
-    listOf(
-        AccountGroupOption(AccountType.CASH, "Cash"),
-        AccountGroupOption(AccountType.BANK, "Accounts"),
-        AccountGroupOption(AccountType.LOAN_LINKED, "Loan"),
-    )
 
 data class AccountsSummaryUiModel(
     val assets: String,
@@ -84,11 +67,7 @@ sealed interface AccountsAction {
 
     data class NameChanged(val name: String) : AccountsAction
 
-    data class TypeChanged(val type: AccountType) : AccountsAction
-
     data class GroupChanged(val groupId: String) : AccountsAction
-
-    data class CurrencyChanged(val currencyCode: String) : AccountsAction
 
     data object SaveClicked : AccountsAction
 }

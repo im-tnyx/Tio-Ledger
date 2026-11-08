@@ -55,7 +55,7 @@ Must never be imported from the JADX reference, this note, or any implementation
 3. User enters the account name (required, free text).
 4. User selects an account group; its policy supplies the stored `AccountType` (cash, bank, credit card, loan-linked, investment, or wallet/other).
 5. The current Main Currency setting supplies the account currency; there is no per-account currency selector in this flow.
-6. On Save, the route builds a `CreateAccountCommand` from the current draft (name, type, global currency, generated id, timestamp) and delegates to the existing `CreateAccountUseCase`. The UI performs no validation of its own beyond disabling submission while a save is in flight.
+6. On Save, the route validates the selected persisted group, derives `CreateAccountCommand.type` from its policy, and durably prepares the group assignment before delegating to the existing `CreateAccountUseCase`. No independent type selection is accepted.
 7. If the use case returns a validation failure, the dialog stays open, the field(s) remain editable, and the error is shown inline. No account is created and no UI state is fabricated as successful.
 8. On success, the dialog closes, the full creation draft resets to its defaults, and the Accounts list is refreshed from the same read path Accounts v1 already uses (`ListAccountSummariesUseCase`).
 9. Cancel or dismiss (tap outside, system back) closes the dialog, discards the entire draft, and persists nothing — no account, no ledger entry, no partial state.
@@ -73,7 +73,7 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 ## Functional Specification
 
 - **Required field:** account name. Blank name is rejected.
-- **Supported account types:** the selected `AccountGroupPolicy` determines the stored `AccountType`; group-specific detail fields are not shown unless the application command can persist them.
+- **Supported account types:** the selected, still-valid persisted `AccountGroupPolicy` determines the stored `AccountType`; group-specific detail fields are not shown unless the application command can persist them. A group assignment must be persisted before account creation starts, and a failed account save removes its prepared assignment.
 - **Currency:** the current persisted Main Currency setting reaches `CreateAccountCommand.currencyCode` unchanged. Add Account does not expose a second currency selector.
 - **Validation ownership:** unchanged — `CreateAccountUseCase` (application layer) owns all validation. The UI/ViewModel does not duplicate business validation; it only reflects success/failure.
 - **One save per submission:** while a save is in flight (`isSaving`), the Save control is disabled and repeated taps do not start a second submission or create a duplicate account.
@@ -102,7 +102,7 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 - Use the existing Tio Ledger Compose design system (`shared/ui` components, tokens) exclusively. No visual measurements are copied from the JADX reference.
 - **Dialog/surface behavior:** a Material `AlertDialog`-style surface anchored to the Accounts screen, dismissible by Cancel, the dismiss request (scrim tap/back), or successful save.
 - **Name field:** a labeled text field with an explicit accessible label, disabled while saving.
-- **Account-type selector:** a set of selectable chips/options, one active at a time, each exposing selected/unselected state through both visual treatment and accessibility semantics (not decoration alone).
+- **Account-group selector:** persisted group chips/options, one active at a time, each exposing selected/unselected state through both visual treatment and accessibility semantics (not decoration alone). The policy-derived type is not separately editable.
 - **Currency:** no account-local currency control is rendered; the active Main Currency remains owned by Currency Settings.
 - **Save/Cancel behavior:** Save is disabled while saving and reflects a loading label; Cancel is disabled while saving so an in-flight submission cannot be abandoned into an inconsistent state.
 - **Loading state:** Save shows a saving indication; the rest of the dialog remains visible so the user retains context.
@@ -113,8 +113,8 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 
 ## Navigation Definition
 
-- Entry point: the existing Accounts floating action button.
-- Creation remains part of the Accounts workflow; it is not a new route, screen, or back-stack destination.
+- Entry points: the existing Accounts floating action button and the non-primary Account Settings management destination defined in [Account Settings management](account-settings-management.md).
+- Creation remains part of the displayed Accounts workflow; it is not an additional creation route or back-stack destination.
 - Cancel returns to the Accounts screen exactly as it was before the dialog opened (unchanged state).
 - Success returns to the Accounts screen with a refreshed list.
 - No new primary navigation destination is introduced.
@@ -127,13 +127,13 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 - **Repository write failure:** save-specific inline error text (not the list-load message); the dialog stays open with the draft intact so the user can retry without re-entering everything.
 - **Repeated Save taps:** ignored while `isSaving` is true; guarantees exactly one in-flight submission.
 - **Dialog dismissal (Cancel, scrim tap, back):** discards the full draft; no persistence.
-- **Failure retains editable draft:** confirmed for both validation and repository failures — only `isSaving` and the error message change; name/type selections are preserved so the user is not forced to redo their input.
+- **Failure retains editable draft:** confirmed for invalid/deleted groups, assignment persistence, validation, and repository failures — only `isSaving` and the error message change; name/group selections are preserved so the user is not forced to redo their input.
 
 ## Accessibility Requirements
 
 - The Accounts FAB has an accessible label describing its action ("Add account").
 - The name text field has an explicit, programmatically associated label.
-- The account-type selector exposes which option is currently selected to accessibility services (not just a visual leading icon).
+- The account-group selector exposes which option is currently selected to accessibility services (not just a visual leading icon).
 - The current Main Currency remains accessible from Currency Settings; Add Account does not duplicate that control.
 - Save and Cancel have clear, accessible labels, including while Save is in a loading state.
 - Validation and repository error text is exposed to screen readers, not conveyed by color alone.
@@ -183,10 +183,10 @@ Phone-width review covering:
 
 ## Functional Acceptance Checklist
 
-- [ ] Entry is from the existing Accounts FAB only; no new route is introduced.
+- [ ] Entry is available from the existing Accounts FAB and from the non-primary Account Settings management destination; no additional creation route is introduced.
 - [ ] The four primary bottom-navigation destinations remain Transactions, Stats, Accounts, and More.
 - [ ] Name is required; blank name is rejected with an inline message.
-- [ ] Each persisted group policy is selectable and reaches `CreateAccountCommand.type` correctly.
+- [ ] Each persisted group policy is selectable and reaches `CreateAccountCommand.type` correctly; invalid/deleted groups are rejected before account persistence.
 - [ ] The current Main Currency setting reaches `CreateAccountCommand.currencyCode` unchanged; Add Account does not silently override it.
 - [ ] Validation ownership remains in `CreateAccountUseCase`; the ViewModel performs no duplicate business validation.
 - [ ] Exactly one save operation occurs per user submission; repeated taps while saving do not create duplicates.
@@ -198,6 +198,7 @@ Phone-width review covering:
 - [ ] Pixel review is completed.
 - [ ] Accessibility review is completed.
 - [ ] No financial schema, ledger, database, or Loan Engine semantics were changed.
+- [ ] Prepared group assignments are removed when account persistence fails, and in-use groups cannot be deleted.
 
 ## Deviation Log
 

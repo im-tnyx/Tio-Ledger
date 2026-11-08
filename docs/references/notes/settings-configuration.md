@@ -34,7 +34,7 @@ The existing typed `MainRoute.Settings` is non-primary and renders Android remin
 | Appearance/Style | Specify one Tio Appearance section with System default, Light, Dark; reuse the existing theme. | Approve #73 reference note, persistence and UI before implementation. Do not import other Style options. |
 | Income/Expense categories | Reuse the existing Categories owner and plan edit/archive/hierarchy separately. | Decide Settings shortcut versus dedicated sub-route; protect referenced history. |
 | Budget Setting | Keep Budgets as current financial owner. | Decide whether Settings needs an entry; no duplicate budget computation. |
-| Accounts/Account Group | Preserve current Accounts contracts. | Separate account management/type-group requirements and financial safety review. |
+| Accounts/Account Group | Reuse the existing Accounts read path and persisted Account Group infrastructure through [Account Settings management](account-settings-management.md). | Credit Card financial-detail semantics, group reassignment/archive strategy, and any SQLDelight migration remain separate approvals. |
 | Currency/date/display/language preferences | Inventory only. | Product definitions, storage scope, locale and cross-platform behavior. |
 | Backup/import/export/reset | Phase 8 candidate; no UI promise yet. | Recovery format, integrity, privacy, permissions, confirmation, rollback and migration design. |
 | PC Manager, Help, Feedback | Inventory only. | Product priority, security/privacy and support ownership. |
@@ -42,6 +42,10 @@ The existing typed `MainRoute.Settings` is non-primary and renders Android remin
 ## Navigation And Tio UI Specification Gate
 
 Keep the current four primary bottom destinations—Transactions, Stats, Accounts, and More. The reference-aligned More hub opens Configuration, where Categories, Budgets, Account settings, Transaction settings, and Currency settings are represented by typed destinations; unsupported behavior remains placeholder-only. A future Settings IA specification must define section order, entry/exit paths, labels, loading/error states, preference write-failure truthfulness, accessibility, and responsive/light/dark behavior. It must explicitly state which reference rows are omitted and why. No new setting should imply a working feature before its runtime contract exists.
+
+## Account Settings Decision (2026-11-08)
+
+The bounded Account Settings management slice is documented in [Account Settings management](account-settings-management.md). It adds a non-primary account-management entry using the existing Accounts list/use cases, mandatory persisted-group selection, policy-derived types, safe in-use group-deletion rejection, and explicit navigation/back behavior. It does not approve Credit Card payment/billing fields, financial automation, ledger changes, or a schema migration.
 
 ## Acceptance For The Next Documentation Decision
 

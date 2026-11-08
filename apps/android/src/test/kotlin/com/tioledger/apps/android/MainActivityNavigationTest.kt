@@ -37,6 +37,22 @@ class MainActivityNavigationTest {
     }
 
     @Test
+    fun systemBackPreservesAccountSettingsHierarchy() {
+        assertEquals(
+            RootRoute.Main(MainRoute.Configuration),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountSettings)),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.AccountSettings),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountManager)),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.AccountSettings),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountGroup)),
+        )
+    }
+
+    @Test
     fun systemBackFromSmsReviewReturnsTransactions() {
         assertEquals(
             RootRoute.Main(MainRoute.Transactions),

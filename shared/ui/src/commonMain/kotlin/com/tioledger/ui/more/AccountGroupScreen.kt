@@ -72,7 +72,7 @@ fun AccountGroupRoute(
         groups = groups,
         onAddGroup = { title, policy -> store.addGroup(title, policy) },
         onUpdateGroup = { id, title -> store.updateGroup(id, title) },
-        onDeleteGroup = { id -> store.removeGroup(id) },
+        onDeleteGroup = store::removeGroup,
         onReorder = { from, to -> store.reorder(from, to) },
     )
 }
@@ -86,7 +86,7 @@ fun AccountGroupScreen(
     groups: List<AccountGroupEntry>? = null,
     onAddGroup: ((String, AccountGroupPolicy) -> Unit)? = null,
     onUpdateGroup: ((String, String) -> Unit)? = null,
-    onDeleteGroup: ((String) -> Unit)? = null,
+    onDeleteGroup: ((String) -> AccountGroupRemovalResult)? = null,
     onReorder: ((Int, Int) -> Unit)? = null,
 ) {
     val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.AccountGroup)
@@ -96,6 +96,7 @@ fun AccountGroupScreen(
     var isAddDialogVisible by remember { mutableStateOf(false) }
     var itemToEdit by remember { mutableStateOf<AccountGroupEntry?>(null) }
     var itemToDelete by remember { mutableStateOf<AccountGroupEntry?>(null) }
+    var deleteErrorMessage by remember { mutableStateOf<String?>(null) }
     val stepPx = with(LocalDensity.current) { 48.dp.toPx() }
 
     Scaffold(
@@ -150,7 +151,10 @@ fun AccountGroupScreen(
                             }
                         } else {
                             IconButton(
-                                onClick = { itemToDelete = entry },
+                                onClick = {
+                                    deleteErrorMessage = null
+                                    itemToDelete = entry
+                                },
                                 modifier =
                                     Modifier
                                         .size(36.dp)
@@ -319,20 +323,39 @@ fun AccountGroupScreen(
     itemToDelete?.let { entry ->
         TioDialog(
             title = "Delete Account Group",
-            text = "Are you sure you want to delete '${entry.title}'?",
-            confirmLabel = "Delete",
+            text =
+                deleteErrorMessage
+                    ?: "Are you sure you want to delete '${entry.title}'?",
+            confirmLabel = if (deleteErrorMessage == null) "Delete" else "Close",
             dismissLabel = "Cancel",
             onConfirm = {
+                if (deleteErrorMessage != null) {
+                    deleteErrorMessage = null
+                    itemToDelete = null
+                    return@TioDialog
+                }
                 if (!entry.isPermanent) {
                     if (onDeleteGroup != null) {
-                        onDeleteGroup(entry.id)
+                        when (onDeleteGroup(entry.id)) {
+                            AccountGroupRemovalResult.Removed -> itemToDelete = null
+                            AccountGroupRemovalResult.GroupContainsAccounts -> {
+                                deleteErrorMessage = "This group contains accounts and cannot be deleted."
+                            }
+                            AccountGroupRemovalResult.PermanentGroup -> {
+                                deleteErrorMessage = "This permanent group cannot be deleted."
+                            }
+                            AccountGroupRemovalResult.GroupNotFound -> {
+                                deleteErrorMessage = "This account group is no longer available."
+                            }
+                        }
                     } else {
                         localGroups = localGroups.filterNot { it.id == entry.id }
+                        itemToDelete = null
                     }
                 }
-                itemToDelete = null
             },
             onDismiss = {
+                deleteErrorMessage = null
                 itemToDelete = null
             },
         )
