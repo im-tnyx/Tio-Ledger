@@ -9,7 +9,10 @@ import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountCommand
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.account.UpdateAccountCommand
+import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.account.withSearchQuery
+import com.tioledger.application.usecase.loan.ListLoansUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
@@ -31,10 +34,19 @@ class AccountsViewModel(
     private val nowProvider: () -> Long = { Clock.System.now().toEpochMilliseconds() },
     private val accountGroupStore: AccountGroupStore,
     private val currencyPreferenceStore: CurrencyPreferenceStore? = null,
+    private val listLoansUseCase: ListLoansUseCase? = null,
+    private val updateAccountUseCase: UpdateAccountUseCase? = null,
 ) {
-    private val _uiState = MutableStateFlow(AccountsUiState())
+    private val _uiState =
+        MutableStateFlow(
+            AccountsUiState(
+                draftCurrencyCode = currentCurrencyCode(),
+                currencySymbol = currentCurrencySymbol(),
+            ),
+        )
     val uiState: StateFlow<AccountsUiState> = _uiState.asStateFlow()
     private var loadedOverview: AccountsBalanceOverview? = null
+    private var loanIdByAccountId: Map<String, String> = emptyMap()
 
     init {
         onAction(AccountsAction.Load)
@@ -51,6 +63,7 @@ class AccountsViewModel(
                             action.query,
                             accountGroupStore,
                             currencyPreferenceStore,
+                            loanIdByAccountId,
                         )
                     _uiState.value = _uiState.value.copy(groups = projected.groups)
                 }
@@ -61,10 +74,28 @@ class AccountsViewModel(
                 _uiState.value =
                     _uiState.value.copy(
                         isCreateDialogVisible = true,
+                        editingAccountId = null,
                         createErrorMessage = if (firstGroup == null) "A valid Account Group is required." else null,
                         availableGroups = groups,
                         draftGroupId = firstGroup?.id.orEmpty(),
                         draftCurrencyCode = currentCurrencyCode(),
+                        currencySymbol = currentCurrencySymbol(),
+                    )
+            }
+            is AccountsAction.EditAccountRequested -> {
+                val accountSummary = loadedOverview?.accounts?.firstOrNull { it.account.id == action.accountId }
+                val assignedGroupId =
+                    accountGroupStore.groupIdForAccount(action.accountId)
+                        ?: _uiState.value.availableGroups.firstOrNull()?.id.orEmpty()
+                val currency = accountSummary?.account?.currencyCode ?: currentCurrencyCode()
+                _uiState.value =
+                    _uiState.value.copy(
+                        editingAccountId = action.accountId,
+                        draftName = accountSummary?.account?.name.orEmpty(),
+                        draftGroupId = assignedGroupId,
+                        draftCurrencyCode = currency,
+                        currencySymbol = currencySymbolFor(currency),
+                        createErrorMessage = null,
                     )
             }
             AccountsAction.CreateDismissed -> dismissCreateDialog()
@@ -79,7 +110,7 @@ class AccountsViewModel(
                         )
                 }
             }
-            AccountsAction.SaveClicked -> createAccount()
+            AccountsAction.SaveClicked -> saveAccount()
             is AccountsAction.ArchiveRequested -> {
                 _uiState.value =
                     _uiState.value.copy(
@@ -95,7 +126,53 @@ class AccountsViewModel(
 
     private fun dismissCreateDialog() {
         if (_uiState.value.isSaving) return
-        _uiState.value = resetCreateDraft(_uiState.value)
+        _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
+    }
+
+    private fun saveAccount() {
+        val current = _uiState.value
+        if (current.editingAccountId != null) {
+            updateAccount()
+        } else {
+            createAccount()
+        }
+    }
+
+    private fun updateAccount() {
+        val current = _uiState.value
+        val accountId = current.editingAccountId ?: return
+        if (current.isSaving) return
+        _uiState.value = current.copy(isSaving = true, createErrorMessage = null)
+        val group = accountGroupStore.groupForId(current.draftGroupId)
+        if (group == null) {
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "A valid Account Group is required.")
+            return
+        }
+        val command =
+            UpdateAccountCommand(
+                accountId = accountId,
+                name = current.draftName,
+                displayOrder = 0,
+                updatedAt = nowProvider(),
+                currencyCode = current.draftCurrencyCode,
+                type = group.policy.accountType,
+            )
+        if (updateAccountUseCase != null) {
+            when (val result = updateAccountUseCase.invoke(command)) {
+                is ApplicationResult.Success -> {
+                    accountGroupStore.assignAccount(accountId, group.id)
+                    _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
+                    loadAccounts()
+                }
+                is ApplicationResult.Failure -> {
+                    _uiState.value = current.copy(isSaving = false, createErrorMessage = result.error.toCreateMessage())
+                }
+            }
+        } else {
+            accountGroupStore.assignAccount(accountId, group.id)
+            _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
+            loadAccounts()
+        }
     }
 
     private fun createAccount() {
@@ -136,7 +213,7 @@ class AccountsViewModel(
         }
         when (val result = createAccountUseCase(command)) {
             is ApplicationResult.Success -> {
-                _uiState.value = resetCreateDraft(_uiState.value)
+                _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
                 loadAccounts()
             }
             is ApplicationResult.Failure -> {
@@ -197,6 +274,37 @@ class AccountsViewModel(
     }
 
     private fun loadAccounts() {
+        currencyPreferenceStore?.reload()
+        if (currencyPreferenceStore != null && updateAccountUseCase != null) {
+            val mainCode = currentCurrencyCode()
+            when (val initialResult = listAccountSummariesUseCase()) {
+                is ApplicationResult.Success -> {
+                    val mismatched = initialResult.outcome.value.accounts.filter { it.account.currencyCode != mainCode }
+                    if (mismatched.isNotEmpty()) {
+                        mismatched.forEach { summary ->
+                            updateAccountUseCase(
+                                UpdateAccountCommand(
+                                    accountId = summary.account.id,
+                                    name = summary.account.name,
+                                    displayOrder = summary.account.displayOrder,
+                                    updatedAt = nowProvider(),
+                                    currencyCode = mainCode,
+                                    type = summary.account.type,
+                                ),
+                            )
+                        }
+                    }
+                }
+                is ApplicationResult.Failure -> Unit
+            }
+        }
+        loanIdByAccountId =
+            listLoansUseCase?.let { useCase ->
+                when (val result = useCase()) {
+                    is ApplicationResult.Success -> result.outcome.value.associate { it.loan.accountId to it.loan.id }
+                    is ApplicationResult.Failure -> emptyMap()
+                }
+            } ?: emptyMap()
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         when (val result = listAccountSummariesUseCase()) {
             is ApplicationResult.Success -> {
@@ -204,7 +312,7 @@ class AccountsViewModel(
                 _uiState.value =
                     result.outcome.value
                         .withSearchQuery(_uiState.value.searchQuery)
-                        .toUiState(_uiState.value.searchQuery, accountGroupStore, currencyPreferenceStore)
+                        .toUiState(_uiState.value.searchQuery, accountGroupStore, currencyPreferenceStore, loanIdByAccountId)
             }
             is ApplicationResult.Failure -> {
                 _uiState.value =
@@ -218,14 +326,25 @@ class AccountsViewModel(
 
     private fun currentCurrencyCode(): String =
         currencyPreferenceStore?.getConfig()?.currency?.code?.normalized ?: SUPPORTED_ACCOUNT_CURRENCY_CODES.first()
+
+    private fun currentCurrencySymbol(): String = currencyPreferenceStore?.getConfig()?.currency?.symbol ?: "₹"
 }
 
 private fun AccountsBalanceOverview.toUiState(
     searchQuery: String,
     accountGroupStore: AccountGroupStore,
     currencyPreferenceStore: CurrencyPreferenceStore? = null,
+    loanIdByAccountId: Map<String, String> = emptyMap(),
 ): AccountsUiState {
-    val uiGroups = toAccountGroupUiModels(searchQuery, accountGroupStore.groups.value, accountGroupStore)
+    val symbol = currencyPreferenceStore?.getConfig()?.currency?.symbol
+    val uiGroups =
+        toAccountGroupUiModels(
+            searchQuery = searchQuery,
+            groupEntries = accountGroupStore.groups.value,
+            groupStore = accountGroupStore,
+            loanIdByAccountId = loanIdByAccountId,
+            currencySymbol = symbol,
+        )
     val availableGroups = accountGroupStore.groups.value
     return AccountsUiState(
         isLoading = false,
@@ -233,9 +352,9 @@ private fun AccountsBalanceOverview.toUiState(
         summary =
             totals.firstOrNull()?.let {
                 AccountsSummaryUiModel(
-                    assets = it.assets.toDisplayAmount(),
-                    liabilities = it.liabilities.toDisplayAmount(),
-                    total = it.total.toDisplayAmount(),
+                    assets = it.assets.toDisplayAmount(symbol),
+                    liabilities = it.liabilities.toDisplayAmount(symbol),
+                    total = it.total.toDisplayAmount(symbol),
                     currencyLabel = if (totals.size == 1) it.currencyCode else "Multiple currencies",
                 )
             } ?: AccountsSummaryUiModel.Empty,
@@ -245,6 +364,9 @@ private fun AccountsBalanceOverview.toUiState(
         draftCurrencyCode =
             currencyPreferenceStore?.getConfig()?.currency?.code?.normalized
                 ?: SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
+        currencySymbol =
+            currencyPreferenceStore?.getConfig()?.currency?.symbol
+                ?: "₹",
     )
 }
 
@@ -252,6 +374,8 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
     searchQuery: String,
     groupEntries: List<AccountGroupEntry>,
     groupStore: AccountGroupStore,
+    loanIdByAccountId: Map<String, String> = emptyMap(),
+    currencySymbol: String? = null,
 ): List<AccountGroupUiModel> {
     val visibleAccounts =
         accounts.filter {
@@ -273,8 +397,8 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
                 type = entry.policy.accountType,
                 id = entry.id,
                 title = entry.title,
-                totals = summaries.toGroupTotals(),
-                accounts = summaries.map { it.toRow() },
+                totals = summaries.toGroupTotals(currencySymbol),
+                accounts = summaries.map { it.toRow(loanIdByAccountId, currencySymbol) },
             )
         }
     val fallbackGroups =
@@ -285,31 +409,38 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
                     type = type,
                     id = "fallback-${type.name}",
                     title = type.toGroupTitle(),
-                    totals = summaries.toGroupTotals(),
-                    accounts = summaries.map { it.toRow() },
+                    totals = summaries.toGroupTotals(currencySymbol),
+                    accounts = summaries.map { it.toRow(loanIdByAccountId, currencySymbol) },
                 )
             }
     return configuredGroups + fallbackGroups
 }
 
-private fun List<AccountBalanceSummary>.toGroupTotals(): List<String> =
+private fun List<AccountBalanceSummary>.toGroupTotals(currencySymbol: String? = null): List<String> =
     groupBy { it.account.currencyCode }
         .toSortedMap()
         .map { (currencyCode, summaries) ->
             val currency = CurrencyCode(currencyCode)
             val total = summaries.fold(Money.zero(currency)) { sum, summary -> sum + summary.balance }
-            total.toDisplayAmount()
+            total.toDisplayAmount(currencySymbol)
         }
 
-private fun AccountBalanceSummary.toRow(): AccountRowUiModel =
-    AccountRowUiModel(
+private fun AccountBalanceSummary.toRow(
+    loanIdByAccountId: Map<String, String> = emptyMap(),
+    currencySymbol: String? = null,
+): AccountRowUiModel {
+    val isLoanAccount = account.type == AccountType.LOAN_LINKED
+    return AccountRowUiModel(
         id = account.id,
         name = account.name,
         typeLabel = account.type.toGroupTitle(),
-        balance = balance.toDisplayAmount(),
+        balance = balance.toDisplayAmount(currencySymbol),
         currencyCode = account.currencyCode,
         isLiability = account.type.ledgerClass == com.tioledger.domain.model.LedgerClass.LIABILITY,
+        isLoan = isLoanAccount,
+        loanId = if (isLoanAccount) loanIdByAccountId[account.id] else null,
     )
+}
 
 private fun AccountType.toGroupTitle(): String =
     when (this) {
@@ -342,12 +473,21 @@ private fun ApplicationError.toArchiveMessage(): String =
         is ApplicationError.Ledger -> "Unable to archive this account. Try again."
     }
 
-private fun resetCreateDraft(state: AccountsUiState): AccountsUiState =
+private fun resetCreateDraft(
+    state: AccountsUiState,
+    currencyPreferenceStore: CurrencyPreferenceStore? = null,
+): AccountsUiState =
     state.copy(
         isCreateDialogVisible = false,
+        editingAccountId = null,
         draftName = "",
         draftGroupId = state.availableGroups.firstOrNull()?.id.orEmpty(),
-        draftCurrencyCode = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
+        draftCurrencyCode =
+            currencyPreferenceStore?.getConfig()?.currency?.code?.normalized
+                ?: SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
+        currencySymbol =
+            currencyPreferenceStore?.getConfig()?.currency?.symbol
+                ?: "₹",
         isSaving = false,
         createErrorMessage = null,
     )

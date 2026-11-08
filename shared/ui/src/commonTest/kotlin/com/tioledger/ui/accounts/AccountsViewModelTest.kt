@@ -3,8 +3,10 @@ package com.tioledger.ui.accounts
 import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.currency.GetMainCurrencyConfigUseCase
 import com.tioledger.application.usecase.currency.SaveMainCurrencyConfigUseCase
+import com.tioledger.application.usecase.loan.ListLoansUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.LedgerError
 import com.tioledger.core.model.LedgerResult
@@ -184,7 +186,7 @@ class AccountsViewModelTest {
         assertEquals("generated-account-id", created.id)
         assertEquals("Travel Wallet", created.name)
         assertEquals(AccountType.BANK, created.type)
-        assertEquals("USD", created.currencyCode)
+        assertEquals("INR", created.currencyCode)
     }
 
     @Test
@@ -382,6 +384,43 @@ class AccountsViewModelTest {
     }
 
     @Test
+    fun editAccountRequestedAndSavedUpdatesAccount() {
+        val usdAccount = account("acc-1", "Old Name", AccountType.BANK).copy(currencyCode = "INR")
+        val accounts = FakeAccountRepository(listOf(usdAccount))
+        val ledger = FakeLedgerRepository()
+        val viewModel = testViewModel(accounts, ledger)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested("acc-1"))
+        val draftState = viewModel.uiState.value
+        assertEquals("acc-1", draftState.editingAccountId)
+        assertEquals("Old Name", draftState.draftName)
+
+        viewModel.onAction(AccountsAction.NameChanged("New Name"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        val updatedResult = accounts.findById("acc-1")
+        assertTrue(updatedResult is LedgerResult.Success)
+        val updated = updatedResult.value
+        assertEquals("New Name", updated.name)
+        assertEquals("INR", updated.currencyCode)
+        kotlin.test.assertNull(viewModel.uiState.value.editingAccountId)
+    }
+
+    @Test
+    fun loadAccountsAutoSyncsMismatchedCurrencyToMainCurrency() {
+        val usdAccount = account("acc-1", "My Bank", AccountType.BANK).copy(currencyCode = "USD")
+        val accounts = FakeAccountRepository(listOf(usdAccount))
+        val ledger = FakeLedgerRepository()
+        val inrStore = currencyPreferenceStore("INR")
+        val viewModel = testViewModel(accounts, ledger, currencyPreferenceStore = inrStore)
+
+        val updatedResult = accounts.findById("acc-1")
+        assertTrue(updatedResult is LedgerResult.Success)
+        assertEquals("INR", updatedResult.value.currencyCode)
+        assertEquals("₹ 0.00", viewModel.uiState.value.groups.single().accounts.single().balance)
+    }
+
+    @Test
     fun validationFailurePreservesEditableDraft() {
         val cash = account("cash", "Cash", AccountType.CASH)
         val accounts = FakeAccountRepository(listOf(cash))
@@ -399,7 +438,7 @@ class AccountsViewModelTest {
         val state = viewModel.uiState.value
         assertTrue(state.isCreateDialogVisible)
         assertEquals(loanGroup.id, state.draftGroupId)
-        assertEquals("USD", state.draftCurrencyCode)
+        assertEquals("INR", state.draftCurrencyCode)
         assertEquals("name: must not be blank", state.createErrorMessage)
     }
 
@@ -610,6 +649,8 @@ private fun testViewModel(
     idGenerator: IdGenerator = FixedIdGenerator("unused-id"),
     accountGroupStore: AccountGroupStore = AccountGroupStore(),
     currencyPreferenceStore: CurrencyPreferenceStore? = null,
+    listLoansUseCase: ListLoansUseCase? = null,
+    updateAccountUseCase: UpdateAccountUseCase? = UpdateAccountUseCase(accounts),
 ): AccountsViewModel =
     AccountsViewModel(
         listAccountSummariesUseCase = ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
@@ -619,6 +660,8 @@ private fun testViewModel(
         nowProvider = { 1_700_000_000_000L },
         accountGroupStore = accountGroupStore,
         currencyPreferenceStore = currencyPreferenceStore,
+        listLoansUseCase = listLoansUseCase,
+        updateAccountUseCase = updateAccountUseCase,
     )
 
 private fun currencyPreferenceStore(currencyCode: String): CurrencyPreferenceStore {

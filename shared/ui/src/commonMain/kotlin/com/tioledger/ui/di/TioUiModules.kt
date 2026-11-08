@@ -22,8 +22,25 @@ fun tioUiModule(): Module =
         single<AccountGroupPersistence> { InMemoryAccountGroupPersistence() }
         single { AccountGroupStore(persistence = get(), accountRepository = getOrNull()) }
         single { CurrencyPreferenceStore(get(), get()) }
-        factory { CurrencySettingsViewModel(get()) }
-        factory { AccountsViewModel(get(), get(), get(), get(), accountGroupStore = get(), currencyPreferenceStore = get()) }
+        factory {
+            CurrencySettingsViewModel(
+                currencyPreferenceStore = get(),
+                accountRepository = getOrNull(),
+                updateAccountUseCase = getOrNull(),
+            )
+        }
+        factory {
+            AccountsViewModel(
+                listAccountSummariesUseCase = get(),
+                createAccountUseCase = get(),
+                archiveAccountUseCase = get(),
+                idGenerator = get(),
+                accountGroupStore = get(),
+                currencyPreferenceStore = get(),
+                listLoansUseCase = getOrNull(),
+                updateAccountUseCase = getOrNull(),
+            )
+        }
         factory { BudgetsViewModel(get(), get(), get(), get(), get()) }
         factory { CategoriesViewModel(get(), get(), get()) }
         factory { LoansViewModel(get(), get(), get(), get()) }
@@ -36,5 +53,5 @@ fun tioUiModule(): Module =
                 confirmUseCase = get(),
             )
         }
-        factory { TransactionsViewModel(get(), get()) }
+        factory { TransactionsViewModel(get(), get(), getOrNull()) }
     }

@@ -12,14 +12,17 @@ data class AccountsUiState(
     val groups: List<AccountGroupUiModel> = emptyList(),
     val errorMessage: String? = null,
     val isCreateDialogVisible: Boolean = false,
+    val editingAccountId: String? = null,
     val draftName: String = "",
     val availableGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
     val draftGroupId: String = DEFAULT_ACCOUNT_GROUPS.first().id,
     val draftCurrencyCode: String = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
+    val currencySymbol: String = "₹",
     val isSaving: Boolean = false,
     val createErrorMessage: String? = null,
     val archiveAccountId: String? = null,
     val archiveAccountName: String? = null,
+    val archiveAccountGroupId: String? = null,
     val isArchiving: Boolean = false,
     val archiveErrorMessage: String? = null,
 ) {
@@ -28,7 +31,7 @@ data class AccountsUiState(
 }
 
 // Fallback only when Main Currency has not been configured — see account-creation-v2.md.
-val SUPPORTED_ACCOUNT_CURRENCY_CODES: List<String> = listOf("USD", "INR", "EUR", "GBP")
+val SUPPORTED_ACCOUNT_CURRENCY_CODES: List<String> = listOf("INR", "USD", "EUR", "GBP")
 
 data class AccountsSummaryUiModel(
     val assets: String,
@@ -37,7 +40,7 @@ data class AccountsSummaryUiModel(
     val currencyLabel: String,
 ) {
     companion object {
-        val Empty = AccountsSummaryUiModel("0", "0", "0", "")
+        val Empty = AccountsSummaryUiModel("0.00", "0.00", "0.00", "")
     }
 }
 
@@ -56,6 +59,8 @@ data class AccountRowUiModel(
     val balance: String,
     val currencyCode: String,
     val isLiability: Boolean,
+    val isLoan: Boolean = false,
+    val loanId: String? = null,
 )
 
 sealed interface AccountsAction {
@@ -66,6 +71,8 @@ sealed interface AccountsAction {
     data object Retry : AccountsAction
 
     data object AddClicked : AccountsAction
+
+    data class EditAccountRequested(val accountId: String) : AccountsAction
 
     data object CreateDismissed : AccountsAction
 
@@ -89,12 +96,30 @@ sealed interface AccountsEvent
 
 sealed interface AccountsEffect
 
-internal fun Money.toDisplayAmount(): String {
+internal fun currencySymbolFor(currencyCode: String): String =
+    when (currencyCode.uppercase()) {
+        "INR" -> "₹"
+        "USD" -> "$"
+        "EUR" -> "€"
+        "GBP" -> "£"
+        else -> currencyCode
+    }
+
+internal fun Money.toDecimalAmount(): String {
     val absolute = kotlin.math.abs(amount)
     val major = absolute / MINOR_UNITS
     val minor = absolute % MINOR_UNITS
     val sign = if (amount < 0L) "-" else ""
-    return "$sign$currency $major.${minor.toString().padStart(2, '0')}"
+    return "$sign$major.${minor.toString().padStart(2, '0')}"
+}
+
+internal fun Money.toDisplayAmount(overrideSymbol: String? = null): String {
+    val absolute = kotlin.math.abs(amount)
+    val major = absolute / MINOR_UNITS
+    val minor = absolute % MINOR_UNITS
+    val sign = if (amount < 0L) "-" else ""
+    val sym = overrideSymbol ?: currency.normalized
+    return "$sign$sym $major.${minor.toString().padStart(2, '0')}"
 }
 
 private const val MINOR_UNITS = 100L

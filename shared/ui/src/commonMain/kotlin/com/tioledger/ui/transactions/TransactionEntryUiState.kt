@@ -30,7 +30,7 @@ data class TransactionEntryUiState(
         get() = categoryOptions.firstOrNull { it.id == selectedCategoryId }
 
     val selectedCurrencyCode: String
-        get() = selectedAccount?.currencyCode ?: selectedTargetAccount?.currencyCode ?: accountOptions.firstOrNull()?.currencyCode ?: "USD"
+        get() = selectedAccount?.currencyCode ?: selectedTargetAccount?.currencyCode ?: accountOptions.firstOrNull()?.currencyCode ?: "INR"
 
     val isTransfer: Boolean
         get() = transactionType == TransactionType.Transfer
