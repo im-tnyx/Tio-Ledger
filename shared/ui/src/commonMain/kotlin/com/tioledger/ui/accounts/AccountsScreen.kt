@@ -215,7 +215,7 @@ private fun SummaryColumn(
 private fun AccountsGroupedList(groups: List<AccountGroupUiModel>) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         groups.forEach { group ->
-            item(key = "header-${group.type}") {
+            item(key = "header-${group.id}") {
                 AccountGroupHeader(group)
             }
             items(group.accounts, key = { it.id }) { account ->

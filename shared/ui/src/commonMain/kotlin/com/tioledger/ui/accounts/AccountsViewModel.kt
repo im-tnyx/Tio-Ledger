@@ -146,6 +146,7 @@ private fun AccountsBalanceOverview.toUiState(
         } ?: groups.map { group ->
             AccountGroupUiModel(
                 type = group.type,
+                id = group.type.name,
                 title = group.type.toGroupTitle(),
                 totals = group.totals.map { it.toDisplayAmount() },
                 accounts = group.accounts.map { it.toRow() },
@@ -197,6 +198,7 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
             if (summaries.isEmpty()) return@mapNotNull null
             AccountGroupUiModel(
                 type = entry.policy.accountType,
+                id = entry.id,
                 title = entry.title,
                 totals = summaries.toGroupTotals(),
                 accounts = summaries.map { it.toRow() },
@@ -208,6 +210,7 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
             .map { (type, summaries) ->
                 AccountGroupUiModel(
                     type = type,
+                    id = "fallback-${type.name}",
                     title = type.toGroupTitle(),
                     totals = summaries.toGroupTotals(),
                     accounts = summaries.map { it.toRow() },

@@ -436,8 +436,9 @@ class AccountsViewModelTest {
 
     @Test
     fun assignedCustomGroupControlsAccountListingTitle() {
+        val defaultBank = account("default-bank", "Primary Bank", AccountType.BANK)
         val bank = account("bank", "Emergency Reserve", AccountType.BANK)
-        val accounts = FakeAccountRepository(listOf(bank))
+        val accounts = FakeAccountRepository(listOf(defaultBank, bank))
         val ledger = FakeLedgerRepository()
         val groupStore = AccountGroupStore()
         val custom = groupStore.addGroup("Emergency Savings", AccountGroupPolicy.BANK)
@@ -445,8 +446,10 @@ class AccountsViewModelTest {
 
         val state = testViewModel(accounts, ledger, accountGroupStore = groupStore).uiState.value
 
-        assertEquals("Emergency Savings", state.groups.single().title)
-        assertEquals(listOf(bank.id), state.groups.single().accounts.map { it.id })
+        val customGroup = state.groups.single { it.title == "Emergency Savings" }
+        assertEquals(listOf(bank.id), customGroup.accounts.map { it.id })
+        assertEquals(listOf("Accounts", "Emergency Savings"), state.groups.map { it.title })
+        assertEquals(2, state.groups.map { it.id }.toSet().size)
     }
 }
 
