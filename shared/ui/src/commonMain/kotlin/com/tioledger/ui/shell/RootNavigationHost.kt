@@ -24,6 +24,7 @@ import com.tioledger.ui.loans.LoansRoute
 import com.tioledger.ui.more.AccountGroupRoute
 import com.tioledger.ui.more.AccountSettingsRoute
 import com.tioledger.ui.more.ConfigurationRoute
+import com.tioledger.ui.more.CurrencySettingsRoute
 import com.tioledger.ui.more.MoreRoute
 import com.tioledger.ui.more.RepeatSettingsRoute
 import com.tioledger.ui.more.StyleRoute
@@ -195,6 +196,15 @@ fun RootNavigationHost(
                         SmsTransactionReviewRoute(
                             onNavigateBack = {
                                 onNavigate(RootRoute.Main(MainRoute.Transactions))
+                            },
+                        )
+                    MainRoute.CurrencySettings ->
+                        CurrencySettingsRoute(
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.More))
+                            },
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
                             },
                         )
                     MainRoute.Settings ->

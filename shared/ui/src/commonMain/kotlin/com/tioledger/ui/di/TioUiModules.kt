@@ -6,6 +6,8 @@ import com.tioledger.ui.categories.CategoriesViewModel
 import com.tioledger.ui.loans.LoanDetailsViewModel
 import com.tioledger.ui.loans.LoansViewModel
 import com.tioledger.ui.more.AccountGroupStore
+import com.tioledger.ui.more.CurrencyPreferenceStore
+import com.tioledger.ui.more.CurrencySettingsViewModel
 import com.tioledger.ui.reports.ReportsViewModel
 import com.tioledger.ui.sms.SmsTransactionReviewViewModel
 import com.tioledger.ui.transactions.TransactionEntryViewModel
@@ -16,6 +18,8 @@ import org.koin.dsl.module
 fun tioUiModule(): Module =
     module {
         single { AccountGroupStore() }
+        single { CurrencyPreferenceStore(get(), get()) }
+        factory { CurrencySettingsViewModel(get()) }
         factory { AccountsViewModel(get(), get(), get()) }
         factory { BudgetsViewModel(get(), get(), get(), get(), get()) }
         factory { CategoriesViewModel(get(), get(), get()) }
