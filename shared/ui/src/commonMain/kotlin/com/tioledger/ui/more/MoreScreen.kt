@@ -14,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
@@ -23,6 +25,7 @@ import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 import com.tioledger.ui.navigation.bottomNavigationModel
+import org.koin.compose.koinInject
 
 private data class MoreEntry(
     val title: String,
@@ -36,7 +39,7 @@ private data class MoreSection(
     val entries: List<MoreEntry>,
 )
 
-private val moreSections =
+private fun buildMoreSections(currencySubtitle: String): List<MoreSection> =
     listOf(
         MoreSection(
             title = null,
@@ -68,11 +71,6 @@ private val moreSections =
                 listOf(
                     MoreEntry("Income Category Setting", MainRoute.IncomeCategories),
                     MoreEntry("Expenses Category Setting", MainRoute.ExpenseCategories),
-                    MoreEntry(
-                        title = "Accounts Setting",
-                        route = MainRoute.AccountSettings,
-                        subtitle = "Account Group, Accounts, Include in totals, Transfer-Expense setting",
-                    ),
                     MoreEntry("Budget Setting", MainRoute.BudgetSettings),
                 ),
         ),
@@ -83,25 +81,33 @@ private val moreSections =
                     MoreEntry(
                         title = "Main Currency Setting",
                         route = MainRoute.CurrencySettings,
-                        subtitle = "INR(₹)",
+                        subtitle = currencySubtitle,
                     ),
-                    MoreEntry("Alarm Setting", MainRoute.AlarmSettings),
                     MoreEntry("Style", MainRoute.Style),
                 ),
         ),
     )
 
 @Composable
-fun MoreRoute(onNavigate: (MainRoute) -> Unit = {}) {
-    MoreScreen(onNavigate = onNavigate)
+fun MoreRoute(
+    onNavigate: (MainRoute) -> Unit = {},
+    currencyPreferenceStore: CurrencyPreferenceStore = koinInject(),
+) {
+    val currencyConfig by currencyPreferenceStore.config.collectAsState()
+    MoreScreen(
+        onNavigate = onNavigate,
+        currencySubtitle = currencyConfig.subtitleLabel,
+    )
 }
 
 @Composable
 fun MoreScreen(
     onNavigate: (MainRoute) -> Unit,
     modifier: Modifier = Modifier,
+    currencySubtitle: String = "INR(₹)",
 ) {
     val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.More)
+    val sections = buildMoreSections(currencySubtitle)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -131,7 +137,7 @@ fun MoreScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = padding,
         ) {
-            moreSections.forEach { section ->
+            sections.forEach { section ->
                 section.title?.let { title ->
                     item(key = "header-$title") {
                         Text(

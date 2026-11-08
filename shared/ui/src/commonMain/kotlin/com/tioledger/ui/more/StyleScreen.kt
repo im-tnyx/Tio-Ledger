@@ -2,27 +2,33 @@
 
 package com.tioledger.ui.more
 
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import com.tioledger.ui.components.TioAppBar
+import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.components.TioBottomNavigation
-import com.tioledger.ui.components.TioListItem
 import com.tioledger.ui.design.ThemeMode
+import com.tioledger.ui.design.TioDimensions
+import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 import com.tioledger.ui.navigation.bottomNavigationModel
@@ -71,8 +77,11 @@ fun StyleScreen(
             TioAppBar(
                 title = "Style",
                 navigationIcon = {
-                    TextButton(onClick = onNavigateBack) {
-                        Text("‹ Settings")
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.semantics { contentDescription = "Navigate back" },
+                    ) {
+                        TioBackIcon()
                     }
                 },
             )
@@ -90,32 +99,40 @@ fun StyleScreen(
             modifier =
                 Modifier
                     .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .fillMaxSize(),
         ) {
-            item {
-                Text(
-                    text = "Theme",
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
             items(themeOptions, key = ThemeOption::mode) { option ->
-                TioListItem(
-                    title = option.title,
-                    subtitle = option.subtitle,
-                    trailing = {
-                        Text(
-                            text = if (themeMode == option.mode) "✓" else "",
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    },
+                Row(
                     modifier =
                         Modifier
                             .fillMaxWidth()
+                            .heightIn(min = TioDimensions.accountRowHeight)
+                            .clickable { onThemeModeChanged(option.mode) }
+                            .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md)
                             .semantics { contentDescription = "${option.title} theme" },
-                    onClick = { onThemeModeChanged(option.mode) },
-                )
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = option.title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = option.subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    RadioButton(
+                        selected = themeMode == option.mode,
+                        onClick = null,
+                    )
+                }
+                HorizontalDivider()
             }
         }
     }
