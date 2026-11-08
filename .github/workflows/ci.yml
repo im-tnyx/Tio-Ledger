@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  build-lint-test:
-    name: Targeted KMP validation
+  kmp-build:
+    name: Targeted KMP build
     runs-on: ubuntu-22.04
     timeout-minutes: 20
 
@@ -41,8 +41,59 @@ jobs:
       - name: Compile Android application
         run: ./gradlew :apps:android:compileDebugKotlin --no-daemon --console=plain --stacktrace
 
+  kmp-tests:
+    name: Targeted KMP tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x ./gradlew
+
       - name: Run critical tests
         run: ./gradlew :shared:finance-engine:test :shared:analytics:test :shared:notifications:test :shared:application:test :shared:data:test :shared:bootstrap:test :shared:ui:test :apps:android:testDebugUnitTest --no-daemon --console=plain --stacktrace
+
+  kmp-quality:
+    name: Targeted KMP quality
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x ./gradlew
 
       - name: Ktlint
         id: ktlint
@@ -69,6 +120,24 @@ jobs:
           path: detekt-output.txt
           if-no-files-found: error
           retention-days: 7
+
+  kmp-validation:
+    name: Targeted KMP validation
+    if: always()
+    needs: [kmp-build, kmp-tests, kmp-quality]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Require all KMP validation parts to pass
+        env:
+          BUILD_RESULT: ${{ needs.kmp-build.result }}
+          TEST_RESULT: ${{ needs.kmp-tests.result }}
+          QUALITY_RESULT: ${{ needs.kmp-quality.result }}
+        run: |
+          test "$BUILD_RESULT" = success
+          test "$TEST_RESULT" = success
+          test "$QUALITY_RESULT" = success
 
   migration-verification:
     name: SQLDelight migration verification
