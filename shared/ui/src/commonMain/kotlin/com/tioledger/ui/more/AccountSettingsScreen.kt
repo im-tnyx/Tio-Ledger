@@ -61,7 +61,7 @@ fun AccountSettingsScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TioAppBar(
-                title = "Accounts",
+                title = MainRoute.AccountSettings.title,
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,

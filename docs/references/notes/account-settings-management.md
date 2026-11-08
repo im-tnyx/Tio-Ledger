@@ -6,8 +6,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 
 ## Primary Reference
 
-- `docs/references/Screenshot_20260630_164139_Money Manager.jpg` (Configuration hierarchy)
-- `docs/references/Screenshot_20260630_164204_Money Manager.jpg` (Accounts Setting entry)
+- `docs/references/Screenshot_20260630_164204_Money Manager.jpg` (Accounts Setting grouped management list)
 
 ## Supporting References
 
@@ -19,8 +18,8 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 
 1. More opens Configuration; Configuration opens Accounts Setting.
 2. Accounts Setting offers Account Group management and an Accounts Setting row.
-3. Accounts Setting opens a non-primary account-management destination that reuses the approved Accounts list and existing `AccountsViewModel`/Application use cases.
-4. The account-management destination lists existing accounts and offers the existing Add account workflow.
+3. Accounts Setting opens a non-primary account-management destination with its own settings-style grouped list. It is distinct from the primary Accounts tab and reuses only the existing `AccountsViewModel`/Application read and write use cases.
+4. The account-management destination lists active account names beneath their persisted group headings, offers the existing Add account workflow, and exposes explicit archive actions. It does not render the Accounts tab's balance summary, search field, account-row balances, or account-type totals.
 5. Account creation requires a persisted Account Group. The selected group policy is the only source of `AccountType`; there is no independent type selector.
 6. A group-to-account assignment is synchronously persisted and validated before the existing `CreateAccountUseCase` is invoked. If assignment preparation fails, no account save is attempted.
 7. A custom group that still has assigned accounts cannot be deleted. Reassignment or archival is intentionally deferred until a separately approved design exists.
@@ -29,7 +28,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 ## Information Hierarchy
 
 1. Account Settings: Account Group, Accounts Setting, existing unsupported rows.
-2. Account-management destination: existing Accounts summary, search, grouped rows, loading/error/empty states, and Add account affordance.
+2. Account-management destination: title/back/add actions, persisted group headings, account-name settings rows, archive action, loading/error/empty states, and the existing Add account affordance.
 3. Add account dialog: Group, Name, Main Currency context, validation/error text, Cancel, Save.
 
 ## Functional Specification
@@ -40,6 +39,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 - Debit Cards remain `BANK` assets when associated with a bank group; this change adds no Debit Card `AccountType` and never maps one to `CREDIT_CARD`.
 - The existing persisted Main Currency reaches `CreateAccountCommand.currencyCode` unchanged.
 - Account creation continues to use `CreateAccountUseCase`; Account Settings has no second account repository, balance source, or ledger write path.
+- The Account Settings management list uses the existing loaded account projection but has an independent Compose presentation. The primary Accounts tab retains its approved summary/search/balance layout unchanged.
 - Existing accounts without an assignment remain visible through the established type-based fallback. Their type, ledger class, balances, and historical ledger entries are never changed.
 - **Account deletion intent:** the visible action is implemented as archive, not a destructive database delete or a transfer to a shared "Deleted Account". The account keeps its ID and historical attribution; it disappears from active account lists while transactions and ledger entries remain attached to it. The user must explicitly confirm the archive action.
 - An archive failure leaves the account active, keeps the confirmation visible, and shows an error. Repeated confirmation while an archive is in flight is ignored.
@@ -47,7 +47,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 
 ## Navigation Definition
 
-- `More → Configuration → Accounts Setting → Accounts Setting` opens account management.
+- `More → Configuration → Accounts Setting → Accounts Setting` opens the dedicated Account Settings management list, not the primary Accounts tab.
 - Back from account management returns to Accounts Setting.
 - Back from Account Group returns to Accounts Setting.
 - Back from Accounts Setting returns to Configuration; back from Configuration returns to More.
@@ -66,9 +66,10 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 
 ## Tio UI Specification
 
-- Reuse the existing Tio Ledger Accounts list and dialog; do not redesign the Accounts tab.
-- The management destination has a back affordance with an accessible description and uses theme-driven colors only.
+- Reuse the existing Tio Ledger account read/use-case and Add account dialog, but render a separate management list; do not embed or re-label the primary Accounts tab.
+- The management destination has a settings-specific app bar with a back affordance, Add account action, persisted group headings, and simple navigable account rows; it uses theme-driven colors only.
 - An account archive affordance is available only from the management destination, has an accessible account-specific label, and opens a confirmation dialog that explains history preservation before persistence.
+- Account Group has only its own navigation/back and Add Group actions in the app bar. Loan navigation is not an Account Group action and must not appear as a top action/tab.
 - Group options expose their selected state in text/semantics, support keyboard/switch access, and remain reachable at large text sizes.
 - Save/Cancel, loading, validation, and save failures remain visible and accessible in light and dark themes.
 
@@ -80,7 +81,8 @@ This slice does **not** add those fields, mutable balances, billing formulas, au
 
 ## Acceptance Checklist
 
-- [ ] Account management is reachable from the Accounts Setting row and preserves the existing Accounts list layout.
+- [ ] Account management is reachable from the Accounts Setting row and is visibly distinct from the primary Accounts tab.
+- [ ] The management list follows the approved grouped settings hierarchy without the Accounts tab's balance summary, search field, or balance/totals rows.
 - [ ] Back navigation follows the definition above.
 - [ ] Group selection is mandatory; invalid/deleted selection cannot create an account.
 - [ ] Each policy maps to its required `AccountType`; no independent type selector exists.
@@ -90,13 +92,14 @@ This slice does **not** add those fields, mutable balances, billing formulas, au
 - [ ] Failed and repeated saves preserve account/ledger invariants.
 - [ ] Archiving an account requires confirmation, removes it only from active lists, and preserves its ID, group assignment, transactions, ledger entries, and derived balance.
 - [ ] Archive failure and repeated confirmation preserve the active account and show an actionable error/loading state.
+- [ ] Account Group does not expose a Loan action/tab in its top app bar.
 - [ ] Legacy unassigned accounts remain compatible without reclassification.
 - [ ] No ledger entry, balance mutation, Loan Engine change, or schema migration occurs.
 - [ ] Pixel, theme, responsive, and accessibility review are recorded separately after a real device/screenshot pass.
 
 ## Intentional Deviations
 
-- The management destination reuses the existing Accounts list instead of copying a separate reference list implementation.
+- The management destination reuses existing account data/use cases and Add account dialog, while providing a distinct original Compose presentation required by the Account Settings reference hierarchy.
 - Credit Card financial detail fields are deferred because the current financial contract does not support them.
 - Group assignment remains in the existing Account Group persisted infrastructure. Moving it into frozen SQLDelight persistence would require a versioned migration and separate architecture approval.
 - A common "Deleted Account" was intentionally not introduced: reassigning historical records would violate the immutable-ledger and historical-attribution rules. Archive retains the original account identity instead.

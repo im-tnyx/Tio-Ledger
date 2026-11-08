@@ -113,9 +113,6 @@ fun AccountGroupScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { onNavigate(MainRoute.Loans) }) {
-                        Text("Loans")
-                    }
                     IconButton(
                         onClick = { isAddDialogVisible = true },
                         modifier = Modifier.semantics { contentDescription = "Add account group" },

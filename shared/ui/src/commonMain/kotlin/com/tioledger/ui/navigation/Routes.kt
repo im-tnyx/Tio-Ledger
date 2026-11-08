@@ -90,13 +90,13 @@ sealed interface MainRoute : AppRoute {
 
     data object AccountSettings : MainRoute {
         override val path: String = "settings/accounts"
-        override val title: String = "Accounts Setting"
+        override val title: String = "Account Settings"
         override val icon: TioIconToken = TioIconToken.Account
     }
 
     data object AccountManager : MainRoute {
         override val path: String = "settings/accounts/manage"
-        override val title: String = "Accounts"
+        override val title: String = "Accounts Setting"
         override val icon: TioIconToken = TioIconToken.Account
     }
 
