@@ -34,7 +34,7 @@ private val accountSettings =
         AccountSettingEntry("Accounts Setting", route = MainRoute.AccountManager),
         AccountSettingEntry("Include in totals"),
         AccountSettingEntry("Transfer-Expense setting"),
-        AccountSettingEntry("Deleted accounts"),
+        AccountSettingEntry("Deleted accounts", route = MainRoute.DeletedAccounts),
         AccountSettingEntry("Card expenses display config", value = "A. At the time"),
     )
 

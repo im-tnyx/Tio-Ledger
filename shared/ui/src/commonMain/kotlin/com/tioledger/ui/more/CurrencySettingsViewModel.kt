@@ -1,19 +1,14 @@
 package com.tioledger.ui.more
 
-import com.tioledger.application.usecase.account.UpdateAccountCommand
-import com.tioledger.application.usecase.account.UpdateAccountUseCase
-import com.tioledger.core.model.LedgerResult
 import com.tioledger.domain.model.CurrencyDecimalDisplay
 import com.tioledger.domain.model.CurrencyUnitPosition
 import com.tioledger.domain.model.MainCurrencyConfig
 import com.tioledger.domain.model.SYSTEM_SUPPORTED_CURRENCIES
 import com.tioledger.domain.model.SupportedCurrency
-import com.tioledger.domain.repository.AccountRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.datetime.Clock
 
 data class CurrencySettingsUiState(
     val selectedCurrency: SupportedCurrency = SYSTEM_SUPPORTED_CURRENCIES.first(),
@@ -64,9 +59,6 @@ sealed interface CurrencySettingsAction {
 
 class CurrencySettingsViewModel(
     private val currencyPreferenceStore: CurrencyPreferenceStore,
-    private val accountRepository: AccountRepository? = null,
-    private val updateAccountUseCase: UpdateAccountUseCase? = null,
-    private val nowProvider: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) {
     private val _uiState = MutableStateFlow(createInitialState())
     val uiState: StateFlow<CurrencySettingsUiState> = _uiState.asStateFlow()
@@ -143,28 +135,6 @@ class CurrencySettingsViewModel(
                     )
                 val success = currencyPreferenceStore.saveConfig(newConfig)
                 if (success) {
-                    val newCurrencyCode = newConfig.currency.code.normalized
-                    if (updateAccountUseCase != null && accountRepository != null) {
-                        when (val accountsResult = accountRepository.findAll(includeArchived = true)) {
-                            is LedgerResult.Success -> {
-                                accountsResult.value.forEach { account ->
-                                    if (account.currencyCode != newCurrencyCode) {
-                                        updateAccountUseCase(
-                                            UpdateAccountCommand(
-                                                accountId = account.id,
-                                                name = account.name,
-                                                displayOrder = account.displayOrder,
-                                                updatedAt = nowProvider(),
-                                                currencyCode = newCurrencyCode,
-                                                type = account.type,
-                                            ),
-                                        )
-                                    }
-                                }
-                            }
-                            is LedgerResult.Failure -> Unit
-                        }
-                    }
                     _uiState.update { it.copy(isSaving = false) }
                     onSaveSuccess()
                 } else {

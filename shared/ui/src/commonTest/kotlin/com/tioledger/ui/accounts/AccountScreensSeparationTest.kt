@@ -25,6 +25,15 @@ class AccountScreensSeparationTest {
     }
 
     @Test
+    fun quickAddRouteReturnsToPrimaryAccountsDestination() {
+        val route = MainRoute.AccountQuickAdd
+        assertEquals("accounts/add", route.path)
+        assertEquals("Add Account", route.title)
+        assertTrue(route in TioNavigationGraphs.main.routes)
+        assertFalse(route in TioNavigationGraphs.main.bottomNavigationRoutes)
+    }
+
+    @Test
     fun accountManagerRouteRemainsInMainRoutes() {
         assertTrue(MainRoute.AccountManager in TioNavigationGraphs.main.routes)
         assertFalse(MainRoute.AccountManager in TioNavigationGraphs.main.bottomNavigationRoutes)

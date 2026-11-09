@@ -116,6 +116,8 @@ class ApplicationUseCaseTest {
         val outcome = assertSuccess(result)
         assertEquals("Primary Bank", outcome.value.name)
         assertEquals(5, outcome.value.displayOrder)
+        assertEquals(AccountType.BANK, outcome.value.type)
+        assertEquals("USD", outcome.value.currencyCode)
         assertEquals(200L, outcome.value.updatedAt)
         assertTrue(outcome.events.single() is DomainEvent.AccountUpdated)
     }

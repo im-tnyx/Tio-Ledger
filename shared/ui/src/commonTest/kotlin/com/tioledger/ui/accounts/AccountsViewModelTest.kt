@@ -24,6 +24,7 @@ import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.CurrencyPreferenceRepository
 import com.tioledger.domain.repository.LedgerRepository
 import com.tioledger.finance.engine.BalanceCalculator
+import com.tioledger.ui.more.AccountBillingDetails
 import com.tioledger.ui.more.AccountGroupPolicy
 import com.tioledger.ui.more.AccountGroupRemovalResult
 import com.tioledger.ui.more.AccountGroupStore
@@ -209,22 +210,98 @@ class AccountsViewModelTest {
     }
 
     @Test
-    fun openingBalanceAndCardDraftActionsUpdateState() {
+    fun openingBalanceAndCardBillingDraftActionsUpdateState() {
         val cash = account("cash", "Cash", AccountType.CASH)
         val accounts = FakeAccountRepository(listOf(cash))
         val ledger = FakeLedgerRepository()
         val viewModel = testViewModel(accounts, ledger)
 
         viewModel.onAction(AccountsAction.OpeningBalanceChanged("1500.50"))
-        viewModel.onAction(AccountsAction.PaymentAccountChanged("Cash"))
+        viewModel.onAction(AccountsAction.PaymentAccountChanged("bank-1"))
+        viewModel.onAction(AccountsAction.DescriptionChanged("Primary credit card"))
         viewModel.onAction(AccountsAction.SettlementDateChanged("15"))
         viewModel.onAction(AccountsAction.PaymentDateChanged("25"))
 
         val state = viewModel.uiState.value
         assertEquals("1500.50", state.draftOpeningBalance)
-        assertEquals("Cash", state.draftPaymentAccount)
+        assertEquals("bank-1", state.draftPaymentAccountId)
+        assertEquals("Primary credit card", state.draftDescription)
         assertEquals("15", state.draftSettlementDate)
         assertEquals("25", state.draftPaymentDate)
+    }
+
+    @Test
+    fun openingBalanceParserRejectsPrecisionLossAndOverflow() {
+        assertEquals(199L, parseAmountToMinor("1.99"))
+        assertEquals(100L, parseAmountToMinor("1"))
+        assertNull(parseAmountToMinor("1.999"))
+        assertNull(parseAmountToMinor("-1.00"))
+        assertNull(parseAmountToMinor("999999999999999999999.00"))
+    }
+
+    @Test
+    fun accountGroupsShowDistinctCardCategoryAndBillingDate() {
+        val card = account("card-1", "Travel Card", AccountType.CREDIT_CARD)
+        val accounts = FakeAccountRepository(listOf(card))
+        val ledger = FakeLedgerRepository()
+        val groupStore = AccountGroupStore()
+        assertTrue(groupStore.saveBillingDetails(card.id, com.tioledger.ui.more.AccountBillingDetails(12, 25)))
+
+        val viewModel = testViewModel(accounts, ledger, accountGroupStore = groupStore)
+        val group = viewModel.uiState.value.groups.single()
+
+        assertEquals("Credit card accounts", group.categoryLabel)
+        assertEquals(1, group.accountCount)
+        assertEquals(12, group.accounts.single().billingDay)
+        assertEquals(25, group.accounts.single().paymentDueDay)
+    }
+
+    @Test
+    fun editingCreditCardLoadsSavedPaymentAccountDescriptionAndDates() {
+        val bank = account("bank-1", "Main bank", AccountType.BANK)
+        val card = account("card-1", "Travel Card", AccountType.CREDIT_CARD)
+        val groupStore = AccountGroupStore()
+        assertTrue(groupStore.assignAccount(bank.id, "accounts"))
+        assertTrue(groupStore.assignAccount(card.id, "credit_card"))
+        assertTrue(
+            groupStore.saveBillingDetails(
+                card.id,
+                AccountBillingDetails(
+                    billingDay = 12,
+                    paymentDueDay = 25,
+                    paymentAccountId = bank.id,
+                    description = "Primary card",
+                ),
+            ),
+        )
+        val viewModel = testViewModel(FakeAccountRepository(listOf(bank, card)), FakeLedgerRepository(), accountGroupStore = groupStore)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested(card.id))
+
+        val state = viewModel.uiState.value
+        assertEquals(bank.id, state.draftPaymentAccountId)
+        assertEquals("Primary card", state.draftDescription)
+        assertEquals("12", state.draftSettlementDate)
+        assertEquals("25", state.draftPaymentDate)
+    }
+
+    @Test
+    fun archivedAccountsViewListsOnlyArchivedRecords() {
+        val active = account("active", "Daily Account", AccountType.BANK)
+        val archived = account("archived", "Old Card", AccountType.CREDIT_CARD).copy(isArchived = true)
+        val accounts = FakeAccountRepository(listOf(active, archived))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[archived.id] = listOf(entry("archived-entry", archived, 250L))
+        val groupStore = AccountGroupStore()
+        val viewModel =
+            ArchivedAccountsViewModel(
+                ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
+                groupStore,
+            )
+
+        assertEquals(listOf("archived"), viewModel.uiState.value.accounts.map { it.id })
+        assertEquals("Old Card", viewModel.uiState.value.accounts.single().name)
+        assertEquals("-USD 2.50", viewModel.uiState.value.accounts.single().balance)
     }
 
     @Test
@@ -426,7 +503,7 @@ class AccountsViewModelTest {
     }
 
     @Test
-    fun loadAccountsAutoSyncsMismatchedCurrencyToMainCurrency() {
+    fun loadAccountsPreservesExistingAccountCurrencyWhenMainCurrencyDiffers() {
         val usdAccount = account("acc-1", "My Bank", AccountType.BANK).copy(currencyCode = "USD")
         val accounts = FakeAccountRepository(listOf(usdAccount))
         val ledger = FakeLedgerRepository()
@@ -435,8 +512,8 @@ class AccountsViewModelTest {
 
         val updatedResult = accounts.findById("acc-1")
         assertTrue(updatedResult is LedgerResult.Success)
-        assertEquals("INR", updatedResult.value.currencyCode)
-        assertEquals("₹ 0.00", viewModel.uiState.value.groups.single().accounts.single().balance)
+        assertEquals("USD", updatedResult.value.currencyCode)
+        assertEquals("USD 0.00", viewModel.uiState.value.groups.single().accounts.single().balance)
     }
 
     @Test

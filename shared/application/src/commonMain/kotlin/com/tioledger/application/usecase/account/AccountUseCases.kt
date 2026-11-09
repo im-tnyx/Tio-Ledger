@@ -199,8 +199,6 @@ data class UpdateAccountCommand(
     val displayOrder: Int = 0,
     val updatedAt: Long,
     val updatedBy: String? = null,
-    val currencyCode: String? = null,
-    val type: AccountType? = null,
 )
 
 class UpdateAccountUseCase(private val accountRepository: AccountRepository) {
@@ -220,23 +218,12 @@ class UpdateAccountUseCase(private val accountRepository: AccountRepository) {
             return ApplicationResult.Failure(ApplicationError.Validation("accountId", "archived account cannot be updated"))
         }
 
-        val updatedCurrency =
-            if (command.currencyCode != null) {
-                val normalized = normalizedCurrencyCode(command.currencyCode)
-                validateCurrencyCode(normalized)?.let { return ApplicationResult.Failure(it) }
-                normalized
-            } else {
-                existing.currencyCode
-            }
-
         val updated =
             existing.copy(
                 name = command.name.trim(),
                 displayOrder = command.displayOrder,
                 updatedAt = command.updatedAt,
                 updatedBy = command.updatedBy,
-                currencyCode = updatedCurrency,
-                type = command.type ?: existing.type,
             )
 
         return accountRepository.update(updated).mapRepositoryResult(

@@ -100,8 +100,20 @@ sealed interface MainRoute : AppRoute {
         override val icon: TioIconToken = TioIconToken.Account
     }
 
+    data object DeletedAccounts : MainRoute {
+        override val path: String = "settings/accounts/deleted"
+        override val title: String = "Deleted accounts"
+        override val icon: TioIconToken = TioIconToken.Account
+    }
+
     data object AccountAdd : MainRoute {
         override val path: String = "settings/accounts/add"
+        override val title: String = "Add Account"
+        override val icon: TioIconToken = TioIconToken.Account
+    }
+
+    data object AccountQuickAdd : MainRoute {
+        override val path: String = "accounts/add"
         override val title: String = "Add Account"
         override val icon: TioIconToken = TioIconToken.Account
     }
@@ -282,7 +294,9 @@ object TioNavigationGraphs {
                     MainRoute.Configuration,
                     MainRoute.AccountSettings,
                     MainRoute.AccountManager,
+                    MainRoute.DeletedAccounts,
                     MainRoute.AccountAdd,
+                    MainRoute.AccountQuickAdd,
                     MainRoute.AccountGroup,
                     MainRoute.AccountGroupAdd,
                     MainRoute.BudgetSettings,

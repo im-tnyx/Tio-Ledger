@@ -5,7 +5,6 @@ package com.tioledger.ui.accounts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,8 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,27 +27,21 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import com.tioledger.domain.model.AccountType
+import com.tioledger.ui.components.TioAddIcon
 import com.tioledger.ui.components.TioAmountText
 import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioFilterChip
-import com.tioledger.ui.components.TioIcon
 import com.tioledger.ui.design.TioDimensions
-import com.tioledger.ui.design.TioIconToken
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
@@ -79,8 +70,6 @@ fun AccountsScreen(
 ) {
     val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.Accounts)
 
-    var showMenu by remember { mutableStateOf(false) }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -88,29 +77,10 @@ fun AccountsScreen(
                 title = MainRoute.Accounts.title,
                 actions = {
                     IconButton(
-                        onClick = { showMenu = true },
-                        modifier = Modifier.semantics { contentDescription = "More options" },
+                        onClick = { onNavigate(MainRoute.AccountQuickAdd) },
+                        modifier = Modifier.semantics { contentDescription = "Add account" },
                     ) {
-                        TioIcon(TioIconToken.More)
-                    }
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Accounts Setting") },
-                            onClick = {
-                                showMenu = false
-                                onNavigate(MainRoute.AccountManager)
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Add Account") },
-                            onClick = {
-                                showMenu = false
-                                onNavigate(MainRoute.AccountAdd)
-                            },
-                        )
+                        TioAddIcon()
                     }
                 },
             )
@@ -268,7 +238,7 @@ private fun SummaryColumn(
     tone: TioAmountTone,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.End) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
@@ -288,42 +258,82 @@ private fun AccountsGroupedList(
             item(key = "header-${group.id}") {
                 AccountGroupHeader(group)
             }
-            items(group.accounts, key = { it.id }) { account ->
-                AccountRow(
-                    account = account,
-                    onClick = { onAccountClick(account) },
-                )
-                HorizontalDivider()
+            if (group.type == AccountType.CREDIT_CARD) {
+                group.accounts
+                    .groupBy { it.billingDay }
+                    .toSortedMap(compareBy<Int?> { it ?: 32 })
+                    .forEach { (billingDay, cards) ->
+                        item(key = "billing-${group.id}-${billingDay ?: "unset"}") {
+                            BillingDateSectionHeader(billingDay, cards.size)
+                        }
+                        items(cards, key = { it.id }) { account ->
+                            AccountRow(account = account, onClick = { onAccountClick(account) })
+                            HorizontalDivider()
+                        }
+                    }
+            } else {
+                items(group.accounts, key = { it.id }) { account ->
+                    AccountRow(
+                        account = account,
+                        onClick = { onAccountClick(account) },
+                    )
+                    HorizontalDivider()
+                }
             }
         }
     }
 }
 
 @Composable
+private fun BillingDateSectionHeader(
+    billingDay: Int?,
+    cardCount: Int,
+) {
+    Text(
+        text =
+            if (billingDay == null) {
+                "Billing date not set · $cardCount ${if (cardCount == 1) "card" else "cards"}"
+            } else {
+                "Billing day $billingDay · $cardCount ${if (cardCount == 1) "card" else "cards"}"
+            },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
+    )
+}
+
+@Composable
 private fun AccountGroupHeader(group: AccountGroupUiModel) {
-    BoxWithConstraints(
+    Column(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .semantics(mergeDescendants = true) { }
-                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
+                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(TioSpacing.xs),
     ) {
-        val measurer = rememberTextMeasurer()
-        val titleStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        val amountStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
-        val titleWidth = measurer.measure(group.title, style = titleStyle, softWrap = false).size.width
-        val amountWidth = group.totals.maxOfOrNull { measurer.measure(it, style = amountStyle, softWrap = false).size.width } ?: 0
-        val gap = with(LocalDensity.current) { TioSpacing.md.roundToPx() }
-        if (titleWidth + amountWidth + gap <= constraints.maxWidth) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(text = group.title, modifier = Modifier.weight(1f), style = titleStyle)
-                AccountGroupTotals(group)
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TioSpacing.xs)) {
+                Text(
+                    text = group.categoryLabel.uppercase(),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
+                    Text(
+                        text = group.title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    )
+                    Text(
+                        text = "${group.accountCount} ${if (group.accountCount == 1) "account" else "accounts"}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
             }
-        } else {
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
-                Text(text = group.title, style = titleStyle)
-                AccountGroupTotals(group, modifier = Modifier.align(Alignment.End))
-            }
+            AccountGroupTotals(group, modifier = Modifier.padding(start = TioSpacing.sm))
         }
     }
 }
@@ -365,17 +375,27 @@ private fun AccountRow(
                 .heightIn(min = TioDimensions.accountRowHeight)
                 .clickable(enabled = account.isLoan, onClick = onClick)
                 .semantics {
-                    contentDescription = "${account.name}, ${account.typeLabel}, ${account.balance}"
+                    val billing = account.billingDay?.let { "Billing day $it, payment due day ${account.paymentDueDay}" }.orEmpty()
+                    contentDescription = "${account.name}, ${account.typeLabel}, ${account.balance}, $billing"
                 }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = account.name,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TioSpacing.xs)) {
+            Text(
+                text = account.name,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+            )
+            account.billingDay?.let { billingDay ->
+                Text(
+                    text = "Billing day $billingDay · Payment due day ${account.paymentDueDay}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                )
+            }
+        }
         TioAmountText(
             amount = account.balance,
             tone = if (account.isLiability) TioAmountTone.Negative else TioAmountTone.Neutral,

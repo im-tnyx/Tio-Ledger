@@ -1,6 +1,7 @@
 package com.tioledger.ui.di
 
 import com.tioledger.ui.accounts.AccountsViewModel
+import com.tioledger.ui.accounts.ArchivedAccountsViewModel
 import com.tioledger.ui.budgets.BudgetsViewModel
 import com.tioledger.ui.categories.CategoriesViewModel
 import com.tioledger.ui.loans.LoanDetailsViewModel
@@ -25,8 +26,6 @@ fun tioUiModule(): Module =
         factory {
             CurrencySettingsViewModel(
                 currencyPreferenceStore = get(),
-                accountRepository = getOrNull(),
-                updateAccountUseCase = getOrNull(),
             )
         }
         factory {
@@ -42,6 +41,7 @@ fun tioUiModule(): Module =
                 recordOpeningBalanceUseCase = getOrNull(),
             )
         }
+        factory { ArchivedAccountsViewModel(get(), get()) }
         factory { BudgetsViewModel(get(), get(), get(), get(), get()) }
         factory { CategoriesViewModel(get(), get(), get()) }
         factory { LoansViewModel(get(), get(), get(), get()) }

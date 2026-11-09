@@ -98,6 +98,35 @@ class AccountGroupStoreTest {
     }
 
     @Test
+    fun assignedGroupCannotChangeFinancialPolicy() {
+        val store = AccountGroupStore()
+        val custom = store.addGroup("Main account", AccountGroupPolicy.BANK)!!
+        assertTrue(store.assignAccount("account-1", custom.id))
+
+        assertFalse(store.updateGroup(custom.id, "Main account", AccountGroupPolicy.LOAN))
+        assertEquals(AccountGroupPolicy.BANK, store.groupForId(custom.id)?.policy)
+    }
+
+    @Test
+    fun creditCardSettingsPersistAcrossStoreRecreation() {
+        val persistence = InMemoryAccountGroupPersistence()
+        val firstStore = AccountGroupStore(persistence = persistence)
+        val details =
+            AccountBillingDetails(
+                billingDay = 12,
+                paymentDueDay = 25,
+                paymentAccountId = "bank-1",
+                description = "Primary card",
+            )
+
+        assertTrue(firstStore.saveBillingDetails("card-1", details))
+        val recreatedStore = AccountGroupStore(persistence = persistence)
+
+        assertEquals(details, recreatedStore.billingDetailsForAccount("card-1"))
+        assertFalse(recreatedStore.saveBillingDetails("card-1", AccountBillingDetails(0, 32)))
+    }
+
+    @Test
     fun reorderMovesItemsCorrectly() {
         val store = AccountGroupStore()
         store.reorder(0, 2)

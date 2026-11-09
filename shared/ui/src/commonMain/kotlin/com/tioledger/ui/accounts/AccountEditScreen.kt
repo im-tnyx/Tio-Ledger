@@ -2,11 +2,7 @@
 
 package com.tioledger.ui.accounts
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,15 +19,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -81,6 +78,7 @@ fun AccountEditRoute(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun AccountEditScreen(
     accountId: String?,
     state: AccountsUiState,
@@ -96,24 +94,38 @@ fun AccountEditScreen(
             ?: state.availableGroups.firstOrNull()
 
     val isCreditCard = selectedGroup?.policy == AccountGroupPolicy.CREDIT_CARD
+    val eligiblePaymentAccounts =
+        state.groups.flatMap { it.accounts }
+            .filter { account ->
+                account.accountType == AccountType.CASH ||
+                    account.accountType == AccountType.BANK ||
+                    account.accountType == AccountType.WALLET
+            }
+            .distinctBy { it.id }
+    val selectedPaymentAccount = eligiblePaymentAccounts.firstOrNull { it.id == state.draftPaymentAccountId }
 
     var showGroupPicker by remember { mutableStateOf(false) }
+    var showPaymentAccountPicker by remember { mutableStateOf(false) }
     var showAmountDialog by remember { mutableStateOf(false) }
     var tempAmountInput by remember { mutableStateOf("") }
-    var showPaymentPicker by remember { mutableStateOf(false) }
     var showSettlementPicker by remember { mutableStateOf(false) }
     var showPaymentDatePicker by remember { mutableStateOf(false) }
-    var description by remember { mutableStateOf("") }
-    var includeInTotals by remember { mutableStateOf(true) }
-    var showHideSetting by remember { mutableStateOf(true) }
 
     var wasSaving by remember { mutableStateOf(false) }
+    var wasArchiving by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isSaving, state.createErrorMessage) {
         if (wasSaving && !state.isSaving && state.createErrorMessage == null) {
             onNavigateBack()
         }
         wasSaving = state.isSaving
+    }
+
+    LaunchedEffect(state.isArchiving, state.archiveErrorMessage) {
+        if (wasArchiving && !state.isArchiving && state.archiveErrorMessage == null) {
+            onNavigateBack()
+        }
+        wasArchiving = state.isArchiving
     }
 
     Scaffold(
@@ -211,28 +223,34 @@ fun AccountEditScreen(
             }
 
             if (isCreditCard) {
-                // Payment Row
-                AccountFormRow(label = "Payment") {
+                AccountFormRow(
+                    label = "Payment",
+                    isUnderlineActive = showPaymentAccountPicker,
+                ) {
                     Text(
-                        text = state.draftPaymentAccount.orEmpty(),
-                        color = MaterialTheme.colorScheme.onSurface,
+                        text = selectedPaymentAccount?.name ?: "Select account",
+                        color =
+                            if (selectedPaymentAccount == null) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
                         fontSize = 15.sp,
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .clickable { showPaymentPicker = true }
+                                .clickable { showPaymentAccountPicker = true }
                                 .padding(vertical = 12.dp),
                     )
                 }
 
-                // Description Row
                 AccountFormRow(label = "Description") {
                     BasicTextField(
-                        value = description,
-                        onValueChange = { description = it },
+                        value = state.draftDescription,
+                        onValueChange = { onAction(AccountsAction.DescriptionChanged(it)) },
                         textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp),
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                        singleLine = true,
+                        maxLines = 3,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                     )
                 }
@@ -244,8 +262,7 @@ fun AccountEditScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Settlement Date Row
-                AccountFormRow(label = "Settlement\nDate") {
+                AccountFormRow(label = "Settlement Date") {
                     Text(
                         text = state.draftSettlementDate,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -258,8 +275,7 @@ fun AccountEditScreen(
                     )
                 }
 
-                // Payment Date Row
-                AccountFormRow(label = "Payment\nDate") {
+                AccountFormRow(label = "Payment Date") {
                     Text(
                         text = state.draftPaymentDate,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -274,92 +290,17 @@ fun AccountEditScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Card Outstanding Summary Box
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                            .padding(16.dp),
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Text(text = "Balance Payable", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
-                            Text(text = "10/01 ~ 10/31 (Pay: 11/01)", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Text(text = "Outst. Balance", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
-                            Text(text = "11/01 ~ 11/30 (Pay: 12/01)", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
-                        }
-                    }
-                }
+                Text(
+                    text = "Dates and payment account are saved as card settings. They do not trigger payments.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             } else {
-                // Description Row
-                AccountFormRow(label = "Description") {
-                    BasicTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp),
-                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Include in totals Row
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Include in totals",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 15.sp,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = includeInTotals,
-                        onCheckedChange = { includeInTotals = it },
-                        colors =
-                            SwitchDefaults.colors(
-                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            ),
-                    )
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                // Show/Hide Setting Row
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Show/Hide Setting",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 15.sp,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = showHideSetting,
-                        onCheckedChange = { showHideSetting = it },
-                        colors =
-                            SwitchDefaults.colors(
-                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            ),
-                    )
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Text(
+                    text = selectedGroup?.policy?.title.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -389,7 +330,12 @@ fun AccountEditScreen(
                         .height(48.dp),
             ) {
                 Text(
-                    text = if (state.isSaving) "Saving..." else "Save",
+                    text =
+                        when {
+                            state.isSaving -> "Saving..."
+                            state.pendingOpeningBalanceAccountId != null -> "Retry Opening Balance"
+                            else -> "Save"
+                        },
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -398,6 +344,84 @@ fun AccountEditScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    if (showPaymentAccountPicker) {
+        AlertDialog(
+            onDismissRequest = { showPaymentAccountPicker = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(12.dp),
+            title = {
+                Text(
+                    text = "Payment account",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                )
+            },
+            text = {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState()),
+                ) {
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onAction(AccountsAction.PaymentAccountChanged(null))
+                                    showPaymentAccountPicker = false
+                                }
+                                .padding(vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("None", modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
+                        if (state.draftPaymentAccountId == null) {
+                            Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    eligiblePaymentAccounts.forEach { account ->
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onAction(AccountsAction.PaymentAccountChanged(account.id))
+                                        showPaymentAccountPicker = false
+                                    }
+                                    .padding(vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = account.name,
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            if (account.id == state.draftPaymentAccountId) {
+                                Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+                    if (eligiblePaymentAccounts.isEmpty()) {
+                        Text(
+                            text = "Add a cash or bank account to select a payment account.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showPaymentAccountPicker = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+        )
     }
 
     // Account Group Modal Selection Dialog
@@ -416,41 +440,43 @@ fun AccountEditScreen(
             },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    state.availableGroups.forEach { group ->
-                        val isSelected = group.id == state.draftGroupId
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onAction(AccountsAction.GroupChanged(group.id))
-                                        showGroupPicker = false
-                                    }
-                                    .padding(vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = group.title,
-                                color =
-                                    if (isSelected) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface
-                                    },
-                                fontSize = 16.sp,
-                                modifier = Modifier.weight(1f),
-                            )
-                            if (isSelected) {
+                    state.availableGroups
+                        .filter { isAddMode || it.policy.accountType == accountRow?.accountType }
+                        .forEach { group ->
+                            val isSelected = group.id == state.draftGroupId
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onAction(AccountsAction.GroupChanged(group.id))
+                                            showGroupPicker = false
+                                        }
+                                        .padding(vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
                                 Text(
-                                    text = "✓",
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
+                                    text = group.title,
+                                    color =
+                                        if (isSelected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.weight(1f),
                                 )
+                                if (isSelected) {
+                                    Text(
+                                        text = "✓",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp,
+                                    )
+                                }
                             }
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    }
                 }
             },
             confirmButton = {},
@@ -469,7 +495,6 @@ fun AccountEditScreen(
             isArchiving = state.isArchiving,
             onConfirm = {
                 onAction(AccountsAction.ArchiveConfirmed)
-                onNavigateBack()
             },
             onDismiss = { onAction(AccountsAction.ArchiveDismissed) },
         )
@@ -515,188 +540,71 @@ fun AccountEditScreen(
         )
     }
 
-    if (showPaymentPicker) {
-        val eligiblePaymentAccounts =
-            state.groups
-                .filter { it.type != AccountType.CREDIT_CARD }
-                .flatMap { it.accounts }
-        AlertDialog(
-            onDismissRequest = { showPaymentPicker = false },
+    if (showSettlementPicker || showPaymentDatePicker) {
+        val isSettlementDate = showSettlementPicker
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val selectedDate = if (isSettlementDate) state.draftSettlementDate else state.draftPaymentDate
+        val title = if (isSettlementDate) "Settlement Date" else "Payment Date"
+        val dismissSheet = {
+            showSettlementPicker = false
+            showPaymentDatePicker = false
+        }
+
+        ModalBottomSheet(
+            onDismissRequest = dismissSheet,
+            sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(12.dp),
-            title = {
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 360.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp),
+            ) {
                 Text(
-                    text = "Payment Account",
+                    text = title,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
+                    modifier = Modifier.padding(vertical = 16.dp),
                 )
-            },
-            text = {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState()),
-                ) {
-                    if (eligiblePaymentAccounts.isEmpty()) {
-                        Text(
-                            text = "No eligible bank or cash accounts available.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 12.dp),
-                        )
-                    } else {
-                        eligiblePaymentAccounts.forEach { acc ->
-                            val isSelected = acc.name == state.draftPaymentAccount
-                            Row(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            onAction(AccountsAction.PaymentAccountChanged(acc.name))
-                                            showPaymentPicker = false
-                                        }
-                                        .padding(vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = acc.name,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 16.sp,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                if (isSelected) {
-                                    Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                (1..31).forEach { day ->
+                    val dayText = day.toString()
+                    val isSelected = dayText == selectedDate
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (isSettlementDate) {
+                                        onAction(AccountsAction.SettlementDateChanged(dayText))
+                                    } else {
+                                        onAction(AccountsAction.PaymentDateChanged(dayText))
+                                    }
+                                    dismissSheet()
                                 }
-                            }
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = dayText,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            fontSize = 16.sp,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (isSelected) {
+                            Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         }
                     }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showPaymentPicker = false }) {
+                TextButton(onClick = dismissSheet, modifier = Modifier.fillMaxWidth()) {
                     Text("Cancel", color = MaterialTheme.colorScheme.primary)
                 }
-            },
-        )
-    }
-
-    if (showSettlementPicker) {
-        val days = (1..31).map { "Every $it" } + "End of month"
-        AlertDialog(
-            onDismissRequest = { showSettlementPicker = false },
-            containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(12.dp),
-            title = {
-                Text(
-                    text = "Date of Settlement",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                )
-            },
-            text = {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp)
-                            .verticalScroll(rememberScrollState()),
-                ) {
-                    days.forEach { day ->
-                        val isSelected = day == state.draftSettlementDate
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onAction(AccountsAction.SettlementDateChanged(day))
-                                        showSettlementPicker = false
-                                    }
-                                    .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = day,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                fontSize = 16.sp,
-                                modifier = Modifier.weight(1f),
-                            )
-                            if (isSelected) {
-                                Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            }
-                        }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showSettlementPicker = false }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.primary)
-                }
-            },
-        )
-    }
-
-    if (showPaymentDatePicker) {
-        val days = (1..31).map { "Every $it" } + "End of month"
-        AlertDialog(
-            onDismissRequest = { showPaymentDatePicker = false },
-            containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(12.dp),
-            title = {
-                Text(
-                    text = "Date of Payment",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                )
-            },
-            text = {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp)
-                            .verticalScroll(rememberScrollState()),
-                ) {
-                    days.forEach { day ->
-                        val isSelected = day == state.draftPaymentDate
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onAction(AccountsAction.PaymentDateChanged(day))
-                                        showPaymentDatePicker = false
-                                    }
-                                    .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = day,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                fontSize = 16.sp,
-                                modifier = Modifier.weight(1f),
-                            )
-                            if (isSelected) {
-                                Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            }
-                        }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showPaymentDatePicker = false }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.primary)
-                }
-            },
-        )
+            }
+        }
     }
 }
 

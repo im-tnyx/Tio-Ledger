@@ -19,8 +19,10 @@ import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.AccountType
+import com.tioledger.ui.more.AccountBillingDetails
 import com.tioledger.ui.more.AccountGroupAssignmentResult
 import com.tioledger.ui.more.AccountGroupEntry
+import com.tioledger.ui.more.AccountGroupPolicy
 import com.tioledger.ui.more.AccountGroupStore
 import com.tioledger.ui.more.CurrencyPreferenceStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,10 +89,13 @@ class AccountsViewModel(
             }
             is AccountsAction.EditAccountRequested -> {
                 val accountSummary = loadedOverview?.accounts?.firstOrNull { it.account.id == action.accountId }
+                val accountType = accountSummary?.account?.type
                 val assignedGroupId =
-                    accountGroupStore.groupIdForAccount(action.accountId)
-                        ?: _uiState.value.availableGroups.firstOrNull()?.id.orEmpty()
+                    accountGroupStore.groupIdForAccount(action.accountId)?.takeIf { groupId ->
+                        accountGroupStore.groupForId(groupId)?.policy?.accountType == accountType
+                    } ?: _uiState.value.availableGroups.firstOrNull { it.policy.accountType == accountType }?.id.orEmpty()
                 val currency = accountSummary?.account?.currencyCode ?: currentCurrencyCode()
+                val billingDetails = accountGroupStore.billingDetailsForAccount(action.accountId)
                 _uiState.value =
                     _uiState.value.copy(
                         editingAccountId = action.accountId,
@@ -98,6 +103,10 @@ class AccountsViewModel(
                         draftGroupId = assignedGroupId,
                         draftCurrencyCode = currency,
                         currencySymbol = currencySymbolFor(currency),
+                        draftSettlementDate = (billingDetails?.billingDay ?: 1).toString(),
+                        draftPaymentDate = (billingDetails?.paymentDueDay ?: 1).toString(),
+                        draftPaymentAccountId = billingDetails?.paymentAccountId,
+                        draftDescription = billingDetails?.description.orEmpty(),
                         createErrorMessage = null,
                     )
             }
@@ -107,13 +116,26 @@ class AccountsViewModel(
             is AccountsAction.OpeningBalanceChanged ->
                 _uiState.value = _uiState.value.copy(draftOpeningBalance = action.amount, createErrorMessage = null)
             is AccountsAction.PaymentAccountChanged ->
-                _uiState.value = _uiState.value.copy(draftPaymentAccount = action.account, createErrorMessage = null)
+                _uiState.value = _uiState.value.copy(draftPaymentAccountId = action.accountId, createErrorMessage = null)
+            is AccountsAction.DescriptionChanged ->
+                _uiState.value = _uiState.value.copy(draftDescription = action.description, createErrorMessage = null)
             is AccountsAction.SettlementDateChanged ->
                 _uiState.value = _uiState.value.copy(draftSettlementDate = action.day, createErrorMessage = null)
             is AccountsAction.PaymentDateChanged ->
                 _uiState.value = _uiState.value.copy(draftPaymentDate = action.day, createErrorMessage = null)
             is AccountsAction.GroupChanged -> {
                 accountGroupStore.groupForId(action.groupId)?.let { group ->
+                    val editingAccount =
+                        _uiState.value.editingAccountId?.let { id ->
+                            loadedOverview?.accounts?.firstOrNull { it.account.id == id }?.account
+                        }
+                    if (editingAccount != null && editingAccount.type != group.policy.accountType) {
+                        _uiState.value =
+                            _uiState.value.copy(
+                                createErrorMessage = "Changing an account's financial type is not supported.",
+                            )
+                        return
+                    }
                     _uiState.value =
                         _uiState.value.copy(
                             draftGroupId = group.id,
@@ -142,10 +164,59 @@ class AccountsViewModel(
 
     private fun saveAccount() {
         val current = _uiState.value
-        if (current.editingAccountId != null) {
+        if (current.pendingOpeningBalanceAccountId != null) {
+            retryOpeningBalance()
+        } else if (current.editingAccountId != null) {
             updateAccount()
         } else {
             createAccount()
+        }
+    }
+
+    private fun retryOpeningBalance() {
+        val current = _uiState.value
+        val accountId = current.pendingOpeningBalanceAccountId ?: return
+        if (current.isSaving) return
+        val amountMinor = parseAmountToMinor(current.draftOpeningBalance)
+        if (amountMinor == null) {
+            _uiState.value = current.copy(createErrorMessage = "Enter a valid amount with up to 2 decimal places.")
+            return
+        }
+        if (amountMinor == 0L) {
+            _uiState.value = resetCreateDraft(current.copy(pendingOpeningBalanceAccountId = null), currencyPreferenceStore)
+            loadAccounts()
+            return
+        }
+        val openingBalanceUseCase = recordOpeningBalanceUseCase
+        if (openingBalanceUseCase == null) {
+            _uiState.value = current.copy(createErrorMessage = "Opening balance posting is unavailable.")
+            return
+        }
+        _uiState.value = current.copy(isSaving = true, createErrorMessage = null)
+        val now = nowProvider()
+        when (
+            val result =
+                openingBalanceUseCase(
+                    RecordOpeningBalanceCommand(
+                        timestamp = now,
+                        description = "Opening balance",
+                        amount = Money(amountMinor, CurrencyCode(current.draftCurrencyCode)),
+                        accountId = accountId,
+                        createdAt = now,
+                    ),
+                )
+        ) {
+            is ApplicationResult.Success -> {
+                _uiState.value = resetCreateDraft(_uiState.value.copy(pendingOpeningBalanceAccountId = null), currencyPreferenceStore)
+                loadAccounts()
+            }
+            is ApplicationResult.Failure -> {
+                _uiState.value =
+                    current.copy(
+                        isSaving = false,
+                        createErrorMessage = "Opening balance could not be saved. Select Save to retry: ${result.error.toCreateMessage()}",
+                    )
+            }
         }
     }
 
@@ -159,36 +230,61 @@ class AccountsViewModel(
             _uiState.value = current.copy(isSaving = false, createErrorMessage = "A valid Account Group is required.")
             return
         }
+        val existingAccount = loadedOverview?.accounts?.firstOrNull { it.account.id == accountId }?.account
+        if (existingAccount == null || existingAccount.type != group.policy.accountType) {
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Account group type cannot be changed.")
+            return
+        }
+        val previousGroupId = accountGroupStore.groupIdForAccount(accountId)
+        if (!accountGroupStore.assignAccount(accountId, group.id)) {
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Unable to save the account group assignment. Try again.")
+            return
+        }
+        val oldBillingDetails = accountGroupStore.billingDetailsForAccount(accountId)
+        val newBillingDetails = current.toBillingDetailsOrNull(group)
+        if (newBillingDetails != null && !accountGroupStore.saveBillingDetails(accountId, newBillingDetails)) {
+            restoreAccountAssignment(accountId, previousGroupId)
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Unable to save billing dates. Try again.")
+            return
+        }
         val command =
             UpdateAccountCommand(
                 accountId = accountId,
                 name = current.draftName,
                 displayOrder = 0,
                 updatedAt = nowProvider(),
-                currencyCode = current.draftCurrencyCode,
-                type = group.policy.accountType,
             )
         if (updateAccountUseCase != null) {
             when (val result = updateAccountUseCase.invoke(command)) {
                 is ApplicationResult.Success -> {
-                    accountGroupStore.assignAccount(accountId, group.id)
                     _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
                     loadAccounts()
                 }
                 is ApplicationResult.Failure -> {
+                    restoreAccountAssignment(accountId, previousGroupId)
+                    restoreBillingDetails(accountId, oldBillingDetails)
                     _uiState.value = current.copy(isSaving = false, createErrorMessage = result.error.toCreateMessage())
                 }
             }
         } else {
-            accountGroupStore.assignAccount(accountId, group.id)
-            _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
-            loadAccounts()
+            restoreAccountAssignment(accountId, previousGroupId)
+            restoreBillingDetails(accountId, oldBillingDetails)
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Account editing is unavailable.")
         }
     }
 
     private fun createAccount() {
         val current = _uiState.value
         if (current.isSaving) return
+        val openingBalanceMinor = parseAmountToMinor(current.draftOpeningBalance)
+        if (openingBalanceMinor == null) {
+            _uiState.value = current.copy(createErrorMessage = "Enter a valid amount with up to 2 decimal places.")
+            return
+        }
+        if (openingBalanceMinor > 0L && recordOpeningBalanceUseCase == null) {
+            _uiState.value = current.copy(createErrorMessage = "Opening balance posting is unavailable. Account was not created.")
+            return
+        }
         _uiState.value = current.copy(isSaving = true, createErrorMessage = null)
         val group = accountGroupStore.groupForId(current.draftGroupId)
         if (group == null) {
@@ -222,26 +318,50 @@ class AccountsViewModel(
                 return
             }
         }
+        val billingDetails = current.toBillingDetailsOrNull(group)
+        if (billingDetails != null && !accountGroupStore.saveBillingDetails(command.id, billingDetails)) {
+            accountGroupStore.removePreparedAccountAssignment(command.id, group.id)
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Unable to save billing dates. Try again.")
+            return
+        }
         when (val result = createAccountUseCase(command)) {
             is ApplicationResult.Success -> {
                 val created = result.outcome.value
-                val minor = parseAmountToMinor(current.draftOpeningBalance)
-                if (minor > 0L && recordOpeningBalanceUseCase != null) {
+                if (openingBalanceMinor > 0L && recordOpeningBalanceUseCase != null) {
                     val now = nowProvider()
-                    recordOpeningBalanceUseCase(
-                        RecordOpeningBalanceCommand(
-                            timestamp = now,
-                            description = "Opening balance",
-                            amount = Money(minor, CurrencyCode(created.currencyCode)),
-                            accountId = created.id,
-                            createdAt = now,
-                        ),
-                    )
+                    val openingBalanceResult =
+                        recordOpeningBalanceUseCase(
+                            RecordOpeningBalanceCommand(
+                                timestamp = now,
+                                description = "Opening balance",
+                                amount = Money(openingBalanceMinor, CurrencyCode(created.currencyCode)),
+                                accountId = created.id,
+                                createdAt = now,
+                            ),
+                        )
+                    when (openingBalanceResult) {
+                        is ApplicationResult.Success -> {
+                            _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
+                            loadAccounts()
+                        }
+                        is ApplicationResult.Failure -> {
+                            _uiState.value =
+                                _uiState.value.copy(
+                                    isSaving = false,
+                                    pendingOpeningBalanceAccountId = created.id,
+                                    createErrorMessage =
+                                        "Account created, but opening balance failed: " +
+                                            openingBalanceResult.error.toCreateMessage(),
+                                )
+                        }
+                    }
+                } else {
+                    _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
+                    loadAccounts()
                 }
-                _uiState.value = resetCreateDraft(_uiState.value, currencyPreferenceStore)
-                loadAccounts()
             }
             is ApplicationResult.Failure -> {
+                accountGroupStore.removeBillingDetails(command.id)
                 val cleanupSucceeded = accountGroupStore.removePreparedAccountAssignment(command.id, group.id)
                 val message =
                     if (cleanupSucceeded) {
@@ -298,31 +418,32 @@ class AccountsViewModel(
         }
     }
 
+    private fun restoreAccountAssignment(
+        accountId: String,
+        previousGroupId: String?,
+    ) {
+        if (previousGroupId == null) {
+            accountGroupStore.groupIdForAccount(accountId)?.let { currentGroupId ->
+                accountGroupStore.removePreparedAccountAssignment(accountId, currentGroupId)
+            }
+        } else {
+            accountGroupStore.assignAccount(accountId, previousGroupId)
+        }
+    }
+
+    private fun restoreBillingDetails(
+        accountId: String,
+        previous: AccountBillingDetails?,
+    ) {
+        if (previous == null) {
+            accountGroupStore.removeBillingDetails(accountId)
+        } else {
+            accountGroupStore.saveBillingDetails(accountId, previous)
+        }
+    }
+
     private fun loadAccounts() {
         currencyPreferenceStore?.reload()
-        if (currencyPreferenceStore != null && updateAccountUseCase != null) {
-            val mainCode = currentCurrencyCode()
-            when (val initialResult = listAccountSummariesUseCase()) {
-                is ApplicationResult.Success -> {
-                    val mismatched = initialResult.outcome.value.accounts.filter { it.account.currencyCode != mainCode }
-                    if (mismatched.isNotEmpty()) {
-                        mismatched.forEach { summary ->
-                            updateAccountUseCase(
-                                UpdateAccountCommand(
-                                    accountId = summary.account.id,
-                                    name = summary.account.name,
-                                    displayOrder = summary.account.displayOrder,
-                                    updatedAt = nowProvider(),
-                                    currencyCode = mainCode,
-                                    type = summary.account.type,
-                                ),
-                            )
-                        }
-                    }
-                }
-                is ApplicationResult.Failure -> Unit
-            }
-        }
         loanIdByAccountId =
             listLoansUseCase?.let { useCase ->
                 when (val result = useCase()) {
@@ -361,14 +482,13 @@ private fun AccountsBalanceOverview.toUiState(
     currencyPreferenceStore: CurrencyPreferenceStore? = null,
     loanIdByAccountId: Map<String, String> = emptyMap(),
 ): AccountsUiState {
-    val symbol = currencyPreferenceStore?.getConfig()?.currency?.symbol
     val uiGroups =
         toAccountGroupUiModels(
             searchQuery = searchQuery,
             groupEntries = accountGroupStore.groups.value,
             groupStore = accountGroupStore,
             loanIdByAccountId = loanIdByAccountId,
-            currencySymbol = symbol,
+            currencyPreferenceStore = currencyPreferenceStore,
         )
     val availableGroups = accountGroupStore.groups.value
     return AccountsUiState(
@@ -377,9 +497,21 @@ private fun AccountsBalanceOverview.toUiState(
         summary =
             totals.firstOrNull()?.let {
                 AccountsSummaryUiModel(
-                    assets = it.assets.toDisplayAmount(symbol),
-                    liabilities = it.liabilities.toDisplayAmount(symbol),
-                    total = it.total.toDisplayAmount(symbol),
+                    assets =
+                        totals.map {
+                                row ->
+                            row.assets.toDisplayAmount(currencyPreferenceStore.symbolFor(row.currencyCode))
+                        }.joinToString("\n"),
+                    liabilities =
+                        totals.map {
+                                row ->
+                            row.liabilities.toDisplayAmount(currencyPreferenceStore.symbolFor(row.currencyCode))
+                        }.joinToString("\n"),
+                    total =
+                        totals.map {
+                                row ->
+                            row.total.toDisplayAmount(currencyPreferenceStore.symbolFor(row.currencyCode))
+                        }.joinToString("\n"),
                     currencyLabel = if (totals.size == 1) it.currencyCode else "Multiple currencies",
                 )
             } ?: AccountsSummaryUiModel.Empty,
@@ -400,7 +532,7 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
     groupEntries: List<AccountGroupEntry>,
     groupStore: AccountGroupStore,
     loanIdByAccountId: Map<String, String> = emptyMap(),
-    currencySymbol: String? = null,
+    currencyPreferenceStore: CurrencyPreferenceStore? = null,
 ): List<AccountGroupUiModel> {
     val visibleAccounts =
         accounts.filter {
@@ -422,8 +554,17 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
                 type = entry.policy.accountType,
                 id = entry.id,
                 title = entry.title,
-                totals = summaries.toGroupTotals(currencySymbol),
-                accounts = summaries.map { it.toRow(loanIdByAccountId, currencySymbol) },
+                categoryLabel = entry.policy.sectionLabel(),
+                accountCount = summaries.size,
+                totals = summaries.toGroupTotals(currencyPreferenceStore),
+                accounts =
+                    summaries.map { summary ->
+                        val billingDetails = groupStore.billingDetailsForAccount(summary.account.id)
+                        summary.toRow(loanIdByAccountId, currencyPreferenceStore).copy(
+                            billingDay = billingDetails?.billingDay,
+                            paymentDueDay = billingDetails?.paymentDueDay,
+                        )
+                    },
             )
         }
     val fallbackGroups =
@@ -434,36 +575,75 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
                     type = type,
                     id = "fallback-${type.name}",
                     title = type.toGroupTitle(),
-                    totals = summaries.toGroupTotals(currencySymbol),
-                    accounts = summaries.map { it.toRow(loanIdByAccountId, currencySymbol) },
+                    categoryLabel = type.toSectionLabel(),
+                    accountCount = summaries.size,
+                    totals = summaries.toGroupTotals(currencyPreferenceStore),
+                    accounts = summaries.map { it.toRow(loanIdByAccountId, currencyPreferenceStore) },
                 )
             }
     return configuredGroups + fallbackGroups
 }
 
-private fun List<AccountBalanceSummary>.toGroupTotals(currencySymbol: String? = null): List<String> =
+private fun AccountGroupPolicy.sectionLabel(): String =
+    when (this) {
+        AccountGroupPolicy.CASH -> "Cash accounts"
+        AccountGroupPolicy.BANK -> "Bank accounts"
+        AccountGroupPolicy.CREDIT_CARD -> "Credit card accounts"
+        AccountGroupPolicy.DEBIT_CARD -> "Debit card accounts"
+        AccountGroupPolicy.LOAN -> "Loan accounts"
+        AccountGroupPolicy.INVESTMENT -> "Investment accounts"
+        AccountGroupPolicy.OTHER -> "Other accounts"
+    }
+
+private fun AccountType.toSectionLabel(): String =
+    when (this) {
+        AccountType.CASH -> "Cash accounts"
+        AccountType.BANK -> "Bank accounts"
+        AccountType.CREDIT_CARD -> "Credit card accounts"
+        AccountType.WALLET -> "Other accounts"
+        AccountType.LOAN_LINKED -> "Loan accounts"
+        AccountType.INVESTMENT -> "Investment accounts"
+    }
+
+private fun AccountsUiState.toBillingDetailsOrNull(group: AccountGroupEntry): AccountBillingDetails? {
+    if (group.policy != AccountGroupPolicy.CREDIT_CARD) return null
+    val billingDay = draftSettlementDate.toIntOrNull() ?: return null
+    val paymentDay = draftPaymentDate.toIntOrNull() ?: return null
+    return AccountBillingDetails(
+        billingDay = billingDay,
+        paymentDueDay = paymentDay,
+        paymentAccountId = draftPaymentAccountId,
+        description = draftDescription,
+    )
+}
+
+private fun List<AccountBalanceSummary>.toGroupTotals(currencyPreferenceStore: CurrencyPreferenceStore? = null): List<String> =
     groupBy { it.account.currencyCode }
         .toSortedMap()
         .map { (currencyCode, summaries) ->
             val currency = CurrencyCode(currencyCode)
             val total = summaries.fold(Money.zero(currency)) { sum, summary -> sum + summary.balance }
-            total.toDisplayAmount(currencySymbol)
+            total.toDisplayAmount(currencyPreferenceStore.symbolFor(currencyCode))
         }
+
+private fun CurrencyPreferenceStore?.symbolFor(currencyCode: String): String? =
+    this?.getConfig()?.currency?.takeIf { it.code.normalized == currencyCode }?.symbol
 
 private fun AccountBalanceSummary.toRow(
     loanIdByAccountId: Map<String, String> = emptyMap(),
-    currencySymbol: String? = null,
+    currencyPreferenceStore: CurrencyPreferenceStore? = null,
 ): AccountRowUiModel {
     val isLoanAccount = account.type == AccountType.LOAN_LINKED
     return AccountRowUiModel(
         id = account.id,
         name = account.name,
         typeLabel = account.type.toGroupTitle(),
-        balance = balance.toDisplayAmount(currencySymbol),
+        balance = balance.toDisplayAmount(currencyPreferenceStore.symbolFor(account.currencyCode)),
         currencyCode = account.currencyCode,
         isLiability = account.type.ledgerClass == com.tioledger.domain.model.LedgerClass.LIABILITY,
         isLoan = isLoanAccount,
         loanId = if (isLoanAccount) loanIdByAccountId[account.id] else null,
+        accountType = account.type,
     )
 }
 
@@ -507,9 +687,11 @@ private fun resetCreateDraft(
         editingAccountId = null,
         draftName = "",
         draftOpeningBalance = "",
-        draftPaymentAccount = null,
-        draftSettlementDate = "Every 1",
-        draftPaymentDate = "Every 1",
+        draftPaymentAccountId = null,
+        draftDescription = "",
+        draftSettlementDate = "1",
+        draftPaymentDate = "1",
+        pendingOpeningBalanceAccountId = null,
         draftGroupId = state.availableGroups.firstOrNull()?.id.orEmpty(),
         draftCurrencyCode =
             currencyPreferenceStore?.getConfig()?.currency?.code?.normalized
@@ -521,17 +703,18 @@ private fun resetCreateDraft(
         createErrorMessage = null,
     )
 
-internal fun parseAmountToMinor(input: String): Long {
+internal fun parseAmountToMinor(input: String): Long? {
     val clean = input.trim().replace(",", "").replace(" ", "").replace("₹", "").replace("$", "")
     if (clean.isBlank()) return 0L
+    if (!clean.matches(Regex("[0-9]+(\\.[0-9]{1,2})?"))) return null
     val parts = clean.split(".")
-    val major = parts[0].toLongOrNull() ?: 0L
+    val major = parts[0].toLongOrNull() ?: return null
     val minor =
         if (parts.size > 1) {
-            val frac = parts[1].padEnd(2, '0').take(2)
-            frac.toLongOrNull() ?: 0L
+            parts[1].padEnd(2, '0').toLongOrNull() ?: return null
         } else {
             0L
         }
+    if (major > (Long.MAX_VALUE - minor) / 100L) return null
     return major * 100L + minor
 }

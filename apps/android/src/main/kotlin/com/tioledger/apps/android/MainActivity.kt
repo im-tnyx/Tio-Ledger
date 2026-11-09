@@ -193,12 +193,14 @@ internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
                 MainRoute.AccountManager,
                 MainRoute.AccountGroup,
                 -> RootRoute.Main(MainRoute.AccountSettings)
+                MainRoute.DeletedAccounts -> RootRoute.Main(MainRoute.AccountSettings)
                 MainRoute.AccountGroupAdd,
                 is MainRoute.AccountGroupEdit,
                 -> RootRoute.Main(MainRoute.AccountGroup)
                 MainRoute.AccountAdd,
                 is MainRoute.AccountEdit,
                 -> RootRoute.Main(MainRoute.AccountManager)
+                MainRoute.AccountQuickAdd -> RootRoute.Main(MainRoute.Accounts)
                 MainRoute.SmsTransactionReview,
                 -> RootRoute.Main(MainRoute.Transactions)
                 is MainRoute.LoanDetails,

@@ -54,6 +54,14 @@ class MainActivityNavigationTest {
             systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountAdd)),
         )
         assertEquals(
+            RootRoute.Main(MainRoute.Accounts),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountQuickAdd)),
+        )
+        assertEquals(
+            RootRoute.Main(MainRoute.AccountSettings),
+            systemBackTargetOrNull(RootRoute.Main(MainRoute.DeletedAccounts)),
+        )
+        assertEquals(
             RootRoute.Main(MainRoute.AccountSettings),
             systemBackTargetOrNull(RootRoute.Main(MainRoute.AccountGroup)),
         )

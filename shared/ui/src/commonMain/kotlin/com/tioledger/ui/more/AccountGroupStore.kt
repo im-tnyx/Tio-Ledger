@@ -31,6 +31,13 @@ data class AccountGroupEntry(
     val isPermanent: Boolean = false,
 )
 
+data class AccountBillingDetails(
+    val billingDay: Int = 1,
+    val paymentDueDay: Int = 1,
+    val paymentAccountId: String? = null,
+    val description: String = "",
+)
+
 val DEFAULT_ACCOUNT_GROUPS: List<AccountGroupEntry> =
     listOf(
         AccountGroupEntry(
@@ -65,6 +72,7 @@ class AccountGroupStore(
     private val _groups = MutableStateFlow(persistence.load() ?: initialGroups)
     val groups: StateFlow<List<AccountGroupEntry>> = _groups.asStateFlow()
     private val accountGroupIds = persistence.loadAccountGroupIds().toMutableMap()
+    private val accountBillingDetails = persistence.loadAccountBillingDetails().toMutableMap()
 
     fun groupForId(id: String): AccountGroupEntry? = _groups.value.firstOrNull { it.id == id }
 
@@ -103,6 +111,9 @@ class AccountGroupStore(
         val index = current.indexOfFirst { it.id == id }
         if (index == -1) return false
         val existing = current[index]
+        if (newPolicy != null && newPolicy != existing.policy && accountGroupIds.values.any { it == id }) {
+            return false
+        }
         val policy = if (existing.isPermanent) existing.policy else (newPolicy ?: existing.policy)
         val subtitle =
             if (policy == AccountGroupPolicy.BANK || policy == AccountGroupPolicy.CASH) {
@@ -221,6 +232,29 @@ class AccountGroupStore(
     }
 
     fun groupIdForAccount(accountId: String): String? = accountGroupIds[accountId]
+
+    fun billingDetailsForAccount(accountId: String): AccountBillingDetails? = accountBillingDetails[accountId]
+
+    fun saveBillingDetails(
+        accountId: String,
+        details: AccountBillingDetails,
+    ): Boolean {
+        if (details.billingDay !in 1..31 || details.paymentDueDay !in 1..31) return false
+        val updated = accountBillingDetails.toMutableMap().apply { put(accountId, details) }
+        if (!persistence.saveAccountBillingDetails(updated)) return false
+        accountBillingDetails.clear()
+        accountBillingDetails.putAll(updated)
+        return true
+    }
+
+    fun removeBillingDetails(accountId: String): Boolean {
+        if (accountId !in accountBillingDetails) return true
+        val updated = accountBillingDetails.toMutableMap().apply { remove(accountId) }
+        if (!persistence.saveAccountBillingDetails(updated)) return false
+        accountBillingDetails.clear()
+        accountBillingDetails.putAll(updated)
+        return true
+    }
 }
 
 sealed interface AccountGroupAssignmentResult {
@@ -253,6 +287,10 @@ interface AccountGroupPersistence {
     fun loadAccountGroupIds(): Map<String, String> = emptyMap()
 
     fun saveAccountGroupIds(accountGroupIds: Map<String, String>): Boolean = true
+
+    fun loadAccountBillingDetails(): Map<String, AccountBillingDetails> = emptyMap()
+
+    fun saveAccountBillingDetails(details: Map<String, AccountBillingDetails>): Boolean = true
 }
 
 class InMemoryAccountGroupPersistence(
@@ -270,12 +308,21 @@ class InMemoryAccountGroupPersistence(
     }
 
     private var accountGroupIds: Map<String, String> = emptyMap()
+    private var accountBillingDetails: Map<String, AccountBillingDetails> = emptyMap()
 
     override fun loadAccountGroupIds(): Map<String, String> = accountGroupIds
 
     override fun saveAccountGroupIds(accountGroupIds: Map<String, String>): Boolean {
         if (!saveShouldSucceed) return false
         this.accountGroupIds = accountGroupIds.toMap()
+        return true
+    }
+
+    override fun loadAccountBillingDetails(): Map<String, AccountBillingDetails> = accountBillingDetails
+
+    override fun saveAccountBillingDetails(details: Map<String, AccountBillingDetails>): Boolean {
+        if (!saveShouldSucceed) return false
+        accountBillingDetails = details.toMap()
         return true
     }
 }

@@ -38,6 +38,7 @@ fun MainGraph.bottomNavigationModel(currentRoute: MainRoute): MainBottomNavigati
 
 private fun MainRoute.bottomNavigationParent(): MainRoute =
     when (this) {
+        MainRoute.AccountQuickAdd -> MainRoute.Accounts
         MainRoute.Categories,
         MainRoute.IncomeCategories,
         MainRoute.ExpenseCategories,
@@ -46,6 +47,7 @@ private fun MainRoute.bottomNavigationParent(): MainRoute =
         MainRoute.Configuration,
         MainRoute.AccountSettings,
         MainRoute.AccountManager,
+        MainRoute.DeletedAccounts,
         MainRoute.AccountAdd,
         is MainRoute.AccountEdit,
         MainRoute.AccountGroup,

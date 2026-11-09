@@ -428,7 +428,7 @@ fun TioAmountText(
         color = color,
         style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.SemiBold,
-        maxLines = 1,
+        maxLines = amount.lines().size.coerceAtLeast(1),
         overflow = TextOverflow.Ellipsis,
     )
 }

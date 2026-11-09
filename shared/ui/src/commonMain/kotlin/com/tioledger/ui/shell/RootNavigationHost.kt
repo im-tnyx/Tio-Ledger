@@ -13,6 +13,7 @@ import com.tioledger.domain.model.CategoryType
 import com.tioledger.ui.accounts.AccountEditRoute
 import com.tioledger.ui.accounts.AccountManagementRoute
 import com.tioledger.ui.accounts.AccountsRoute
+import com.tioledger.ui.accounts.ArchivedAccountsRoute
 import com.tioledger.ui.budgets.BudgetsRoute
 import com.tioledger.ui.categories.CategoriesRoute
 import com.tioledger.ui.components.TioAppBar
@@ -149,11 +150,27 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(MainRoute.AccountSettings))
                             },
                         )
+                    MainRoute.DeletedAccounts ->
+                        ArchivedAccountsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountSettings))
+                            },
+                        )
                     MainRoute.AccountAdd ->
                         AccountEditRoute(
                             accountId = null,
                             onNavigateBack = {
                                 onNavigate(RootRoute.Main(MainRoute.AccountManager))
+                            },
+                        )
+                    MainRoute.AccountQuickAdd ->
+                        AccountEditRoute(
+                            accountId = null,
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.Accounts))
                             },
                         )
                     is MainRoute.AccountEdit ->

@@ -15,9 +15,11 @@ data class AccountsUiState(
     val editingAccountId: String? = null,
     val draftName: String = "",
     val draftOpeningBalance: String = "",
-    val draftPaymentAccount: String? = null,
-    val draftSettlementDate: String = "Every 1",
-    val draftPaymentDate: String = "Every 1",
+    val draftPaymentAccountId: String? = null,
+    val draftDescription: String = "",
+    val draftSettlementDate: String = "1",
+    val draftPaymentDate: String = "1",
+    val pendingOpeningBalanceAccountId: String? = null,
     val availableGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
     val draftGroupId: String = DEFAULT_ACCOUNT_GROUPS.first().id,
     val draftCurrencyCode: String = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
@@ -54,6 +56,8 @@ data class AccountGroupUiModel(
     val title: String,
     val totals: List<String>,
     val accounts: List<AccountRowUiModel>,
+    val categoryLabel: String = title,
+    val accountCount: Int = accounts.size,
 )
 
 data class AccountRowUiModel(
@@ -65,6 +69,9 @@ data class AccountRowUiModel(
     val isLiability: Boolean,
     val isLoan: Boolean = false,
     val loanId: String? = null,
+    val billingDay: Int? = null,
+    val paymentDueDay: Int? = null,
+    val accountType: AccountType = AccountType.BANK,
 )
 
 sealed interface AccountsAction {
@@ -84,7 +91,9 @@ sealed interface AccountsAction {
 
     data class OpeningBalanceChanged(val amount: String) : AccountsAction
 
-    data class PaymentAccountChanged(val account: String) : AccountsAction
+    data class PaymentAccountChanged(val accountId: String?) : AccountsAction
+
+    data class DescriptionChanged(val description: String) : AccountsAction
 
     data class SettlementDateChanged(val day: String) : AccountsAction
 
