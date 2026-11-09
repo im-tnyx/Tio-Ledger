@@ -111,14 +111,10 @@ fun AccountEditScreen(
     var showSettlementPicker by remember { mutableStateOf(false) }
     var showPaymentDatePicker by remember { mutableStateOf(false) }
 
-    var wasSaving by remember { mutableStateOf(false) }
     var wasArchiving by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.isSaving, state.createErrorMessage) {
-        if (wasSaving && !state.isSaving && state.createErrorMessage == null) {
-            onNavigateBack()
-        }
-        wasSaving = state.isSaving
+    LaunchedEffect(state.saveCompleted) {
+        if (state.saveCompleted) onNavigateBack()
     }
 
     LaunchedEffect(state.isArchiving, state.archiveErrorMessage) {
@@ -195,17 +191,18 @@ fun AccountEditScreen(
                 )
             }
 
-            // Amount Row
-            AccountFormRow(label = "Amount") {
+            // New accounts start at zero; existing balance changes are recorded as ledger transactions.
+            AccountFormRow(label = "Current Balance") {
                 val amountText =
                     if (isAddMode) {
-                        if (state.draftOpeningBalance.isBlank()) {
-                            "${state.currencySymbol} 0.00"
-                        } else {
-                            "${state.currencySymbol} ${state.draftOpeningBalance}"
-                        }
+                        val initialAmount = state.draftCurrentBalance
+                        if (initialAmount.isBlank()) "${state.currencySymbol} 0.00" else "${state.currencySymbol} $initialAmount"
                     } else {
-                        accountRow?.balance ?: "${state.currencySymbol} 0.00"
+                        if (state.draftCurrentBalance.isBlank()) {
+                            accountRow?.balance ?: "${state.currencySymbol} 0.00"
+                        } else {
+                            "${state.currencySymbol} ${state.draftCurrentBalance}"
+                        }
                     }
                 Text(
                     text = amountText,
@@ -214,8 +211,8 @@ fun AccountEditScreen(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clickable(enabled = isAddMode) {
-                                tempAmountInput = state.draftOpeningBalance
+                            .clickable {
+                                tempAmountInput = state.draftCurrentBalance
                                 showAmountDialog = true
                             }
                             .padding(vertical = 12.dp),
@@ -333,7 +330,6 @@ fun AccountEditScreen(
                     text =
                         when {
                             state.isSaving -> "Saving..."
-                            state.pendingOpeningBalanceAccountId != null -> "Retry Opening Balance"
                             else -> "Save"
                         },
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -507,7 +503,7 @@ fun AccountEditScreen(
             shape = RoundedCornerShape(12.dp),
             title = {
                 Text(
-                    text = "Amount",
+                    text = "Current balance",
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
@@ -525,7 +521,7 @@ fun AccountEditScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onAction(AccountsAction.OpeningBalanceChanged(tempAmountInput.trim()))
+                        onAction(AccountsAction.CurrentBalanceChanged(tempAmountInput.trim()))
                         showAmountDialog = false
                     },
                 ) {

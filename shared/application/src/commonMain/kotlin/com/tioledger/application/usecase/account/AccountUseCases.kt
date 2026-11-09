@@ -11,14 +11,17 @@ import com.tioledger.application.model.ApplicationError
 import com.tioledger.application.model.ApplicationResult
 import com.tioledger.application.model.UseCaseOutcome
 import com.tioledger.core.model.CurrencyCode
+import com.tioledger.core.model.LedgerError
 import com.tioledger.core.model.LedgerResult
 import com.tioledger.core.model.Money
 import com.tioledger.domain.event.DomainEvent
 import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
+import com.tioledger.domain.model.TransactionRecord
 import com.tioledger.domain.repository.AccountRepository
 import com.tioledger.domain.repository.LedgerRepository
 import com.tioledger.finance.engine.BalanceCalculator
+import com.tioledger.finance.engine.PostingEngine
 
 data class AccountBalanceSummary(
     val account: Account,
@@ -154,16 +157,33 @@ data class CreateAccountCommand(
     val currencyCode: String,
     val displayOrder: Int = 0,
     val createdAt: Long,
+    val openingBalance: Money? = null,
     val deviceId: String? = null,
     val updatedBy: String? = null,
 )
 
-class CreateAccountUseCase(private val accountRepository: AccountRepository) {
+class CreateAccountUseCase(
+    private val accountRepository: AccountRepository,
+    private val postingEngine: PostingEngine? = null,
+) {
     operator fun invoke(command: CreateAccountCommand): ApplicationResult<Account> {
         validateId(command.id, "id")?.let { return ApplicationResult.Failure(it) }
         validateName(command.name)?.let { return ApplicationResult.Failure(it) }
         validateCurrencyCode(command.currencyCode)?.let { return ApplicationResult.Failure(it) }
         validateTimestamp(command.createdAt, "createdAt")?.let { return ApplicationResult.Failure(it) }
+        val openingBalance = command.openingBalance
+        if (openingBalance != null) {
+            if (openingBalance.amount < 0L) {
+                return ApplicationResult.Failure(
+                    ApplicationError.Validation("openingBalance", "must not be negative"),
+                )
+            }
+            if (openingBalance.currency.normalized != normalizedCurrencyCode(command.currencyCode)) {
+                return ApplicationResult.Failure(
+                    ApplicationError.Validation("openingBalance", "currency must match account currency"),
+                )
+            }
+        }
 
         val account =
             Account(
@@ -178,7 +198,34 @@ class CreateAccountUseCase(private val accountRepository: AccountRepository) {
                 updatedBy = command.updatedBy,
             )
 
-        return accountRepository.create(account).mapRepositoryResult(
+        val createResult =
+            if (openingBalance == null || openingBalance.isZero()) {
+                accountRepository.create(account)
+            } else {
+                val engine =
+                    postingEngine
+                        ?: return ApplicationResult.Failure(ApplicationError.Repository(LedgerError.StorageUnavailable))
+                val posted =
+                    when (
+                        val result =
+                            engine.postOpeningBalance(
+                                timestamp = command.createdAt,
+                                description = "Opening balance",
+                                amount = openingBalance,
+                                account = account,
+                                createdAt = command.createdAt,
+                            )
+                    ) {
+                        is LedgerResult.Success -> result.value
+                        is LedgerResult.Failure -> return ApplicationResult.Failure(ApplicationError.Ledger(result.error))
+                    }
+                accountRepository.createWithOpeningBalance(
+                    account,
+                    TransactionRecord(posted.transaction, posted.splits, posted.entries),
+                )
+            }
+
+        return createResult.mapRepositoryResult(
             events = { created ->
                 listOf(
                     DomainEvent.AccountCreated(

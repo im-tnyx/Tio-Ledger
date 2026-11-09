@@ -14,17 +14,17 @@ data class AccountsUiState(
     val isCreateDialogVisible: Boolean = false,
     val editingAccountId: String? = null,
     val draftName: String = "",
-    val draftOpeningBalance: String = "",
+    val draftCurrentBalance: String = "",
     val draftPaymentAccountId: String? = null,
     val draftDescription: String = "",
     val draftSettlementDate: String = "1",
     val draftPaymentDate: String = "1",
-    val pendingOpeningBalanceAccountId: String? = null,
     val availableGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
     val draftGroupId: String = DEFAULT_ACCOUNT_GROUPS.first().id,
     val draftCurrencyCode: String = SUPPORTED_ACCOUNT_CURRENCY_CODES.first(),
     val currencySymbol: String = "₹",
     val isSaving: Boolean = false,
+    val saveCompleted: Boolean = false,
     val createErrorMessage: String? = null,
     val archiveAccountId: String? = null,
     val archiveAccountName: String? = null,
@@ -89,7 +89,7 @@ sealed interface AccountsAction {
 
     data class NameChanged(val name: String) : AccountsAction
 
-    data class OpeningBalanceChanged(val amount: String) : AccountsAction
+    data class CurrentBalanceChanged(val amount: String) : AccountsAction
 
     data class PaymentAccountChanged(val accountId: String?) : AccountsAction
 

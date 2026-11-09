@@ -45,7 +45,7 @@ Must never be imported from the JADX reference, this note, or any implementation
 
 - Java/Kotlin source, XML layouts, resources, drawables, icons, strings, colors, dimensions, animations, or assets.
 - Proprietary visual layout, spacing, or pixel measurements.
-- Reference-specific fields out of v2 scope: credit limit, opening-balance amount entry, account grouping/category, SMS-linking configuration, show/hide toggles, ad banner placement.
+- Reference-specific fields out of v2 scope: credit limit, account grouping/category, SMS-linking configuration, show/hide toggles, ad banner placement.
 - Any Realbyte-specific business rule.
 
 ## Workflow Summary
@@ -79,8 +79,9 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 - **One save per submission:** while a save is in flight (`isSaving`), the Save control is disabled and repeated taps do not start a second submission or create a duplicate account.
 - **Successful refresh:** a successful creation always triggers a fresh read through `ListAccountSummariesUseCase` so the new account appears immediately.
 - **Cancel/dismiss semantics:** discards the entire draft (name, type, error) with no persistence side effect.
-- **No opening-balance posting:** this flow creates an account record only. It does not create, prompt for, or imply an opening-balance transaction or ledger posting.
-- **No ledger entry from creation alone:** creating an account, by itself, never creates a `LedgerEntry`. Ledger entries are created only by transaction/loan/budget workflows that are out of scope here.
+- **Optional initial balance:** Add Account shows a current-balance field that defaults to zero. If left empty/zero, creation persists only the account record. If a positive amount is entered, the account and its opening-balance ledger transaction are persisted atomically.
+- **Current-balance correction is an edit workflow:** editing an existing account's current balance records only the difference as a normal `INCOME` or `EXPENSE` transaction. Asset increases and liability decreases post income; asset decreases and liability increases post expense. Category is optional and remains unset. Existing ledger entries are never rewritten. Re-saving an unchanged balance creates no transaction.
+- **Ledger entry only for a supplied balance:** creation without a balance does not create a `LedgerEntry`; a supplied positive balance creates its opening-balance transaction as part of the same database operation.
 - **No silent financial mutation:** every state change in this flow is either a local, reversible draft edit or a single explicit user-confirmed submission through the existing use case.
 
 ## Currency Contract
@@ -102,6 +103,7 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 - Use the existing Tio Ledger Compose design system (`shared/ui` components, tokens) exclusively. No visual measurements are copied from the JADX reference.
 - **Dialog/surface behavior:** a Material `AlertDialog`-style surface anchored to the Accounts screen, dismissible by Cancel, the dismiss request (scrim tap/back), or successful save.
 - **Name field:** a labeled text field with an explicit accessible label, disabled while saving.
+- **Current Balance:** Add Account defaults to `0.00` and allows an optional positive starting amount. Saving a supplied amount atomically writes the account and opening-balance ledger posting. Edit Account makes current balance editable; Save records only the signed difference as an income or expense transaction and preserves existing entries.
 - **Account-group selector:** persisted group chips/options, one active at a time, each exposing selected/unselected state through both visual treatment and accessibility semantics (not decoration alone). The policy-derived type is not separately editable.
 - **Currency:** no account-local currency control is rendered; the active Main Currency remains owned by Currency Settings.
 - **Save/Cancel behavior:** Save is disabled while saving and reflects a loading label; Cancel is disabled while saving so an in-flight submission cannot be abandoned into an inconsistent state.
@@ -145,13 +147,13 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 ## Intentional Deviations
 
 1. **Modal dialog instead of a dedicated full screen.** The JADX reference reaches account entry through a dedicated navigable screen with several additional fields (credit limit, memo, SMS linking, show/hide, category). Tio Ledger v2 scope is limited to name and type, with currency owned by Settings, so a modal dialog anchored to Accounts is used instead of a new screen/route.
-2. **No opening-balance entry.** The reference's amount/currency block implies an opening balance can be entered at creation time. Tio Ledger v2 explicitly excludes opening-balance entry; accounts start at a computed zero balance derived from the ledger, consistent with the ledger-first architecture.
+2. **Optional opening balance; ledger correction on edit.** The reference's amount/currency block implies an opening balance can be entered at creation time. Tio Ledger defaults new accounts to zero and lets the user provide a positive initial amount; account plus opening transaction are committed atomically. A later explicit current-balance edit posts only its delta through the existing income/expense transaction use cases; the account balance remains a ledger projection.
 3. **Group policy instead of a second type picker.** The selected group supplies the stored `AccountType`; unsupported detail fields are not fabricated or silently discarded.
 4. **Currency owned by Settings.** The reference offers an account-local picker; Tio Ledger uses the existing persisted Main Currency setting so account creation has one source of truth.
 
 ## Reasons For Deviations
 
-- Ledger-first architecture (`docs/architecture.md`) requires balances to be derived from ledger entries, not entered directly on an account; an opening-balance field would conflict with that invariant without its own approved posting workflow.
+- Ledger-first architecture (`docs/architecture.md`) requires balances to be derived from ledger entries. Initial and corrected balances therefore create ledger postings rather than storing mutable amounts or changing historical entries. Initial account and opening posting use one database transaction.
 - Engineering guidelines call for small, focused, reviewable changes and reuse of existing contracts; a full currency-settings subsystem or additional account-type fields would be out of proportion to the approved v2 scope.
 - The `LOAN_LINKED` inclusion is evidence-driven (an existing approved workflow's hard prerequisite), not a general policy of exposing every enum value, keeping the change narrow while still unblocking a real, already-merged workflow.
 
@@ -193,7 +195,8 @@ Phone-width review covering:
 - [ ] Successful creation closes the dialog, resets the draft, and refreshes the Accounts list.
 - [ ] Cancel/dismiss persists nothing and leaves Accounts state unchanged.
 - [ ] Draft fully resets (name, type, error) after both cancel and successful creation.
-- [ ] Account creation alone never creates an opening-balance posting or any ledger entry.
+- [ ] Empty/zero starting balance creates only the account; positive starting balance atomically creates the opening-balance posting with it.
+- [ ] Account edits post only the current-balance delta as income/expense; historical ledger entries remain immutable.
 - [ ] Repository/save failures show create-specific feedback, not the list-load error message.
 - [ ] Pixel review is completed.
 - [ ] Accessibility review is completed.
@@ -205,7 +208,7 @@ Phone-width review covering:
 | Area | Reference behavior/evidence | Tio Ledger v2 decision | Approval basis |
 | --- | --- | --- | --- |
 | Entry surface | `config_account_list.xml` add affordance opens a dedicated full-screen entry surface (`config_account_edit.xml`) | Modal dialog anchored to the existing Accounts screen | Narrower v2 field set does not need a new screen/route; product-owner approval, 2026-08-30 |
-| Opening balance | `config_account_edit.xml` `amountBlock` implies balance entry at creation | No opening-balance entry; balances derive from the ledger | `docs/architecture.md` Ledger-First Accounting; ADR-0013 |
+| Balance entry | `config_account_edit.xml` `amountBlock` implies balance entry at creation | Optional opening balance is atomic with account creation; later edits post only the delta as income/expense | Product-owner clarification, 2026-11-09; `docs/architecture.md` Ledger-First Accounting; ADR-0013 |
 | Account types | Reference edit surface adapts fields per type across its full type set | Selected Account Group policy supplies the stored type; unsupported detail fields are deferred | Existing `AccountGroupPolicy` and `CreateAccountCommand` contracts |
 | Currency | Reference presents currency as a visible multi-option control near the amount field | Existing persisted Main Currency setting is the single source for new-account currency | `CurrencyPreferenceStore`/`CurrencyCode` existing contracts; product-owner approval, 2026-08-30 |
 

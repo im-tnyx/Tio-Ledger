@@ -5,9 +5,12 @@ import com.tioledger.application.usecase.transaction.RecordExpenseCommand
 import com.tioledger.application.usecase.transaction.RecordExpenseUseCase
 import com.tioledger.application.usecase.transaction.RecordIncomeCommand
 import com.tioledger.application.usecase.transaction.RecordIncomeUseCase
+import com.tioledger.application.usecase.transaction.RecordOpeningBalanceCommand
+import com.tioledger.application.usecase.transaction.RecordOpeningBalanceUseCase
 import com.tioledger.application.usecase.transaction.RecordTransferCommand
 import com.tioledger.application.usecase.transaction.RecordTransferUseCase
 import com.tioledger.core.model.CurrencyCode
+import com.tioledger.core.model.LedgerResult
 import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.database.TioLedgerDatabase
@@ -17,6 +20,7 @@ import com.tioledger.domain.model.Category
 import com.tioledger.domain.model.CategoryType
 import com.tioledger.domain.model.LedgerEntry
 import com.tioledger.domain.model.LedgerEntryType
+import com.tioledger.domain.model.PostingTarget
 import com.tioledger.domain.model.SYSTEM_ADJUSTMENT_ID
 import com.tioledger.domain.model.SYSTEM_EXPENSE_ID
 import com.tioledger.domain.model.SYSTEM_INCOME_ID
@@ -39,6 +43,8 @@ class TransactionPersistenceIntegrationTest {
     private lateinit var recordIncomeUseCase: RecordIncomeUseCase
     private lateinit var recordExpenseUseCase: RecordExpenseUseCase
     private lateinit var recordTransferUseCase: RecordTransferUseCase
+    private lateinit var recordOpeningBalanceUseCase: RecordOpeningBalanceUseCase
+    private lateinit var postingEngine: PostingEngine
 
     @BeforeTest
     fun setUp() {
@@ -58,10 +64,98 @@ class TransactionPersistenceIntegrationTest {
         insertSystemAccount(SYSTEM_OPENING_BALANCE_ID)
         insertSystemAccount(SYSTEM_ADJUSTMENT_ID)
 
-        val postingEngine = PostingEngine(IncrementingIdGenerator())
+        postingEngine = PostingEngine(IncrementingIdGenerator())
         recordIncomeUseCase = RecordIncomeUseCase(accountRepository, categoryRepository, transactionRepository, postingEngine)
         recordExpenseUseCase = RecordExpenseUseCase(accountRepository, categoryRepository, transactionRepository, postingEngine)
         recordTransferUseCase = RecordTransferUseCase(accountRepository, transactionRepository, postingEngine)
+        recordOpeningBalanceUseCase = RecordOpeningBalanceUseCase(accountRepository, transactionRepository, postingEngine)
+    }
+
+    @Test
+    fun createsAccountAndOpeningBalanceInOneDatabaseTransaction() {
+        val account =
+            Account(
+                id = "acc-initial-balance",
+                name = "Funded account",
+                type = AccountType.BANK,
+                currencyCode = "USD",
+                createdAt = 10L,
+                updatedAt = 10L,
+            )
+        val posted =
+            when (
+                val result =
+                    postingEngine.postOpeningBalance(
+                        timestamp = 10L,
+                        description = "Opening balance",
+                        amount = Money(12_500L, CurrencyCode("USD")),
+                        account = account,
+                        createdAt = 10L,
+                    )
+            ) {
+                is LedgerResult.Success -> result.value
+                is LedgerResult.Failure -> fail("Expected posting success but got ${result.error}")
+            }
+        val record = TransactionRecord(posted.transaction, posted.splits, posted.entries)
+
+        val saved = accountRepository.createWithOpeningBalance(account, record)
+
+        assertEquals(account, saved.getOrNull())
+        assertTransactionPersisted(record)
+        val balance =
+            ledgerRepository.findEntriesByAccount(account.id).getOrNull().orEmpty().fold(0L) { total, entry ->
+                total + if (entry.entryType == LedgerEntryType.DEBIT) entry.amount.amount else -entry.amount.amount
+            }
+        assertEquals(12_500L, balance)
+    }
+
+    @Test
+    fun failedOpeningPostingRollsBackAccountAndTransactionWrites() {
+        val existing = createAccount("acc-existing", "Existing", AccountType.BANK)
+        val existingOpening =
+            assertSuccess(
+                recordOpeningBalanceUseCase(
+                    RecordOpeningBalanceCommand(
+                        timestamp = 20L,
+                        description = "Existing opening balance",
+                        amount = Money(500L, CurrencyCode("USD")),
+                        accountId = existing.id,
+                        createdAt = 20L,
+                    ),
+                ),
+            )
+        val newAccount =
+            Account(
+                id = "acc-should-rollback",
+                name = "Should roll back",
+                type = AccountType.BANK,
+                currencyCode = "USD",
+                createdAt = 30L,
+                updatedAt = 30L,
+            )
+        val collisionRecord =
+            existingOpening.copy(
+                transaction = existingOpening.transaction.copy(id = "tx-rollback"),
+                splits = existingOpening.splits.map { it.copy(id = "split-rollback", transactionId = "tx-rollback") },
+                ledgerEntries =
+                    existingOpening.ledgerEntries.map { entry ->
+                        entry.copy(
+                            transactionId = "tx-rollback",
+                            splitId = "split-rollback",
+                            target =
+                                when (val target = entry.target) {
+                                    is PostingTarget.Account -> target.copy(accountId = newAccount.id)
+                                    is PostingTarget.Virtual -> target
+                                },
+                        )
+                    },
+            )
+
+        val result = accountRepository.createWithOpeningBalance(newAccount, collisionRecord)
+
+        assertTrue(result.isFailure())
+        assertTrue(accountRepository.findById(newAccount.id).isFailure())
+        assertEquals(null, database.transactionsQueries.selectTransactionById("tx-rollback").executeAsOneOrNull())
     }
 
     @Test
