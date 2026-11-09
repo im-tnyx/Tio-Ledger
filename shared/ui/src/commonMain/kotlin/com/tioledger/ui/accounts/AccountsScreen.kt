@@ -2,6 +2,7 @@
 
 package com.tioledger.ui.accounts
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -311,14 +312,15 @@ private fun AccountGroupHeader(group: AccountGroupUiModel) {
                 .fillMaxWidth()
                 .semantics(mergeDescendants = true) { }
                 .heightIn(min = TioDimensions.accountRowHeight)
-                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f))
+                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = group.title,
             modifier = Modifier.weight(1f),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleSmall,
         )
         if (group.type == AccountType.CREDIT_CARD) {
             CreditCardBalanceHeadingsAndTotals(group)

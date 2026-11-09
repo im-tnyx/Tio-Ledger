@@ -74,7 +74,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 
 - Reuse the existing Tio Ledger account read/use-case and Add account dialog, but render a separate management list; do not embed or re-label the primary Accounts tab.
 - The management destination has a settings-specific app bar with a back affordance, Add account action, persisted group headings, and simple navigable account rows; it uses theme-driven colors only.
-- Account group headings show a clear group title and aggregate amount without a synthetic category caption or inline account count. Credit Card follows its reference hierarchy with Balance Payable and Outst. Balance columns; both display the existing ledger-derived balance. Card rows display saved billing/payment days only when available.
+- Each Accounts group uses a distinct tinted header band matching the section-header treatment on More, with the group title and aggregate amount in the same row and no synthetic category caption or inline count. Credit Card keeps the Balance Payable and Outst. Balance columns in its header; both display the existing ledger-derived balance. Card rows display saved billing/payment days only when available.
 - Account Settings → Deleted accounts lists archived accounts read-only and preserves their financial history.
 - An account archive affordance is available only from the management destination, has an accessible account-specific label, and opens a confirmation dialog that explains history preservation before persistence.
 - Account Group has only its own navigation/back and Add Group actions in the app bar. Loan navigation is not an Account Group action and must not appear as a top action/tab.
