@@ -67,7 +67,7 @@ Current Accounts v1 groups `AccountType.CREDIT_CARD` correctly, but its Applicat
 - `AccountsScreen` has no credit-card-specific two-value row/header contract.
 - No typed `AccountDetails` or `CreditCardDetails` route exists.
 
-Therefore the screenshot's two-value credit-card presentation cannot be implemented correctly by presentation-only formatting. A ledger-first Application contract must define the financial meaning first.
+The Accounts screen now preserves the screenshot's two-column presentation by rendering the existing ledger-derived account balance in both card columns. It renders the existing Application-owned per-currency group totals in both matching header columns. This is a presentation mapping for reference alignment; it does not calculate statement balances or establish two distinct financial measures.
 
 ### Financial semantics that remain unresolved
 
@@ -81,7 +81,7 @@ Until explicitly approved, Tio Ledger does not define:
 - whether statement-cycle, statement balance, billing date, due date, minimum payment, or payment-allocation concepts are required;
 - whether the frozen v1 persistence model already contains enough information to derive both values deterministically.
 
-Do not map the current generic liability balance to either label merely because it is available. Do not persist a mutable payable/outstanding balance solely to reproduce the screenshot.
+The visible v1 columns intentionally repeat the same existing ledger-derived value; users must not interpret them as separate payable and outstanding calculations. Do not persist mutable payable/outstanding balances solely to reproduce the screenshot.
 
 ### Future implementation gate
 

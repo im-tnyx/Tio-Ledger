@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -33,6 +34,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.tioledger.domain.model.AccountType
 import com.tioledger.ui.components.TioAddIcon
 import com.tioledger.ui.components.TioAmountText
@@ -257,14 +259,17 @@ private fun AccountsGroupedList(
         groups.forEach { group ->
             item(key = "header-${group.id}") {
                 AccountGroupHeader(group)
+                HorizontalDivider()
             }
             if (group.type == AccountType.CREDIT_CARD) {
                 group.accounts
                     .groupBy { it.billingDay }
                     .toSortedMap(compareBy<Int?> { it ?: 32 })
                     .forEach { (billingDay, cards) ->
-                        item(key = "billing-${group.id}-${billingDay ?: "unset"}") {
-                            BillingDateSectionHeader(billingDay, cards.size)
+                        if (billingDay != null) {
+                            item(key = "billing-${group.id}-$billingDay") {
+                                BillingDateSectionHeader(billingDay, cards.size)
+                            }
                         }
                         items(cards, key = { it.id }) { account ->
                             AccountRow(account = account, onClick = { onAccountClick(account) })
@@ -286,16 +291,11 @@ private fun AccountsGroupedList(
 
 @Composable
 private fun BillingDateSectionHeader(
-    billingDay: Int?,
+    billingDay: Int,
     cardCount: Int,
 ) {
     Text(
-        text =
-            if (billingDay == null) {
-                "Billing date not set · $cardCount ${if (cardCount == 1) "card" else "cards"}"
-            } else {
-                "Billing day $billingDay · $cardCount ${if (cardCount == 1) "card" else "cards"}"
-            },
+        text = "Billing day $billingDay · $cardCount ${if (cardCount == 1) "card" else "cards"}",
         modifier = Modifier.fillMaxWidth().padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.labelMedium,
@@ -305,36 +305,84 @@ private fun BillingDateSectionHeader(
 
 @Composable
 private fun AccountGroupHeader(group: AccountGroupUiModel) {
-    Column(
+    Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .semantics(mergeDescendants = true) { }
-                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(TioSpacing.xs),
+                .heightIn(min = TioDimensions.accountRowHeight)
+                .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TioSpacing.xs)) {
-                Text(
-                    text = group.categoryLabel.uppercase(),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
-                    Text(
-                        text = group.title,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    )
-                    Text(
-                        text = "${group.accountCount} ${if (group.accountCount == 1) "account" else "accounts"}",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                }
-            }
+        Text(
+            text = group.title,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        if (group.type == AccountType.CREDIT_CARD) {
+            CreditCardBalanceHeadingsAndTotals(group)
+        } else {
             AccountGroupTotals(group, modifier = Modifier.padding(start = TioSpacing.sm))
         }
+    }
+}
+
+@Composable
+private fun CreditCardBalanceHeadingsAndTotals(group: AccountGroupUiModel) {
+    Row(horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
+        CreditCardBalanceColumn(label = "Balance Payable", amounts = group.totals, isPayable = true)
+        CreditCardBalanceColumn(label = "Outst. Balance", amounts = group.totals)
+    }
+}
+
+@Composable
+private fun CreditCardBalanceColumn(
+    label: String,
+    amounts: List<String>,
+    isPayable: Boolean = false,
+) {
+    Column(
+        modifier = Modifier.widthIn(min = 86.dp),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(TioSpacing.xs),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.End,
+            maxLines = 2,
+        )
+        amounts.forEach { amount ->
+            Text(
+                text = amount,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isPayable) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.End,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CreditCardBalanceCell(
+    amount: String,
+    isPayable: Boolean = false,
+) {
+    Column(
+        modifier = Modifier.widthIn(min = 86.dp),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(TioSpacing.xs),
+    ) {
+        Text(
+            text = amount,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = if (isPayable) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.End,
+        )
     }
 }
 
@@ -344,7 +392,7 @@ private fun AccountGroupTotals(
     modifier: Modifier = Modifier,
 ) {
     val color =
-        if (group.type == AccountType.CREDIT_CARD || group.type == AccountType.LOAN_LINKED) {
+        if (group.type == AccountType.LOAN_LINKED) {
             MaterialTheme.colorScheme.error
         } else {
             MaterialTheme.colorScheme.onSurface
@@ -355,8 +403,7 @@ private fun AccountGroupTotals(
             Text(
                 text = total,
                 color = color,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.End,
             )
         }
@@ -375,7 +422,8 @@ private fun AccountRow(
                 .heightIn(min = TioDimensions.accountRowHeight)
                 .clickable(enabled = account.isLoan, onClick = onClick)
                 .semantics {
-                    val billing = account.billingDay?.let { "Billing day $it, payment due day ${account.paymentDueDay}" }.orEmpty()
+                    val billing =
+                        account.billingDay?.let { "Billing day $it, payment due day ${account.paymentDueDay}" }.orEmpty()
                     contentDescription = "${account.name}, ${account.typeLabel}, ${account.balance}, $billing"
                 }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
@@ -396,10 +444,17 @@ private fun AccountRow(
                 )
             }
         }
-        TioAmountText(
-            amount = account.balance,
-            tone = if (account.isLiability) TioAmountTone.Negative else TioAmountTone.Neutral,
-        )
+        if (account.accountType == AccountType.CREDIT_CARD) {
+            Row(horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
+                CreditCardBalanceCell(amount = account.balance, isPayable = true)
+                CreditCardBalanceCell(amount = account.balance)
+            }
+        } else {
+            TioAmountText(
+                amount = account.balance,
+                tone = if (account.isLiability) TioAmountTone.Negative else TioAmountTone.Neutral,
+            )
+        }
     }
 }
 
