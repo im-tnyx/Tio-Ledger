@@ -88,6 +88,36 @@ class SpendingAnalyticsCalculatorTest {
     }
 
     @Test
+    fun balanceCorrectionIncomeAndExpenseAreCurrentlyCountedAsCashFlow() {
+        val result =
+            calculator.calculate(
+                period = SpendingAnalyticsPeriod.MONTHLY,
+                anchorTimestamp = JULY_19_2026_UTC,
+                timeZoneId = "UTC",
+                transactions =
+                    listOf(
+                        record(
+                            id = "balance-increase",
+                            timestamp = JULY_19_2026_UTC,
+                            type = TransactionType.INCOME,
+                            split = split("bank", "Bank", "INR", 5_000L),
+                        ).copy(description = "Account balance correction"),
+                        record(
+                            id = "balance-decrease",
+                            timestamp = JULY_19_2026_UTC,
+                            type = TransactionType.EXPENSE,
+                            split = split("bank", "Bank", "INR", 2_000L),
+                        ).copy(description = "Account balance correction"),
+                    ),
+            )
+
+        val inr = result.currencySummaries.single()
+        assertEquals(Money(5_000L, CurrencyCode("INR")), inr.incomeTotal)
+        assertEquals(Money(2_000L, CurrencyCode("INR")), inr.expenseTotal)
+        assertEquals(Money(3_000L, CurrencyCode("INR")), inr.netTotal)
+    }
+
+    @Test
     fun weeklyWindowStartsOnMondayAndProducesSevenDailyBuckets() {
         val result =
             calculator.calculate(

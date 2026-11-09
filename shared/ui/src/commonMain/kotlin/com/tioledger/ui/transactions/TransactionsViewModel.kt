@@ -41,14 +41,17 @@ class TransactionsViewModel(
 
     private fun loadTransactions() {
         currencyPreferenceStore?.reload()
-        val symbol = currencyPreferenceStore?.getConfig()?.currency?.symbol
+        val preferredCurrency = currencyPreferenceStore?.getConfig()?.currency
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         when (val result = listTransactionsUseCase()) {
             is ApplicationResult.Success -> {
                 _uiState.value =
                     TransactionsUiState(
                         isLoading = false,
-                        transactions = result.outcome.value.map { it.toRow(symbol) },
+                        transactions =
+                            result.outcome.value.map {
+                                it.toRow(preferredCurrency?.code?.normalized, preferredCurrency?.symbol)
+                            },
                         smsReviewAvailable = smsReviewAvailable,
                     )
             }
@@ -64,7 +67,10 @@ class TransactionsViewModel(
     }
 }
 
-private fun TransactionSummary.toRow(currencySymbol: String? = null): TransactionRowUiModel {
+private fun TransactionSummary.toRow(
+    preferredCurrencyCode: String? = null,
+    preferredCurrencySymbol: String? = null,
+): TransactionRowUiModel {
     val title =
         when (type) {
             TransactionType.INCOME -> categoryName ?: description ?: "Income"
@@ -92,7 +98,11 @@ private fun TransactionSummary.toRow(currencySymbol: String? = null): Transactio
         id = id,
         title = title,
         subtitle = detailParts.joinToString(" • "),
-        amount = amount.toDisplayAmount(type, currencySymbol),
+        amount =
+            amount.toDisplayAmount(
+                type,
+                preferredCurrencySymbol.takeIf { preferredCurrencyCode == amount.currency.normalized },
+            ),
         type = type,
     )
 }

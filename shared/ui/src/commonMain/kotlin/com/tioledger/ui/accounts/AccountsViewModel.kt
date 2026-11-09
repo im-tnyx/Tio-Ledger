@@ -92,6 +92,7 @@ class AccountsViewModel(
                         currencySymbol = currentCurrencySymbol(),
                         draftCurrentBalance = "",
                         saveCompleted = false,
+                        archiveCompleted = false,
                     )
             }
             is AccountsAction.EditAccountRequested -> {
@@ -117,6 +118,7 @@ class AccountsViewModel(
                         draftDescription = billingDetails?.description.orEmpty(),
                         createErrorMessage = null,
                         saveCompleted = false,
+                        archiveCompleted = false,
                     )
             }
             AccountsAction.CreateDismissed -> dismissCreateDialog()
@@ -159,6 +161,7 @@ class AccountsViewModel(
                         archiveAccountId = action.accountId,
                         archiveAccountName = action.accountName,
                         archiveErrorMessage = null,
+                        archiveCompleted = false,
                     )
             }
             AccountsAction.ArchiveDismissed -> dismissArchiveDialog()
@@ -173,6 +176,7 @@ class AccountsViewModel(
 
     private fun saveAccount() {
         val current = _uiState.value
+        if (current.saveCompleted) return
         if (current.editingAccountId != null) {
             updateAccount()
         } else {
@@ -429,11 +433,13 @@ class AccountsViewModel(
                         archiveErrorMessage = null,
                     )
                 loadAccounts()
+                _uiState.value = _uiState.value.copy(archiveCompleted = true)
             }
             is ApplicationResult.Failure -> {
                 _uiState.value =
                     current.copy(
                         isArchiving = false,
+                        archiveCompleted = false,
                         archiveErrorMessage = result.error.toArchiveMessage(),
                     )
             }

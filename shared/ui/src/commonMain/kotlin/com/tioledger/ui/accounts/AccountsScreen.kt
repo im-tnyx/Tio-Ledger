@@ -79,6 +79,9 @@ fun AccountsScreen(
             TioAppBar(
                 title = MainRoute.Accounts.title,
                 actions = {
+                    TextButton(onClick = { onNavigate(MainRoute.Loans) }) {
+                        Text("Loans")
+                    }
                     IconButton(
                         onClick = { onNavigate(MainRoute.AccountQuickAdd) },
                         modifier = Modifier.semantics { contentDescription = "Add account" },

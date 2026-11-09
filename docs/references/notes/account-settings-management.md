@@ -54,6 +54,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 ## Navigation Definition
 
 - `More → Configuration → Accounts Setting → Accounts Setting` opens the dedicated Account Settings management list, not the primary Accounts tab.
+- The primary Accounts screen exposes an always-available `Loans` shortcut to the existing Loans route. It remains available when there are no accounts or every loan-linked account already belongs to a loan; Loans is not added to primary bottom navigation.
 - Back from account management returns to Accounts Setting.
 - Back from Account Group returns to Accounts Setting.
 - Back from Accounts Setting returns to Configuration; back from Configuration returns to More.

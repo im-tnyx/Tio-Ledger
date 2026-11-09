@@ -30,6 +30,7 @@ data class AccountsUiState(
     val archiveAccountName: String? = null,
     val archiveAccountGroupId: String? = null,
     val isArchiving: Boolean = false,
+    val archiveCompleted: Boolean = false,
     val archiveErrorMessage: String? = null,
 ) {
     val isEmpty: Boolean

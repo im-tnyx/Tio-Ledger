@@ -111,17 +111,12 @@ fun AccountEditScreen(
     var showSettlementPicker by remember { mutableStateOf(false) }
     var showPaymentDatePicker by remember { mutableStateOf(false) }
 
-    var wasArchiving by remember { mutableStateOf(false) }
-
     LaunchedEffect(state.saveCompleted) {
         if (state.saveCompleted) onNavigateBack()
     }
 
-    LaunchedEffect(state.isArchiving, state.archiveErrorMessage) {
-        if (wasArchiving && !state.isArchiving && state.archiveErrorMessage == null) {
-            onNavigateBack()
-        }
-        wasArchiving = state.isArchiving
+    LaunchedEffect(state.archiveCompleted) {
+        if (state.archiveCompleted) onNavigateBack()
     }
 
     Scaffold(
