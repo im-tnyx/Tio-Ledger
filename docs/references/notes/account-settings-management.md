@@ -11,7 +11,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 ## Supporting References
 
 - `docs/references/accounts/README.md` and `docs/references/notes/account.md` for the existing Accounts list.
-- `docs/references/notes/account-creation-v2.md` for the shared creation dialog and Main Currency contract.
+- `docs/references/notes/account-creation-v2.md` for the full-screen Add Account flow and Main Currency contract.
 - `docs/references/Screenshot_20260630_164106_Money Manager.jpg` for the approved Accounts list hierarchy.
 
 ## Workflow Summary
@@ -25,13 +25,13 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 7. A custom group that still has assigned accounts cannot be deleted. Reassignment or archival is intentionally deferred until a separately approved design exists.
 8. Only the Account Settings management destination exposes an account archive action. Its confirmation makes the account inactive through the existing `ArchiveAccountUseCase`; it does not delete or reassign transaction splits, ledger entries, loans, or balances.
 9. Archived accounts remain visible under Account Settings → Deleted accounts with their original group and ledger-derived balance. This destination is read-only; it does not hard-delete or restore accounts.
-10. Credit Card accounts save statement billing day, payment due day, optional payment-account reference, and description as local account settings metadata. The payment-account reference is informational; it does not post payments. The Accounts tab keeps multiple cards under one Credit Card group and gives cards separate `Balance Payable` and `Outst. Balance` columns. Both columns currently show the existing ledger-derived balance; the group header shows the Application-provided per-currency totals in both columns. Cards with a saved billing day are grouped by that day; cards without a saved day have no synthetic date heading. The repeated values are a reference-alignment presentation, not separate statement calculations. Dates do not calculate statements or change balances.
+10. Credit Card accounts save statement billing day, payment due day, optional payment-account reference, and description as local account settings metadata. The payment-account reference is informational; it does not post payments. The latest owner-supplied Accounts reference keeps multiple cards under one Credit Card group and shows separate `Balance Payable` and `Outst. Balance` values per card and at the group header. Current source repeats the ledger-derived balance in both columns because no approved statement-cycle calculation exists; this is a known reference mismatch, not the target contract. Cards with a saved billing day are grouped by that day; cards without a saved day have no synthetic date heading. Do not infer statement values from billing dates alone.
 
 ## Information Hierarchy
 
 1. Account Settings: Account Group, Accounts Setting, existing unsupported rows.
 2. Account-management destination: title/back/add actions, persisted group headings, account-name settings rows, archive action, loading/error/empty states, and the existing Add account affordance.
-3. Add account dialog: Group, Name, Main Currency context, validation/error text, Cancel, Save.
+3. Add Account full-screen form: Group, Name, Current Balance, group-specific fields, validation/error text, and Save.
 
 ## Functional Specification
 
@@ -47,7 +47,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 - **Account deletion intent:** the visible action is implemented as archive, not a destructive database delete or a transfer to a shared "Deleted Account". The account keeps its ID and historical attribution; it disappears from active account lists while transactions and ledger entries remain attached to it. The user must explicitly confirm the archive action.
 - An archive failure leaves the account active, keeps the confirmation visible, and shows an error. Repeated confirmation while an archive is in flight is ignored.
 - Archived account list calls the existing summary use case with `includeArchived = true`, filters `isArchived`, and preserves original group identity and ledger-derived balances.
-- Credit Card billing day, payment due day, optional payment-account reference, and description persist per account through the existing account-settings store. Settlement/Payment Date selection uses a bottom sheet with plain day numbers 1–31. The Accounts tab presents separate Balance Payable and Outst. Balance columns using the same existing ledger-derived balance in both; header totals reuse the Application-provided per-currency totals. No statement calculation or automatic payment is performed.
+- Credit Card billing day, payment due day, optional payment-account reference, and description persist per account through the existing account-settings store. Settlement/Payment Date selection uses a bottom sheet with plain day numbers 1–31. The Accounts tab presents separate Balance Payable and Outst. Balance columns and group totals per the owner reference. Current source repeats one ledger-derived amount in both columns; the distinct statement calculations remain blocked pending an approved formula for billing windows, sign handling, and transaction inclusion. No automatic payment is performed.
 - Account Group policy cannot be changed while accounts remain assigned to that group.
 - No SQLDelight schema, ledger, loan-engine, balance, payment, or transaction contract changes in this slice.
 
@@ -63,7 +63,7 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 ## Error And Edge States
 
 - Empty or invalid group list: show that a valid Account Group is required; do not call `CreateAccountUseCase`.
-- A group removed between dialog open and Save: reject Save and retain the name draft.
+- A group removed between form open and Save: reject Save and retain the draft.
 - Assignment persistence failure: reject Save before account persistence and retain the draft.
 - Account persistence failure after assignment preparation: remove the prepared non-account assignment and retain the draft.
 - Repeated Save: while saving, further submissions are ignored.
@@ -73,9 +73,9 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 
 ## Tio UI Specification
 
-- Reuse the existing Tio Ledger account read/use-case and Add account dialog, but render a separate management list; do not embed or re-label the primary Accounts tab.
+- Reuse the existing Tio Ledger account read/use-case and full-screen Add Account route, but render a separate management list; do not embed or re-label the primary Accounts tab.
 - The management destination has a settings-specific app bar with a back affordance, Add account action, persisted group headings, and simple navigable account rows; it uses theme-driven colors only.
-- Each Accounts group uses a distinct tinted header band matching the section-header treatment on More, with the group title and aggregate amount in the same row and no synthetic category caption or inline count. Credit Card keeps the Balance Payable and Outst. Balance columns in its header; both display the existing ledger-derived balance. Card rows display saved billing/payment days only when available.
+- Each Accounts group uses a distinct tinted header band matching the section-header treatment on More, with the group title and aggregate amount in the same row and no synthetic category caption or inline count. Credit Card keeps separate Balance Payable and Outst. Balance columns in its header, with totals across that card group; card rows show their respective per-card values. Current source repeats the ledger-derived amount in both columns, which remains a known reference mismatch until statement calculation rules are approved. Card rows display saved billing/payment days only when available.
 - Account Settings → Deleted accounts lists archived accounts read-only and preserves their financial history.
 - An account archive affordance is available only from the management destination, has an accessible account-specific label, and opens a confirmation dialog that explains history preservation before persistence.
 - Account Group has only its own navigation/back and Add Group actions in the app bar. Loan navigation is not an Account Group action and must not appear as a top action/tab.
@@ -84,9 +84,9 @@ Account Settings Management (`More → Configuration → Accounts Setting → Ac
 
 ## Credit Card Reference Gap (Follow-up Required)
 
-The supplied Credit Card reference establishes fields/labels such as Amount, Payment, Description, Settlement Date, Payment Date, Balance Payable, Outstanding Balance, and Automatic Payment. The current persisted account and Application contracts do not define statement or payment semantics. The user-authorized scope stores only billing day and payment due day in existing local account-settings persistence and displays them as informational dates.
+The supplied Credit Card references establish fields/labels such as Amount, Payment, Description, Settlement Date, Payment Date, Balance Payable, Outstanding Balance, and Automatic Payment. The latest supplied examples show different Payable and Outstanding values for distinct billing windows. The current persisted account and Application contracts do not define statement or payment semantics. Billing/payment days and optional payment-account reference remain informational local metadata; current UI repeats the same ledger-derived amount and does not yet match the separate reference values. Billing-day dates alone do not define an approved formula.
 
-This slice does **not** add mutable card balances, billing formulas, payment-account behavior, automatic payments, or a statement lifecycle. Those require a separate ledger-first proposal and financial regression tests. Loan accounts continue to use the existing Loan Engine and approved Loan workflows.
+Automatic Payment, Include in totals, and Show/Hide Setting remain visible but disabled. This slice does **not** add mutable card balances, billing formulas, payment-account behavior, automatic payments, active totals/visibility settings, or a statement lifecycle. Those require a separate ledger-first proposal and financial regression tests. Loan accounts continue to use the existing Loan Engine and approved Loan workflows.
 
 ## Acceptance Checklist
 
@@ -108,7 +108,7 @@ This slice does **not** add mutable card balances, billing formulas, payment-acc
 
 ## Intentional Deviations
 
-- The management destination reuses existing account data/use cases and Add account dialog, while providing a distinct original Compose presentation required by the Account Settings reference hierarchy.
+- The management destination reuses existing account data/use cases and full-screen Add Account route, while providing a distinct original Compose presentation required by the Account Settings reference hierarchy.
 - Credit Card financial detail fields are deferred because the current financial contract does not support them.
 - Group assignment remains in the existing Account Group persisted infrastructure. Moving it into frozen SQLDelight persistence would require a versioned migration and separate architecture approval.
 - A common "Deleted Account" was intentionally not introduced: reassigning historical records would violate the immutable-ledger and historical-attribution rules. Archive retains the original account identity instead.

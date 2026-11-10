@@ -2,6 +2,7 @@
 
 package com.tioledger.ui.accounts
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -94,6 +97,12 @@ fun AccountEditScreen(
             ?: state.availableGroups.firstOrNull()
 
     val isCreditCard = selectedGroup?.policy == AccountGroupPolicy.CREDIT_CARD
+    val displayedBalance =
+        when {
+            accountRow != null -> accountRow.balance
+            state.draftCurrentBalance.isBlank() -> "${state.currencySymbol} 0.00"
+            else -> "${state.currencySymbol} ${state.draftCurrentBalance}"
+        }
     val eligiblePaymentAccounts =
         state.groups.flatMap { it.accounts }
             .filter { account ->
@@ -287,6 +296,22 @@ fun AccountEditScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                        AccountBalanceSummaryRow("Balance Payable", displayedBalance)
+                        AccountBalanceSummaryRow("Outst. Balance", displayedBalance)
+                    }
+                }
+
+                DisabledAccountSwitchRow(label = "Automatic Payment", checked = false)
             } else {
                 Text(
                     text = selectedGroup?.policy?.title.orEmpty(),
@@ -294,6 +319,12 @@ fun AccountEditScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            DisabledAccountSwitchRow(label = "Include in totals", checked = true)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            DisabledAccountVisibilityRow()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -596,6 +627,72 @@ fun AccountEditScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AccountBalanceSummaryRow(
+    label: String,
+    amount: String,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 14.sp,
+        )
+        Text(
+            text = amount,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 14.sp,
+        )
+    }
+}
+
+@Composable
+private fun DisabledAccountSwitchRow(
+    label: String,
+    checked: Boolean,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 14.sp,
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = {},
+            enabled = false,
+        )
+    }
+}
+
+@Composable
+private fun DisabledAccountVisibilityRow() {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "Show/Hide Setting",
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 14.sp,
+        )
+        Text(
+            text = "◉",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 18.sp,
+        )
     }
 }
 

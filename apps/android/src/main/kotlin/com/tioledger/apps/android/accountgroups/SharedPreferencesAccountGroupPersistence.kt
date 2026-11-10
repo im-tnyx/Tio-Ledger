@@ -62,20 +62,29 @@ class SharedPreferencesAccountGroupPersistence(
         ).joinToString(FIELD_SEPARATOR, transform = ::encodeField)
 
     private fun decode(value: String): AccountGroupEntry? {
-        val fields = value.split(FIELD_SEPARATOR)
-        if (fields.size != FIELD_COUNT) return null
-        val policy = fields[POLICY_INDEX].let { name -> AccountGroupPolicy.entries.firstOrNull { it.name == name } }
-        return if (policy == null) {
-            null
-        } else {
+        return runCatching {
+            val fields = value.split(FIELD_SEPARATOR)
+            require(fields.size == FIELD_COUNT)
+            val decoded = fields.map { field -> String(Base64.getDecoder().decode(field), Charsets.UTF_8) }
+            val id = decoded[ID_INDEX].also { require(it.isNotBlank()) }
+            val title = decoded[TITLE_INDEX].also { require(it.isNotBlank()) }
+            val policy = AccountGroupPolicy.entries.first { it.name == decoded[POLICY_INDEX] }
+            val permanentValue = decoded[PERMANENT_INDEX]
+            val isPermanent =
+                when {
+                    permanentValue.equals("true", ignoreCase = true) -> true
+                    permanentValue.equals("false", ignoreCase = true) -> false
+                    else -> error("Invalid account group permanence value")
+                }
+
             AccountGroupEntry(
-                id = decodeField(fields[ID_INDEX]),
-                title = decodeField(fields[TITLE_INDEX]),
-                subtitle = decodeField(fields[SUBTITLE_INDEX]).ifBlank { null },
+                id = id,
+                title = title,
+                subtitle = decoded[SUBTITLE_INDEX].ifBlank { null },
                 policy = policy,
-                isPermanent = decodeField(fields[PERMANENT_INDEX]).toBoolean(),
+                isPermanent = isPermanent,
             )
-        }
+        }.getOrNull()
     }
 
     private fun encodeField(value: String): String {
