@@ -24,13 +24,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.tioledger.domain.model.CurrencyDecimalDisplay
 import com.tioledger.domain.model.CurrencyUnitPosition
 import com.tioledger.ui.components.TioAppBar
+import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.design.TioDimensions
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
@@ -87,16 +88,11 @@ fun CurrencySettingsScreen(
             TioAppBar(
                 title = "Main Currency Setting",
                 navigationIcon = {
-                    TextButton(
+                    IconButton(
                         onClick = onNavigateBack,
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                        modifier = Modifier.semantics { contentDescription = "Navigate back to Settings" },
+                        modifier = Modifier.semantics { contentDescription = "Navigate back" },
                     ) {
-                        Text(
-                            text = "‹ Settings",
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                        )
+                        TioBackIcon()
                     }
                 },
                 actions = {

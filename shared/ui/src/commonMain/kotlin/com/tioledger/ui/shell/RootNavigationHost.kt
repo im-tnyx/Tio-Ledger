@@ -10,7 +10,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tioledger.domain.model.CategoryType
+import com.tioledger.ui.accounts.AccountEditRoute
+import com.tioledger.ui.accounts.AccountManagementRoute
 import com.tioledger.ui.accounts.AccountsRoute
+import com.tioledger.ui.accounts.ArchivedAccountsRoute
 import com.tioledger.ui.budgets.BudgetsRoute
 import com.tioledger.ui.categories.CategoriesRoute
 import com.tioledger.ui.components.TioAppBar
@@ -20,9 +23,9 @@ import com.tioledger.ui.design.ThemeMode
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.loans.LoanDetailsRoute
 import com.tioledger.ui.loans.LoansRoute
+import com.tioledger.ui.more.AccountGroupEditRoute
 import com.tioledger.ui.more.AccountGroupRoute
 import com.tioledger.ui.more.AccountSettingsRoute
-import com.tioledger.ui.more.ConfigurationRoute
 import com.tioledger.ui.more.CurrencySettingsRoute
 import com.tioledger.ui.more.MoreRoute
 import com.tioledger.ui.more.RepeatSettingsRoute
@@ -92,14 +95,14 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(target))
                             },
                             onNavigateBack = {
-                                onNavigate(RootRoute.Main(MainRoute.AccountGroup))
+                                onNavigate(RootRoute.Main(MainRoute.Accounts))
                             },
                         )
                     is MainRoute.LoanDetails ->
                         LoanDetailsRoute(
                             loanId = destination.loanId,
                             onNavigateBack = {
-                                onNavigate(RootRoute.Main(MainRoute.Loans))
+                                onNavigate(RootRoute.Main(MainRoute.Accounts))
                             },
                         )
                     MainRoute.Transactions ->
@@ -124,7 +127,7 @@ fun RootNavigationHost(
                             },
                         )
                     MainRoute.Configuration ->
-                        ConfigurationRoute(
+                        MoreRoute(
                             onNavigate = { target ->
                                 onNavigate(RootRoute.Main(target))
                             },
@@ -138,6 +141,45 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(MainRoute.More))
                             },
                         )
+                    MainRoute.AccountManager ->
+                        AccountManagementRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountSettings))
+                            },
+                        )
+                    MainRoute.DeletedAccounts ->
+                        ArchivedAccountsRoute(
+                            onNavigate = { target ->
+                                onNavigate(RootRoute.Main(target))
+                            },
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountSettings))
+                            },
+                        )
+                    MainRoute.AccountAdd ->
+                        AccountEditRoute(
+                            accountId = null,
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountManager))
+                            },
+                        )
+                    MainRoute.AccountQuickAdd ->
+                        AccountEditRoute(
+                            accountId = null,
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.Accounts))
+                            },
+                        )
+                    is MainRoute.AccountEdit ->
+                        AccountEditRoute(
+                            accountId = destination.accountId,
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountManager))
+                            },
+                        )
                     MainRoute.AccountGroup ->
                         AccountGroupRoute(
                             onNavigate = { target ->
@@ -145,6 +187,20 @@ fun RootNavigationHost(
                             },
                             onNavigateBack = {
                                 onNavigate(RootRoute.Main(MainRoute.AccountSettings))
+                            },
+                        )
+                    MainRoute.AccountGroupAdd ->
+                        AccountGroupEditRoute(
+                            groupId = null,
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountGroup))
+                            },
+                        )
+                    is MainRoute.AccountGroupEdit ->
+                        AccountGroupEditRoute(
+                            groupId = destination.groupId,
+                            onNavigateBack = {
+                                onNavigate(RootRoute.Main(MainRoute.AccountGroup))
                             },
                         )
                     MainRoute.BudgetSettings ->

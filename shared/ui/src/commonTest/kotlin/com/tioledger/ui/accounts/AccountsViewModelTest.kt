@@ -1,7 +1,14 @@
 package com.tioledger.ui.accounts
 
+import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.account.UpdateAccountUseCase
+import com.tioledger.application.usecase.currency.GetMainCurrencyConfigUseCase
+import com.tioledger.application.usecase.currency.SaveMainCurrencyConfigUseCase
+import com.tioledger.application.usecase.loan.ListLoansUseCase
+import com.tioledger.application.usecase.transaction.RecordExpenseUseCase
+import com.tioledger.application.usecase.transaction.RecordIncomeUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.LedgerError
 import com.tioledger.core.model.LedgerResult
@@ -9,18 +16,30 @@ import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
+import com.tioledger.domain.model.Category
 import com.tioledger.domain.model.LedgerEntry
 import com.tioledger.domain.model.LedgerEntryType
 import com.tioledger.domain.model.LedgerSourceType
+import com.tioledger.domain.model.MainCurrencyConfig
 import com.tioledger.domain.model.PostingTarget
+import com.tioledger.domain.model.SYSTEM_SUPPORTED_CURRENCIES
+import com.tioledger.domain.model.TransactionRecord
 import com.tioledger.domain.repository.AccountRepository
+import com.tioledger.domain.repository.CategoryRepository
+import com.tioledger.domain.repository.CurrencyPreferenceRepository
 import com.tioledger.domain.repository.LedgerRepository
+import com.tioledger.domain.repository.TransactionRepository
 import com.tioledger.finance.engine.BalanceCalculator
+import com.tioledger.finance.engine.PostingEngine
+import com.tioledger.ui.more.AccountBillingDetails
 import com.tioledger.ui.more.AccountGroupPolicy
+import com.tioledger.ui.more.AccountGroupRemovalResult
 import com.tioledger.ui.more.AccountGroupStore
+import com.tioledger.ui.more.CurrencyPreferenceStore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AccountsViewModelTest {
@@ -168,14 +187,14 @@ class AccountsViewModelTest {
 
         viewModel.onAction(AccountsAction.AddClicked)
         viewModel.onAction(AccountsAction.NameChanged("Travel Wallet"))
-        viewModel.onAction(AccountsAction.TypeChanged(AccountType.BANK))
+        viewModel.onAction(AccountsAction.GroupChanged("accounts"))
         viewModel.onAction(AccountsAction.SaveClicked)
 
         val created = accounts.created.single()
         assertEquals("generated-account-id", created.id)
         assertEquals("Travel Wallet", created.name)
         assertEquals(AccountType.BANK, created.type)
-        assertEquals("USD", created.currencyCode)
+        assertEquals("INR", created.currencyCode)
     }
 
     @Test
@@ -193,8 +212,263 @@ class AccountsViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isCreateDialogVisible)
         assertFalse(state.isSaving)
+        assertTrue(state.saveCompleted)
         assertEquals("", state.draftName)
         assertTrue(state.groups.flatMap { it.accounts }.any { it.name == "Travel Wallet" })
+    }
+
+    @Test
+    fun creatingAccountWithoutBalanceStartsAtZero() {
+        val accounts = FakeAccountRepository(emptyList())
+        val ledger = FakeLedgerRepository()
+        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("zero-account"))
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("New cash"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertTrue(accounts.created.isNotEmpty())
+        assertTrue(ledger.entriesByAccount.values.flatten().isEmpty())
+        assertTrue(accounts.openingBalanceRecords.isEmpty())
+        assertEquals("INR 0.00", viewModel.uiState.value.groups.single().accounts.single().balance)
+    }
+
+    @Test
+    fun creatingAccountWithCurrentBalancePersistsOpeningLedgerPostingAtomically() {
+        val accounts = FakeAccountRepository(emptyList())
+        val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("funded-account"))
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("Funded bank"))
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("125.00"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertEquals(1, accounts.created.size)
+        assertEquals(1, accounts.openingBalanceRecords.size)
+        assertEquals(12_500L, accounts.openingBalanceRecords.single().splits.single().amount.amount)
+        assertEquals("ADJUSTMENT", accounts.openingBalanceRecords.single().transaction.type.name)
+    }
+
+    @Test
+    fun repeatedSaveAfterOpeningBalanceCreationDoesNotDuplicatePosting() {
+        val accounts = FakeAccountRepository(emptyList())
+        val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("once-only-account"))
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("Savings"))
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("10.01"))
+
+        viewModel.onAction(AccountsAction.SaveClicked)
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertEquals(1, accounts.created.size)
+        assertEquals(1, accounts.openingBalanceRecords.size)
+        assertEquals(1_001L, accounts.openingBalanceRecords.single().splits.single().amount.amount)
+    }
+
+    @Test
+    fun explicitZeroOpeningBalanceCreatesAccountWithoutPosting() {
+        val accounts = FakeAccountRepository(emptyList())
+        val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("zero-opening-account"))
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("Empty wallet"))
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("0.00"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertEquals(1, accounts.created.size)
+        assertTrue(accounts.openingBalanceRecords.isEmpty())
+    }
+
+    @Test
+    fun editingAssetBalanceRecordsOnlyIncomeDifferenceAndPreservesOldEntries() {
+        val bank = account("bank", "Main bank", AccountType.BANK).copy(displayOrder = 7)
+        val originalEntry = entry("original", bank, 1_000L)
+        val accounts = FakeAccountRepository(listOf(bank))
+        val ledger = FakeLedgerRepository().apply { entriesByAccount[bank.id] = listOf(originalEntry) }
+        val transactions = RecordingTransactionRepository(ledger)
+        val viewModel = testViewModelWithPosting(accounts, ledger, transactions)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested(bank.id))
+        assertEquals("10.00", viewModel.uiState.value.draftCurrentBalance)
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("15.00"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        val posted = transactions.records.single()
+        assertEquals("INCOME", posted.transaction.type.name)
+        assertEquals(500L, posted.splits.single().amount.amount)
+        assertEquals(null, posted.splits.single().categoryId)
+        assertEquals(originalEntry, ledger.entriesByAccount[bank.id]?.first())
+        assertEquals(7, (accounts.findById(bank.id) as LedgerResult.Success).value.displayOrder)
+        assertEquals("USD 15.00", viewModel.uiState.value.groups.single().accounts.single().balance)
+        assertTrue(viewModel.uiState.value.saveCompleted)
+    }
+
+    @Test
+    fun editingAssetBalanceDownwardPostsOnlyExactExpenseDelta() {
+        val bank = account("bank", "Main bank", AccountType.BANK)
+        val originalEntry = entry("original", bank, 1_001L)
+        val ledger = FakeLedgerRepository().apply { entriesByAccount[bank.id] = listOf(originalEntry) }
+        val transactions = RecordingTransactionRepository(ledger)
+        val viewModel = testViewModelWithPosting(FakeAccountRepository(listOf(bank)), ledger, transactions)
+        viewModel.onAction(AccountsAction.EditAccountRequested(bank.id))
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("7.50"))
+
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        val correction = transactions.records.single()
+        assertEquals("EXPENSE", correction.transaction.type.name)
+        assertEquals(251L, correction.splits.single().amount.amount)
+        assertEquals(listOf(originalEntry), ledger.entriesByAccount[bank.id]?.take(1))
+        assertEquals("USD 7.50", viewModel.uiState.value.groups.single().accounts.single().balance)
+    }
+
+    @Test
+    fun editingLiabilityBalanceIncreaseRecordsExpenseAndDecreaseRecordsIncome() {
+        val card = account("card", "Credit card", AccountType.CREDIT_CARD)
+        val accounts = FakeAccountRepository(listOf(card))
+        val ledger =
+            FakeLedgerRepository().apply {
+                entriesByAccount[card.id] = listOf(entry("card-original", card, 1_000L, LedgerEntryType.CREDIT))
+            }
+        val transactions = RecordingTransactionRepository(ledger)
+        val viewModel = testViewModelWithPosting(accounts, ledger, transactions)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested(card.id))
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("15.00"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+        viewModel.onAction(AccountsAction.EditAccountRequested(card.id))
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("7.00"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertEquals(listOf("EXPENSE", "INCOME"), transactions.records.map { it.transaction.type.name })
+        assertEquals(listOf(500L, 800L), transactions.records.map { it.splits.single().amount.amount })
+        assertEquals(1_000L, ledger.entriesByAccount[card.id]?.first()?.amount?.amount)
+        assertEquals("USD 7.00", viewModel.uiState.value.groups.single().accounts.single().balance)
+    }
+
+    @Test
+    fun failedBalanceCorrectionLeavesLedgerAndDerivedBalanceUnchanged() {
+        val bank = account("bank", "Main bank", AccountType.BANK)
+        val originalEntry = entry("original", bank, 1_000L)
+        val ledger = FakeLedgerRepository().apply { entriesByAccount[bank.id] = listOf(originalEntry) }
+        val transactions = RecordingTransactionRepository(ledger).apply { failOnRecord = true }
+        val viewModel = testViewModelWithPosting(FakeAccountRepository(listOf(bank)), ledger, transactions)
+        viewModel.onAction(AccountsAction.EditAccountRequested(bank.id))
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("15.00"))
+
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertTrue(transactions.records.isEmpty())
+        assertEquals(listOf(originalEntry), ledger.entriesByAccount[bank.id])
+        assertEquals("USD 10.00", viewModel.uiState.value.groups.single().accounts.single().balance)
+        assertTrue(viewModel.uiState.value.createErrorMessage?.contains("balance correction failed") == true)
+    }
+
+    @Test
+    fun savingUnchangedCurrentBalanceDoesNotCreateTransaction() {
+        val bank = account("bank", "Main bank", AccountType.BANK)
+        val ledger = FakeLedgerRepository().apply { entriesByAccount[bank.id] = listOf(entry("initial", bank, 1_000L)) }
+        val transactions = RecordingTransactionRepository(ledger)
+        val viewModel = testViewModelWithPosting(FakeAccountRepository(listOf(bank)), ledger, transactions)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested(bank.id))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertTrue(transactions.records.isEmpty())
+    }
+
+    @Test
+    fun currentBalanceAndCardBillingDraftActionsUpdateState() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val ledger = FakeLedgerRepository()
+        val viewModel = testViewModel(accounts, ledger)
+
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("1500.50"))
+        viewModel.onAction(AccountsAction.PaymentAccountChanged("bank-1"))
+        viewModel.onAction(AccountsAction.DescriptionChanged("Primary credit card"))
+        viewModel.onAction(AccountsAction.SettlementDateChanged("15"))
+        viewModel.onAction(AccountsAction.PaymentDateChanged("25"))
+
+        val state = viewModel.uiState.value
+        assertEquals("1500.50", state.draftCurrentBalance)
+        assertEquals("bank-1", state.draftPaymentAccountId)
+        assertEquals("Primary credit card", state.draftDescription)
+        assertEquals("15", state.draftSettlementDate)
+        assertEquals("25", state.draftPaymentDate)
+    }
+
+    @Test
+    fun balanceParserPreservesSignAndRejectsPrecisionLossAndOverflow() {
+        assertEquals(199L, parseAmountToMinor("1.99"))
+        assertEquals(100L, parseAmountToMinor("1"))
+        assertNull(parseAmountToMinor("1.999"))
+        assertEquals(-100L, parseAmountToMinor("-1.00"))
+        assertNull(parseAmountToMinor("999999999999999999999.00"))
+    }
+
+    @Test
+    fun accountGroupsShowDistinctCardCategoryAndBillingDate() {
+        val card = account("card-1", "Travel Card", AccountType.CREDIT_CARD)
+        val accounts = FakeAccountRepository(listOf(card))
+        val ledger = FakeLedgerRepository()
+        val groupStore = AccountGroupStore()
+        assertTrue(groupStore.saveBillingDetails(card.id, com.tioledger.ui.more.AccountBillingDetails(12, 25)))
+
+        val viewModel = testViewModel(accounts, ledger, accountGroupStore = groupStore)
+        val group = viewModel.uiState.value.groups.single()
+
+        assertEquals("Credit card accounts", group.categoryLabel)
+        assertEquals(1, group.accountCount)
+        assertEquals(12, group.accounts.single().billingDay)
+        assertEquals(25, group.accounts.single().paymentDueDay)
+    }
+
+    @Test
+    fun editingCreditCardLoadsSavedPaymentAccountDescriptionAndDates() {
+        val bank = account("bank-1", "Main bank", AccountType.BANK)
+        val card = account("card-1", "Travel Card", AccountType.CREDIT_CARD)
+        val groupStore = AccountGroupStore()
+        assertTrue(groupStore.assignAccount(bank.id, "accounts"))
+        assertTrue(groupStore.assignAccount(card.id, "credit_card"))
+        assertTrue(
+            groupStore.saveBillingDetails(
+                card.id,
+                AccountBillingDetails(
+                    billingDay = 12,
+                    paymentDueDay = 25,
+                    paymentAccountId = bank.id,
+                    description = "Primary card",
+                ),
+            ),
+        )
+        val viewModel = testViewModel(FakeAccountRepository(listOf(bank, card)), FakeLedgerRepository(), accountGroupStore = groupStore)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested(card.id))
+
+        val state = viewModel.uiState.value
+        assertEquals(bank.id, state.draftPaymentAccountId)
+        assertEquals("Primary card", state.draftDescription)
+        assertEquals("12", state.draftSettlementDate)
+        assertEquals("25", state.draftPaymentDate)
+    }
+
+    @Test
+    fun archivedAccountsViewListsOnlyArchivedRecords() {
+        val active = account("active", "Daily Account", AccountType.BANK)
+        val archived = account("archived", "Old Card", AccountType.CREDIT_CARD).copy(isArchived = true)
+        val accounts = FakeAccountRepository(listOf(active, archived))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[archived.id] = listOf(entry("archived-entry", archived, 250L))
+        val groupStore = AccountGroupStore()
+        val viewModel =
+            ArchivedAccountsViewModel(
+                ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
+                groupStore,
+            )
+
+        assertEquals(listOf("archived"), viewModel.uiState.value.accounts.map { it.id })
+        assertEquals("Old Card", viewModel.uiState.value.accounts.single().name)
+        assertEquals("-USD 2.50", viewModel.uiState.value.accounts.single().balance)
     }
 
     @Test
@@ -257,11 +531,13 @@ class AccountsViewModelTest {
         val accounts = FakeAccountRepository(listOf(cash))
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
-        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("loan-linked-id"))
+        val groupStore = AccountGroupStore()
+        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)!!
+        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("loan-linked-id"), groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
         viewModel.onAction(AccountsAction.NameChanged("Home Loan Account"))
-        viewModel.onAction(AccountsAction.TypeChanged(AccountType.LOAN_LINKED))
+        viewModel.onAction(AccountsAction.GroupChanged(loanGroup.id))
         viewModel.onAction(AccountsAction.SaveClicked)
 
         val created = accounts.created.single()
@@ -271,22 +547,42 @@ class AccountsViewModelTest {
     }
 
     @Test
-    fun selectedNonUsdCurrencyReachesPersistenceWithoutHiddenOverwrite() {
+    fun selectedGroupControlsCreatedAccountTypeWithoutIndependentSelector() {
         val cash = account("cash", "Cash", AccountType.CASH)
         val accounts = FakeAccountRepository(listOf(cash))
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
-        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("inr-id"))
+        val groupStore = AccountGroupStore()
+        val investmentGroup = groupStore.addGroup("My investments", AccountGroupPolicy.INVESTMENT)!!
+        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("investment-id"), groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
-        viewModel.onAction(AccountsAction.NameChanged("Mumbai Cash"))
-        viewModel.onAction(AccountsAction.TypeChanged(AccountType.CASH))
-        viewModel.onAction(AccountsAction.CurrencyChanged("INR"))
+        viewModel.onAction(AccountsAction.NameChanged("Index fund"))
+        viewModel.onAction(AccountsAction.GroupChanged(investmentGroup.id))
         viewModel.onAction(AccountsAction.SaveClicked)
 
         val created = accounts.created.single()
-        assertEquals("INR", created.currencyCode)
-        assertEquals(listOf("INR 0.00", "USD 10.00"), viewModel.uiState.value.groups.single().totals)
+        assertEquals(AccountType.INVESTMENT, created.type)
+        assertEquals(investmentGroup.id, groupStore.groupIdForAccount(created.id))
+    }
+
+    @Test
+    fun persistedMainCurrencyReachesAccountPersistenceUnchanged() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val viewModel =
+            testViewModel(
+                accounts = accounts,
+                ledger = FakeLedgerRepository(),
+                idGenerator = FixedIdGenerator("inr-id"),
+                currencyPreferenceStore = currencyPreferenceStore("INR"),
+            )
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("Mumbai Cash"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertEquals("INR", accounts.created.single().currencyCode)
     }
 
     @Test
@@ -300,8 +596,6 @@ class AccountsViewModelTest {
 
         viewModel.onAction(AccountsAction.AddClicked)
         viewModel.onAction(AccountsAction.NameChanged("Abandoned Draft"))
-        viewModel.onAction(AccountsAction.TypeChanged(AccountType.LOAN_LINKED))
-        viewModel.onAction(AccountsAction.CurrencyChanged("EUR"))
         viewModel.onAction(AccountsAction.CreateDismissed)
 
         val state = viewModel.uiState.value
@@ -320,14 +614,12 @@ class AccountsViewModelTest {
 
         viewModel.onAction(AccountsAction.AddClicked)
         viewModel.onAction(AccountsAction.NameChanged("Abandoned Draft"))
-        viewModel.onAction(AccountsAction.TypeChanged(AccountType.LOAN_LINKED))
-        viewModel.onAction(AccountsAction.CurrencyChanged("EUR"))
         viewModel.onAction(AccountsAction.CreateDismissed)
 
         val state = viewModel.uiState.value
         assertFalse(state.isCreateDialogVisible)
         assertEquals("", state.draftName)
-        assertEquals(AccountType.CASH, state.draftType)
+        assertEquals("cash", state.draftGroupId)
         assertEquals(SUPPORTED_ACCOUNT_CURRENCY_CODES.first(), state.draftCurrencyCode)
         assertEquals(null, state.createErrorMessage)
     }
@@ -338,19 +630,57 @@ class AccountsViewModelTest {
         val accounts = FakeAccountRepository(listOf(cash))
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
-        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("reset-id"))
+        val groupStore = AccountGroupStore()
+        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)!!
+        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("reset-id"), groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
         viewModel.onAction(AccountsAction.NameChanged("Home Loan Account"))
-        viewModel.onAction(AccountsAction.TypeChanged(AccountType.LOAN_LINKED))
-        viewModel.onAction(AccountsAction.CurrencyChanged("GBP"))
+        viewModel.onAction(AccountsAction.GroupChanged(loanGroup.id))
         viewModel.onAction(AccountsAction.SaveClicked)
 
         val state = viewModel.uiState.value
         assertFalse(state.isCreateDialogVisible)
         assertEquals("", state.draftName)
-        assertEquals(AccountType.CASH, state.draftType)
+        assertEquals("cash", state.draftGroupId)
         assertEquals(SUPPORTED_ACCOUNT_CURRENCY_CODES.first(), state.draftCurrencyCode)
+    }
+
+    @Test
+    fun editAccountRequestedAndSavedUpdatesAccount() {
+        val usdAccount = account("acc-1", "Old Name", AccountType.BANK).copy(currencyCode = "INR")
+        val accounts = FakeAccountRepository(listOf(usdAccount))
+        val ledger = FakeLedgerRepository()
+        val viewModel = testViewModel(accounts, ledger)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested("acc-1"))
+        val draftState = viewModel.uiState.value
+        assertEquals("acc-1", draftState.editingAccountId)
+        assertEquals("Old Name", draftState.draftName)
+
+        viewModel.onAction(AccountsAction.NameChanged("New Name"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        val updatedResult = accounts.findById("acc-1")
+        assertTrue(updatedResult is LedgerResult.Success)
+        val updated = updatedResult.value
+        assertEquals("New Name", updated.name)
+        assertEquals("INR", updated.currencyCode)
+        kotlin.test.assertNull(viewModel.uiState.value.editingAccountId)
+    }
+
+    @Test
+    fun loadAccountsPreservesExistingAccountCurrencyWhenMainCurrencyDiffers() {
+        val usdAccount = account("acc-1", "My Bank", AccountType.BANK).copy(currencyCode = "USD")
+        val accounts = FakeAccountRepository(listOf(usdAccount))
+        val ledger = FakeLedgerRepository()
+        val inrStore = currencyPreferenceStore("INR")
+        val viewModel = testViewModel(accounts, ledger, currencyPreferenceStore = inrStore)
+
+        val updatedResult = accounts.findById("acc-1")
+        assertTrue(updatedResult is LedgerResult.Success)
+        assertEquals("USD", updatedResult.value.currencyCode)
+        assertEquals("USD 0.00", viewModel.uiState.value.groups.single().accounts.single().balance)
     }
 
     @Test
@@ -359,18 +689,19 @@ class AccountsViewModelTest {
         val accounts = FakeAccountRepository(listOf(cash))
         val ledger = FakeLedgerRepository()
         ledger.entriesByAccount[cash.id] = listOf(entry("cash-entry", cash, 1_000L))
-        val viewModel = testViewModel(accounts, ledger)
+        val groupStore = AccountGroupStore()
+        val loanGroup = groupStore.addGroup("Loans", AccountGroupPolicy.LOAN)!!
+        val viewModel = testViewModel(accounts, ledger, accountGroupStore = groupStore)
 
         viewModel.onAction(AccountsAction.AddClicked)
         viewModel.onAction(AccountsAction.NameChanged(""))
-        viewModel.onAction(AccountsAction.TypeChanged(AccountType.LOAN_LINKED))
-        viewModel.onAction(AccountsAction.CurrencyChanged("EUR"))
+        viewModel.onAction(AccountsAction.GroupChanged(loanGroup.id))
         viewModel.onAction(AccountsAction.SaveClicked)
 
         val state = viewModel.uiState.value
         assertTrue(state.isCreateDialogVisible)
-        assertEquals(AccountType.LOAN_LINKED, state.draftType)
-        assertEquals("EUR", state.draftCurrencyCode)
+        assertEquals(loanGroup.id, state.draftGroupId)
+        assertEquals("INR", state.draftCurrencyCode)
         assertEquals("name: must not be blank", state.createErrorMessage)
     }
 
@@ -435,13 +766,137 @@ class AccountsViewModelTest {
     }
 
     @Test
+    fun invalidOrDeletedGroupRejectsBeforeAccountPersistence() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        val groupStore = AccountGroupStore()
+        val custom = groupStore.addGroup("Temporary", AccountGroupPolicy.BANK)!!
+        val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("blocked-id"), groupStore)
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("Blocked account"))
+        viewModel.onAction(AccountsAction.GroupChanged(custom.id))
+        assertEquals(AccountGroupRemovalResult.Removed, groupStore.removeGroup(custom.id))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertTrue(accounts.created.isEmpty())
+        assertEquals("A valid Account Group is required.", viewModel.uiState.value.createErrorMessage)
+        assertNull(groupStore.groupIdForAccount("blocked-id"))
+    }
+
+    @Test
+    fun failedAccountSaveCleansPreparedGroupAssignment() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        accounts.createResult = { LedgerResult.Failure(LedgerError.StorageUnavailable) }
+        val groupStore = AccountGroupStore()
+        val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("failed-id"), groupStore)
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("Not saved"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertTrue(accounts.created.isEmpty())
+        assertNull(groupStore.groupIdForAccount("failed-id"))
+        assertEquals("Unable to save this account. Try again.", viewModel.uiState.value.createErrorMessage)
+    }
+
+    @Test
+    fun archivePreservesHistoricalLedgerEntriesAndGroupAssignment() {
+        val bank = account("bank", "Primary Bank", AccountType.BANK)
+        val accounts = FakeAccountRepository(listOf(bank))
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[bank.id] = listOf(entry("bank-entry", bank, 2_500L))
+        val ledgerBefore = ledger.entriesByAccount.toMap()
+        val groupStore = AccountGroupStore()
+        assertTrue(groupStore.assignAccount(bank.id, "accounts"))
+        val viewModel = testViewModel(accounts, ledger, accountGroupStore = groupStore)
+
+        viewModel.onAction(AccountsAction.ArchiveRequested(bank.id, bank.name))
+        viewModel.onAction(AccountsAction.ArchiveConfirmed)
+
+        val archived = (accounts.findById(bank.id) as LedgerResult.Success).value
+        assertTrue(archived.isArchived)
+        assertTrue(viewModel.uiState.value.isEmpty)
+        assertEquals(ledgerBefore, ledger.entriesByAccount)
+        assertEquals("accounts", groupStore.groupIdForAccount(bank.id))
+        assertTrue(viewModel.uiState.value.archiveCompleted)
+    }
+
+    @Test
+    fun archiveFailureKeepsAccountActiveAndConfirmationVisible() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        accounts.updateResult = { LedgerResult.Failure(LedgerError.StorageUnavailable) }
+        val viewModel = testViewModel(accounts, FakeLedgerRepository())
+
+        viewModel.onAction(AccountsAction.ArchiveRequested(cash.id, cash.name))
+        viewModel.onAction(AccountsAction.ArchiveConfirmed)
+
+        val stored = (accounts.findById(cash.id) as LedgerResult.Success).value
+        assertFalse(stored.isArchived)
+        assertEquals(cash.id, viewModel.uiState.value.archiveAccountId)
+        assertEquals("Unable to archive this account. Try again.", viewModel.uiState.value.archiveErrorMessage)
+        assertFalse(viewModel.uiState.value.archiveCompleted)
+    }
+
+    @Test
+    fun repeatedArchiveConfirmationOnlyUpdatesOnce() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val accounts = FakeAccountRepository(listOf(cash))
+        lateinit var viewModel: AccountsViewModel
+        viewModel = testViewModel(accounts, FakeLedgerRepository())
+        accounts.beforeUpdate = { viewModel.onAction(AccountsAction.ArchiveConfirmed) }
+
+        viewModel.onAction(AccountsAction.ArchiveRequested(cash.id, cash.name))
+        viewModel.onAction(AccountsAction.ArchiveConfirmed)
+
+        assertEquals(1, accounts.updateCount)
+        assertTrue((accounts.findById(cash.id) as LedgerResult.Success).value.isArchived)
+    }
+
+    @Test
+    fun legacyUnassignedAccountRemainsVisibleWithItsExistingType() {
+        val legacyBank = account("legacy-bank", "Legacy bank", AccountType.BANK)
+        val groupStore = AccountGroupStore()
+
+        val state =
+            testViewModel(
+                accounts = FakeAccountRepository(listOf(legacyBank)),
+                ledger = FakeLedgerRepository(),
+                accountGroupStore = groupStore,
+            ).uiState.value
+
+        assertEquals("Accounts", state.groups.single().title)
+        assertEquals(AccountType.BANK, state.groups.single().type)
+        assertNull(groupStore.groupIdForAccount(legacyBank.id))
+    }
+
+    @Test
+    fun accountCreationDoesNotModifyExistingLedgerEntries() {
+        val cash = account("cash", "Cash", AccountType.CASH)
+        val ledger = FakeLedgerRepository()
+        ledger.entriesByAccount[cash.id] = listOf(entry("existing-entry", cash, 1_000L))
+        val before = ledger.entriesByAccount.toMap()
+        val accounts = FakeAccountRepository(listOf(cash))
+        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("new-account"))
+
+        viewModel.onAction(AccountsAction.AddClicked)
+        viewModel.onAction(AccountsAction.NameChanged("New cash"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertEquals(before, ledger.entriesByAccount)
+        assertEquals(AccountType.CASH, accounts.created.single().type)
+    }
+
+    @Test
     fun assignedCustomGroupControlsAccountListingTitle() {
         val defaultBank = account("default-bank", "Primary Bank", AccountType.BANK)
         val bank = account("bank", "Emergency Reserve", AccountType.BANK)
         val accounts = FakeAccountRepository(listOf(defaultBank, bank))
         val ledger = FakeLedgerRepository()
         val groupStore = AccountGroupStore()
-        val custom = groupStore.addGroup("Emergency Savings", AccountGroupPolicy.BANK)
+        val custom = groupStore.addGroup("Emergency Savings", AccountGroupPolicy.BANK)!!
         groupStore.assignAccount(bank.id, custom.id)
 
         val state = testViewModel(accounts, ledger, accountGroupStore = groupStore).uiState.value
@@ -457,15 +912,63 @@ private fun testViewModel(
     accounts: FakeAccountRepository,
     ledger: FakeLedgerRepository,
     idGenerator: IdGenerator = FixedIdGenerator("unused-id"),
-    accountGroupStore: AccountGroupStore? = null,
+    accountGroupStore: AccountGroupStore = AccountGroupStore(),
+    currencyPreferenceStore: CurrencyPreferenceStore? = null,
+    listLoansUseCase: ListLoansUseCase? = null,
+    updateAccountUseCase: UpdateAccountUseCase? = UpdateAccountUseCase(accounts),
+    recordIncomeUseCase: RecordIncomeUseCase? = null,
+    recordExpenseUseCase: RecordExpenseUseCase? = null,
 ): AccountsViewModel =
     AccountsViewModel(
         listAccountSummariesUseCase = ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
-        createAccountUseCase = CreateAccountUseCase(accounts),
+        createAccountUseCase = CreateAccountUseCase(accounts, PostingEngine(SequenceIdGenerator())),
+        archiveAccountUseCase = ArchiveAccountUseCase(accounts),
         idGenerator = idGenerator,
         nowProvider = { 1_700_000_000_000L },
         accountGroupStore = accountGroupStore,
+        currencyPreferenceStore = currencyPreferenceStore,
+        listLoansUseCase = listLoansUseCase,
+        updateAccountUseCase = updateAccountUseCase,
+        recordIncomeUseCase = recordIncomeUseCase,
+        recordExpenseUseCase = recordExpenseUseCase,
     )
+
+private fun testViewModelWithPosting(
+    accounts: FakeAccountRepository,
+    ledger: FakeLedgerRepository,
+    transactions: RecordingTransactionRepository,
+): AccountsViewModel {
+    val categories = EmptyCategoryRepository()
+    val postingEngine = PostingEngine(SequenceIdGenerator())
+    return testViewModel(
+        accounts = accounts,
+        ledger = ledger,
+        recordIncomeUseCase = RecordIncomeUseCase(accounts, categories, transactions, postingEngine),
+        recordExpenseUseCase = RecordExpenseUseCase(accounts, categories, transactions, postingEngine),
+    )
+}
+
+private fun currencyPreferenceStore(currencyCode: String): CurrencyPreferenceStore {
+    val config =
+        MainCurrencyConfig(
+            currency = SYSTEM_SUPPORTED_CURRENCIES.first { it.code.normalized == currencyCode },
+        )
+    val repository =
+        object : CurrencyPreferenceRepository {
+            private var current = config
+
+            override fun getConfig(): MainCurrencyConfig = current
+
+            override fun saveConfig(config: MainCurrencyConfig): Boolean {
+                current = config
+                return true
+            }
+        }
+    return CurrencyPreferenceStore(
+        GetMainCurrencyConfigUseCase(repository),
+        SaveMainCurrencyConfigUseCase(repository),
+    )
+}
 
 private fun account(
     id: String,
@@ -501,13 +1004,48 @@ private class FixedIdGenerator(private val id: String) : IdGenerator {
     override fun nextId(): String = id
 }
 
+private class SequenceIdGenerator : IdGenerator {
+    private var next = 0
+
+    override fun nextId(): String = "generated-${next++}"
+}
+
+private class RecordingTransactionRepository(private val ledger: FakeLedgerRepository) : TransactionRepository {
+    val records = mutableListOf<TransactionRecord>()
+    var failOnRecord = false
+
+    override fun record(record: TransactionRecord): LedgerResult<TransactionRecord> {
+        if (failOnRecord) return LedgerResult.Failure(LedgerError.StorageUnavailable)
+        records += record
+        record.ledgerEntries.filterIsInstance<LedgerEntry>().forEach { entry ->
+            val accountId = (entry.target as? PostingTarget.Account)?.accountId ?: return@forEach
+            ledger.entriesByAccount[accountId] = ledger.entriesByAccount[accountId].orEmpty() + entry
+        }
+        return LedgerResult.Success(record)
+    }
+}
+
+private class EmptyCategoryRepository : CategoryRepository {
+    override fun findAll(): LedgerResult<List<Category>> = LedgerResult.Success(emptyList())
+
+    override fun findById(categoryId: String): LedgerResult<Category> = LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
+
+    override fun create(category: Category): LedgerResult<Category> = LedgerResult.Success(category)
+
+    override fun update(category: Category): LedgerResult<Category> = LedgerResult.Success(category)
+}
+
 private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRepository {
     var readCount = 0
     private val accounts = initialAccounts.toMutableList()
     private val createdAccounts = mutableListOf<Account>()
+    val openingBalanceRecords = mutableListOf<TransactionRecord>()
     val created: List<Account> get() = createdAccounts
     var beforeCreate: (() -> Unit)? = null
     var createResult: ((Account) -> LedgerResult<Account>)? = null
+    var beforeUpdate: (() -> Unit)? = null
+    var updateResult: ((Account) -> LedgerResult<Account>)? = null
+    var updateCount = 0
 
     override fun findAll(includeArchived: Boolean): LedgerResult<List<Account>> {
         readCount++
@@ -528,7 +1066,30 @@ private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRep
         return result
     }
 
-    override fun update(account: Account): LedgerResult<Account> = LedgerResult.Success(account)
+    override fun createWithOpeningBalance(
+        account: Account,
+        openingBalance: TransactionRecord,
+    ): LedgerResult<Account> {
+        beforeCreate?.invoke()
+        val result = createResult?.invoke(account) ?: LedgerResult.Success(account)
+        if (result is LedgerResult.Success) {
+            accounts += account
+            createdAccounts += account
+            openingBalanceRecords += openingBalance
+        }
+        return result
+    }
+
+    override fun update(account: Account): LedgerResult<Account> {
+        beforeUpdate?.invoke()
+        updateCount++
+        val result = updateResult?.invoke(account) ?: LedgerResult.Success(account)
+        if (result is LedgerResult.Success) {
+            val index = accounts.indexOfFirst { it.id == account.id }
+            if (index >= 0) accounts[index] = account
+        }
+        return result
+    }
 }
 
 private class FakeLedgerRepository : LedgerRepository {

@@ -172,8 +172,6 @@ internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
                 MainRoute.Budgets,
                 MainRoute.Settings,
                 MainRoute.Configuration,
-                MainRoute.AccountSettings,
-                MainRoute.AccountGroup,
                 MainRoute.BudgetSettings,
                 MainRoute.TransactionSettings,
                 MainRoute.RepeatSettings,
@@ -191,10 +189,22 @@ internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
                 MainRoute.Help,
                 MainRoute.Feedback,
                 -> RootRoute.Main(MainRoute.More)
+                MainRoute.AccountSettings -> RootRoute.Main(MainRoute.More)
+                MainRoute.AccountManager,
+                MainRoute.AccountGroup,
+                -> RootRoute.Main(MainRoute.AccountSettings)
+                MainRoute.DeletedAccounts -> RootRoute.Main(MainRoute.AccountSettings)
+                MainRoute.AccountGroupAdd,
+                is MainRoute.AccountGroupEdit,
+                -> RootRoute.Main(MainRoute.AccountGroup)
+                MainRoute.AccountAdd,
+                is MainRoute.AccountEdit,
+                -> RootRoute.Main(MainRoute.AccountManager)
+                MainRoute.AccountQuickAdd -> RootRoute.Main(MainRoute.Accounts)
                 MainRoute.SmsTransactionReview,
                 -> RootRoute.Main(MainRoute.Transactions)
-                is MainRoute.LoanDetails -> RootRoute.Main(MainRoute.Loans)
+                is MainRoute.LoanDetails,
                 MainRoute.Loans,
-                -> TioNavigationGraphs.root.mainEntry
+                -> RootRoute.Main(MainRoute.Accounts)
             }
     }

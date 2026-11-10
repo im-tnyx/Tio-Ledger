@@ -4,29 +4,20 @@ package com.tioledger.ui.more
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,7 +44,6 @@ import com.tioledger.ui.components.TioIconAvatar
 import com.tioledger.ui.components.TioListItem
 import com.tioledger.ui.components.TioReorderHandleIcon
 import com.tioledger.ui.design.TioIconToken
-import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 import com.tioledger.ui.navigation.bottomNavigationModel
@@ -72,7 +62,7 @@ fun AccountGroupRoute(
         groups = groups,
         onAddGroup = { title, policy -> store.addGroup(title, policy) },
         onUpdateGroup = { id, title -> store.updateGroup(id, title) },
-        onDeleteGroup = { id -> store.removeGroup(id) },
+        onDeleteGroup = store::removeGroup,
         onReorder = { from, to -> store.reorder(from, to) },
     )
 }
@@ -84,18 +74,17 @@ fun AccountGroupScreen(
     modifier: Modifier = Modifier,
     initialGroups: List<AccountGroupEntry> = DEFAULT_ACCOUNT_GROUPS,
     groups: List<AccountGroupEntry>? = null,
-    onAddGroup: ((String, AccountGroupPolicy) -> Unit)? = null,
-    onUpdateGroup: ((String, String) -> Unit)? = null,
-    onDeleteGroup: ((String) -> Unit)? = null,
+    onAddGroup: ((String, AccountGroupPolicy) -> AccountGroupEntry?)? = null,
+    onUpdateGroup: ((String, String) -> Boolean)? = null,
+    onDeleteGroup: ((String) -> AccountGroupRemovalResult)? = null,
     onReorder: ((Int, Int) -> Unit)? = null,
 ) {
     val bottomNavigation = TioNavigationGraphs.main.bottomNavigationModel(MainRoute.AccountGroup)
     var localGroups by remember(initialGroups) { mutableStateOf(initialGroups) }
     val currentGroups = groups ?: localGroups
 
-    var isAddDialogVisible by remember { mutableStateOf(false) }
-    var itemToEdit by remember { mutableStateOf<AccountGroupEntry?>(null) }
     var itemToDelete by remember { mutableStateOf<AccountGroupEntry?>(null) }
+    var deleteErrorMessage by remember { mutableStateOf<String?>(null) }
     val stepPx = with(LocalDensity.current) { 48.dp.toPx() }
 
     Scaffold(
@@ -112,11 +101,8 @@ fun AccountGroupScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { onNavigate(MainRoute.Loans) }) {
-                        Text("Loans")
-                    }
                     IconButton(
-                        onClick = { isAddDialogVisible = true },
+                        onClick = { onNavigate(MainRoute.AccountGroupAdd) },
                         modifier = Modifier.semantics { contentDescription = "Add account group" },
                     ) {
                         TioAddIcon()
@@ -150,7 +136,10 @@ fun AccountGroupScreen(
                             }
                         } else {
                             IconButton(
-                                onClick = { itemToDelete = entry },
+                                onClick = {
+                                    deleteErrorMessage = null
+                                    itemToDelete = entry
+                                },
                                 modifier =
                                     Modifier
                                         .size(36.dp)
@@ -266,7 +255,7 @@ fun AccountGroupScreen(
                         }
                     },
                     onClick = {
-                        itemToEdit = entry
+                        onNavigate(MainRoute.AccountGroupEdit(entry.id))
                     },
                 )
                 HorizontalDivider()
@@ -274,233 +263,47 @@ fun AccountGroupScreen(
         }
     }
 
-    if (isAddDialogVisible) {
-        AddAccountGroupDialog(
-            existingGroups = currentGroups,
-            onDismiss = { isAddDialogVisible = false },
-            onConfirm = { newName, selectedPolicy ->
-                if (onAddGroup != null) {
-                    onAddGroup(newName, selectedPolicy)
-                } else {
-                    val newEntry =
-                        AccountGroupEntry(
-                            id = "group_${newName.lowercase().replace(" ", "_")}_${localGroups.size + 1}",
-                            title = newName,
-                            subtitle = selectedPolicy.subtitle,
-                            policy = selectedPolicy,
-                            isPermanent = false,
-                        )
-                    localGroups = localGroups + newEntry
-                }
-                isAddDialogVisible = false
-            },
-        )
-    }
-
-    itemToEdit?.let { entry ->
-        EditAccountGroupDialog(
-            entry = entry,
-            existingGroups = currentGroups,
-            onDismiss = { itemToEdit = null },
-            onConfirm = { updatedName ->
-                if (onUpdateGroup != null) {
-                    onUpdateGroup(entry.id, updatedName)
-                } else {
-                    localGroups =
-                        localGroups.map { current ->
-                            if (current.id == entry.id) current.copy(title = updatedName) else current
-                        }
-                }
-                itemToEdit = null
-            },
-        )
-    }
-
     itemToDelete?.let { entry ->
         TioDialog(
             title = "Delete Account Group",
-            text = "Are you sure you want to delete '${entry.title}'?",
-            confirmLabel = "Delete",
+            text =
+                deleteErrorMessage
+                    ?: "Are you sure you want to delete '${entry.title}'?",
+            confirmLabel = if (deleteErrorMessage == null) "Delete" else "Close",
             dismissLabel = "Cancel",
             onConfirm = {
+                if (deleteErrorMessage != null) {
+                    deleteErrorMessage = null
+                    itemToDelete = null
+                    return@TioDialog
+                }
                 if (!entry.isPermanent) {
                     if (onDeleteGroup != null) {
-                        onDeleteGroup(entry.id)
+                        when (onDeleteGroup(entry.id)) {
+                            AccountGroupRemovalResult.Removed -> itemToDelete = null
+                            AccountGroupRemovalResult.GroupContainsAccounts -> {
+                                deleteErrorMessage = "This group contains accounts and cannot be deleted."
+                            }
+                            AccountGroupRemovalResult.PermanentGroup -> {
+                                deleteErrorMessage = "This permanent group cannot be deleted."
+                            }
+                            AccountGroupRemovalResult.GroupNotFound -> {
+                                deleteErrorMessage = "This account group is no longer available."
+                            }
+                            AccountGroupRemovalResult.PersistenceFailure -> {
+                                deleteErrorMessage = "Unable to delete account group. Try again."
+                            }
+                        }
                     } else {
                         localGroups = localGroups.filterNot { it.id == entry.id }
+                        itemToDelete = null
                     }
                 }
-                itemToDelete = null
             },
             onDismiss = {
+                deleteErrorMessage = null
                 itemToDelete = null
             },
         )
     }
-}
-
-@Composable
-private fun AddAccountGroupDialog(
-    existingGroups: List<AccountGroupEntry>,
-    onDismiss: () -> Unit,
-    onConfirm: (String, AccountGroupPolicy) -> Unit,
-) {
-    var name by remember { mutableStateOf("") }
-    var selectedPolicy by remember { mutableStateOf(AccountGroupPolicy.LOAN) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Account Group") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        errorMessage = null
-                    },
-                    label = { Text("Group name") },
-                    singleLine = true,
-                    isError = errorMessage != null,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                Text(
-                    text = "Policy",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    AccountGroupPolicy.entries.chunked(3).forEach { rowPolicies ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            rowPolicies.forEach { policy ->
-                                val isSelected = policy == selectedPolicy
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color =
-                                        if (isSelected) {
-                                            MaterialTheme.colorScheme.primaryContainer
-                                        } else {
-                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                        },
-                                    contentColor =
-                                        if (isSelected) {
-                                            MaterialTheme.colorScheme.onPrimaryContainer
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                    modifier =
-                                        Modifier
-                                            .weight(1f)
-                                            .clickable { selectedPolicy = policy }
-                                            .padding(vertical = 2.dp),
-                                ) {
-                                    Text(
-                                        text = policy.title,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(vertical = 8.dp),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                errorMessage?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val trimmed = name.trim()
-                    when {
-                        trimmed.isBlank() -> errorMessage = "Group name cannot be blank"
-                        existingGroups.any { it.title.equals(trimmed, ignoreCase = true) } -> {
-                            errorMessage = "Group name already exists"
-                        }
-                        else -> onConfirm(trimmed, selectedPolicy)
-                    }
-                },
-            ) {
-                Text("Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-    )
-}
-
-@Composable
-private fun EditAccountGroupDialog(
-    entry: AccountGroupEntry,
-    existingGroups: List<AccountGroupEntry>,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
-    var name by remember { mutableStateOf(entry.title) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit Account Group") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.sm)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        errorMessage = null
-                    },
-                    label = { Text("Group name") },
-                    singleLine = true,
-                    isError = errorMessage != null,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                errorMessage?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val trimmed = name.trim()
-                    when {
-                        trimmed.isBlank() -> errorMessage = "Group name cannot be blank"
-                        existingGroups.any { it.id != entry.id && it.title.equals(trimmed, ignoreCase = true) } -> {
-                            errorMessage = "Group name already exists"
-                        }
-                        else -> onConfirm(trimmed)
-                    }
-                },
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-    )
 }

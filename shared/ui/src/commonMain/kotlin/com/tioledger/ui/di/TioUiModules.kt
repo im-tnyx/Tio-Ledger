@@ -1,6 +1,7 @@
 package com.tioledger.ui.di
 
 import com.tioledger.ui.accounts.AccountsViewModel
+import com.tioledger.ui.accounts.ArchivedAccountsViewModel
 import com.tioledger.ui.budgets.BudgetsViewModel
 import com.tioledger.ui.categories.CategoriesViewModel
 import com.tioledger.ui.loans.LoanDetailsViewModel
@@ -20,10 +21,28 @@ import org.koin.dsl.module
 fun tioUiModule(): Module =
     module {
         single<AccountGroupPersistence> { InMemoryAccountGroupPersistence() }
-        single { AccountGroupStore(persistence = get()) }
+        single { AccountGroupStore(persistence = get(), accountRepository = getOrNull()) }
         single { CurrencyPreferenceStore(get(), get()) }
-        factory { CurrencySettingsViewModel(get()) }
-        factory { AccountsViewModel(get(), get(), get(), accountGroupStore = get(), currencyPreferenceStore = get()) }
+        factory {
+            CurrencySettingsViewModel(
+                currencyPreferenceStore = get(),
+            )
+        }
+        factory {
+            AccountsViewModel(
+                listAccountSummariesUseCase = get(),
+                createAccountUseCase = get(),
+                archiveAccountUseCase = get(),
+                idGenerator = get(),
+                accountGroupStore = get(),
+                currencyPreferenceStore = get(),
+                listLoansUseCase = getOrNull(),
+                updateAccountUseCase = getOrNull(),
+                recordIncomeUseCase = getOrNull(),
+                recordExpenseUseCase = getOrNull(),
+            )
+        }
+        factory { ArchivedAccountsViewModel(get(), get()) }
         factory { BudgetsViewModel(get(), get(), get(), get(), get()) }
         factory { CategoriesViewModel(get(), get(), get()) }
         factory { LoansViewModel(get(), get(), get(), get()) }
@@ -36,5 +55,5 @@ fun tioUiModule(): Module =
                 confirmUseCase = get(),
             )
         }
-        factory { TransactionsViewModel(get(), get()) }
+        factory { TransactionsViewModel(get(), get(), getOrNull()) }
     }

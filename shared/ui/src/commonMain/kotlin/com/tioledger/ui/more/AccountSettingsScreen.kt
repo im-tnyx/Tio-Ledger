@@ -31,10 +31,10 @@ private data class AccountSettingEntry(
 private val accountSettings =
     listOf(
         AccountSettingEntry("Account Group", route = MainRoute.AccountGroup),
-        AccountSettingEntry("Accounts Setting"),
+        AccountSettingEntry("Accounts Setting", route = MainRoute.AccountManager),
         AccountSettingEntry("Include in totals"),
         AccountSettingEntry("Transfer-Expense setting"),
-        AccountSettingEntry("Deleted accounts"),
+        AccountSettingEntry("Deleted accounts", route = MainRoute.DeletedAccounts),
         AccountSettingEntry("Card expenses display config", value = "A. At the time"),
     )
 
@@ -61,7 +61,7 @@ fun AccountSettingsScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TioAppBar(
-                title = "Accounts",
+                title = MainRoute.AccountSettings.title,
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,

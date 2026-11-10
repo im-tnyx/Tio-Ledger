@@ -35,7 +35,50 @@ class AccountsValidationInstrumentation : Instrumentation() {
         if (safe && arguments?.getString("mode") == "inspect-focus") {
             inspectFocus(result)
         }
+        if (safe && arguments?.getString("mode") == "loan-shortcut") {
+            inspectLoanShortcut(result)
+        }
         finish(if (safe) Activity.RESULT_OK else Activity.RESULT_CANCELED, result)
+    }
+
+    private fun inspectLoanShortcut(result: Bundle) {
+        val scenario = arguments?.getString("scenario") ?: "loan-shortcut-fresh"
+        startActivitySync(
+            Intent(targetContext, AccountsValidationActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra("scenario", scenario),
+        )
+        waitForIdleSync()
+        val automation = getUiAutomation()
+        val initialNodes = awaitNodes(automation)
+        result.putString("activeWindowPackage", automation.rootInActiveWindow?.packageName?.toString())
+        val loanLabels = initialNodes.filter { it.text?.toString() == "Loans" }
+        val shortcut =
+            loanLabels.firstNotNullOfOrNull { label ->
+                generateSequence(label) { it.parent }.firstOrNull { it.isClickable }
+            }
+        result.putBoolean("loanLabelFound", loanLabels.isNotEmpty())
+        result.putBoolean("loanShortcutVisible", shortcut != null)
+        result.putBoolean("loanShortcutClicked", shortcut?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true)
+        waitForIdleSync()
+        val finalNodes = awaitNodes(automation, "Selected route: Loans")
+        result.putBoolean("loansRouteOpened", finalNodes.any { it.text?.toString() == "Selected route: Loans" })
+        result.putString("scenario", scenario)
+    }
+
+    private fun awaitNodes(
+        automation: UiAutomation,
+        expectedText: String? = null,
+    ): MutableList<AccessibilityNodeInfo> {
+        repeat(20) {
+            val nodes = mutableListOf<AccessibilityNodeInfo>()
+            automation.rootInActiveWindow?.let { collectNodes(it, nodes) }
+            if (nodes.isNotEmpty() && (expectedText == null || nodes.any { it.text?.toString() == expectedText })) {
+                return nodes
+            }
+            SystemClock.sleep(250)
+        }
+        return mutableListOf()
     }
 
     private fun inspectFocus(result: Bundle) {
@@ -102,5 +145,5 @@ class AccountsValidationInstrumentation : Instrumentation() {
 
     private fun describe(node: AccessibilityNodeInfo): String =
         "text=${node.text}; description=${node.contentDescription}; " +
-            "enabled=${node.isEnabled}; focused=${node.isAccessibilityFocused}"
+            "clickable=${node.isClickable}; enabled=${node.isEnabled}; focused=${node.isAccessibilityFocused}"
 }

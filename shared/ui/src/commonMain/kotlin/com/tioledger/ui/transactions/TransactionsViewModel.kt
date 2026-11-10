@@ -9,6 +9,7 @@ import com.tioledger.core.feature.FeatureFlagProvider
 import com.tioledger.core.feature.StaticFeatureFlagProvider
 import com.tioledger.core.model.Money
 import com.tioledger.domain.model.TransactionType
+import com.tioledger.ui.more.CurrencyPreferenceStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,7 @@ import kotlin.math.abs
 class TransactionsViewModel(
     private val listTransactionsUseCase: ListTransactionsUseCase,
     featureFlagProvider: FeatureFlagProvider = StaticFeatureFlagProvider(),
+    private val currencyPreferenceStore: CurrencyPreferenceStore? = null,
 ) {
     private val smsReviewAvailable =
         featureFlagProvider.isEnabled(FeatureFlag.SMS_ASSISTED_TRANSACTION_REVIEW)
@@ -38,13 +40,18 @@ class TransactionsViewModel(
     }
 
     private fun loadTransactions() {
+        currencyPreferenceStore?.reload()
+        val preferredCurrency = currencyPreferenceStore?.getConfig()?.currency
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         when (val result = listTransactionsUseCase()) {
             is ApplicationResult.Success -> {
                 _uiState.value =
                     TransactionsUiState(
                         isLoading = false,
-                        transactions = result.outcome.value.map(TransactionSummary::toRow),
+                        transactions =
+                            result.outcome.value.map {
+                                it.toRow(preferredCurrency?.code?.normalized, preferredCurrency?.symbol)
+                            },
                         smsReviewAvailable = smsReviewAvailable,
                     )
             }
@@ -60,7 +67,10 @@ class TransactionsViewModel(
     }
 }
 
-private fun TransactionSummary.toRow(): TransactionRowUiModel {
+private fun TransactionSummary.toRow(
+    preferredCurrencyCode: String? = null,
+    preferredCurrencySymbol: String? = null,
+): TransactionRowUiModel {
     val title =
         when (type) {
             TransactionType.INCOME -> categoryName ?: description ?: "Income"
@@ -88,7 +98,11 @@ private fun TransactionSummary.toRow(): TransactionRowUiModel {
         id = id,
         title = title,
         subtitle = detailParts.joinToString(" • "),
-        amount = amount.toDisplayAmount(type),
+        amount =
+            amount.toDisplayAmount(
+                type,
+                preferredCurrencySymbol.takeIf { preferredCurrencyCode == amount.currency.normalized },
+            ),
         type = type,
     )
 }
@@ -99,7 +113,10 @@ private fun Long.toDateLabel(): String =
         .date
         .toString()
 
-private fun Money.toDisplayAmount(type: TransactionType): String {
+private fun Money.toDisplayAmount(
+    type: TransactionType,
+    overrideSymbol: String? = null,
+): String {
     val absolute = abs(amount)
     val major = absolute / MINOR_UNITS
     val minor = absolute % MINOR_UNITS
@@ -109,7 +126,8 @@ private fun Money.toDisplayAmount(type: TransactionType): String {
             TransactionType.EXPENSE, TransactionType.REPAYMENT -> "-"
             TransactionType.TRANSFER, TransactionType.ADJUSTMENT -> ""
         }
-    return "$prefix$currency $major.${minor.toString().padStart(2, '0')}"
+    val sym = overrideSymbol ?: currency.normalized
+    return "$prefix$sym $major.${minor.toString().padStart(2, '0')}"
 }
 
 private fun ApplicationError.toMessage(): String =

@@ -97,7 +97,7 @@ fun applicationModule(): Module =
     module {
         factory { GetMainCurrencyConfigUseCase(get()) }
         factory { SaveMainCurrencyConfigUseCase(get()) }
-        factory { CreateAccountUseCase(get()) }
+        factory { CreateAccountUseCase(get(), get()) }
         factory { UpdateAccountUseCase(get()) }
         factory { ArchiveAccountUseCase(get()) }
         factory { ListAccountSummariesUseCase(get(), get(), get()) }
