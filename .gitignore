@@ -27,6 +27,7 @@ out/
 
 # Xcode / iOS
 DerivedData/
+apps/ios/*.xcodeproj/
 *.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 *.xcodeproj/project.xcworkspace/xcuserdata/

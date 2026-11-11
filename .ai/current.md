@@ -1,16 +1,14 @@
 # Active Task
 
-Status: Idle
-Active Task: none
-Branch: `main`
-Platform Scope: `none`
-PR: `#92 <https://github.com/im-tnyx/Tio-Ledger/pull/92>`
-Base SHA: `b55569a8d39db675655b82c3faf82fd7dddb8b58`
-Stage A Status: merged into `main` through PR `#92`.
-Historical Merge SHA: `d0ecd608ebc264876b49d9dd28435e3980f84ea2` (historical evidence only; resolve current `main` HEAD from GitHub).
-Current HEAD: resolve from GitHub `origin/main`; do not cache a mutable head SHA here.
-Last Updated: `2026-11-01`
-Next Action: `Issue #56 reminder acceptance audit is the next documented roadmap gate, subject to separate owner authorization. Transactions Daily Stage B has not started.`
+Status: In Progress
+Active Task: `.ai/tasks/ios/github-simulator-debug.md`
+Branch: `feat/ios-github-debug`
+Platform Scope: `iOS simulator`
+PR: none
+Base SHA: `30ad6d07a990018db4d8ef26de71fec06b511723` (verified against `origin/main` after fetch)
+Current HEAD: resolve from Git; do not cache a mutable head SHA here.
+Last Updated: `2026-11-12`
+Next Action: `Validate the iOS app and simulator launch on a macOS GitHub Actions runner when GitHub access is restored.`
 
 ## Usage
 
