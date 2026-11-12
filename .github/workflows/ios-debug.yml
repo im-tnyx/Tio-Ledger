@@ -1,4 +1,4 @@
-name: iOS simulator debug
+name: iOS simulator and iPhone debug
 
 on:
   workflow_dispatch:
@@ -46,6 +46,29 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/TioLedgerDerivedData" \
             CODE_SIGNING_ALLOWED=NO \
             build
+      - name: Build unsigned iPhone app for AltServer
+        run: |
+          xcodebuild \
+            -project apps/ios/TioLedger.xcodeproj \
+            -scheme TioLedger \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/TioLedgerDeviceDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+          mkdir -p "$RUNNER_TEMP/TioLedgerUnsignedPayload/Payload"
+          cp -R "$RUNNER_TEMP/TioLedgerDeviceDerivedData/Build/Products/Debug-iphoneos/TioLedger.app" \
+            "$RUNNER_TEMP/TioLedgerUnsignedPayload/Payload/TioLedger.app"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$RUNNER_TEMP/TioLedgerUnsignedPayload/Payload" \
+            "$RUNNER_TEMP/TioLedger-unsigned.ipa"
+      - name: Upload unsigned iPhone IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: tio-ledger-ios-unsigned-ipa-for-altserver
+          path: ${{ runner.temp }}/TioLedger-unsigned.ipa
+          if-no-files-found: error
       - name: Launch on iPhone simulator
         run: |
           device_id="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; devices=json.load(sys.stdin)["devices"]; print(next(device["udid"] for group in devices.values() for device in group if device["name"].startswith("iPhone")))')"

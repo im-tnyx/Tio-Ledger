@@ -8,6 +8,7 @@ import com.tioledger.ui.di.tioUiModule
 import com.tioledger.ui.shell.TioAppShell
 import platform.UIKit.UIViewController
 
+@Suppress("FunctionName")
 fun MainViewController(): UIViewController {
     return ComposeUIViewController {
         TioAppShell(

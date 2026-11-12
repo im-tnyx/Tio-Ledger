@@ -1,7 +1,7 @@
-# GitHub iOS Simulator Debug Build
+# GitHub iOS Simulator and iPhone Debug Build
 
 Status: In Progress
-Objective: Build and launch the iOS debug app in GitHub Actions and publish a simulator artifact.
+Objective: Build and launch the iOS debug app in GitHub Actions and publish simulator and unsigned device IPA artifacts for Windows sideloading.
 Implementation Owner: Codex
 Branch: `feat/ios-github-debug`
 Base SHA: `30ad6d07a990018db4d8ef26de71fec06b511723`
@@ -18,7 +18,8 @@ Last Updated: `2026-11-12`
 ## Approved Scope And Constraints
 
 - Owner requested GitHub-based iOS build and testing because the local machine runs Windows.
-- Start with an unsigned simulator build and launch. Physical iPhone installation requires separate Apple signing assets.
+- Build the simulator app and an unsigned device IPA. Use AltServer on Windows to sign and install it with the user's Apple Account; this free-account install expires after seven days.
+- Paid Apple Developer Program signing and Ad Hoc distribution are out of scope.
 - Preserve the pre-existing untracked `.gradle-user-home/` and unrelated account-settings branch.
 
 ## Decisions
@@ -30,13 +31,15 @@ Last Updated: `2026-11-12`
 
 - [x] Created an isolated local branch from cached `origin/main`.
 - [x] Added iOS host and simulator workflow source.
-- [ ] Run macOS CI build and simulator launch on GitHub.
+- [x] Added unsigned iPhone IPA packaging for AltServer and Windows install instructions.
+- [ ] Run macOS CI build, simulator launch, and device IPA packaging on GitHub.
 - [ ] Review exact CI result and fix any build or launch failures.
 
 ## Validation Evidence
 
-- Checks executed: YAML and plist parsing PASS; `git diff --check` PASS.
-- Checks incomplete / unavailable: iOS compile and simulator launch require macOS; local Gradle metadata and ktlint checks were interrupted after dependency setup stalled without task output.
+- Checks executed: Combined PUSH_TEMPLATE Gradle command for metadata, critical tests, migration verification, ktlint and detekt completed `BUILD SUCCESSFUL`; YAML and plist parsing PASS; `git diff --check` PASS.
+- Task outcomes: critical tests, ktlint and detekt completed; metadata compilation and SQLDelight migration verification were reported `SKIPPED` by Gradle on this Windows run.
+- Checks incomplete / unavailable: Xcode device/simulator builds and simulator launch require macOS; pending GitHub Actions run is the platform validation.
 
 ## Changed Files
 
@@ -60,4 +63,4 @@ Last Updated: `2026-11-12`
 ## Next Action And Handoff
 
 - Owner: Codex
-- Next Action: Publish this branch once GitHub access returns, run the macOS workflow, and resolve its exact failures.
+- Next Action: Publish the AltServer IPA changes to the existing branch, run the macOS workflow, and resolve its exact failures.
