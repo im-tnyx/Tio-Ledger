@@ -8,7 +8,7 @@ PR: none
 Base SHA: `30ad6d07a990018db4d8ef26de71fec06b511723` (verified against `origin/main` after fetch)
 Current HEAD: resolve from Git; do not cache a mutable head SHA here.
 Last Updated: `2026-11-12`
-Next Action: `Push the validated unsigned iPhone IPA workflow, then inspect the exact macOS GitHub Actions run and artifact.`
+Next Action: `Publish the shared UI Kotlin/Native compile fix, then inspect the exact macOS run for simulator launch and unsigned IPA artifacts.`
 
 ## Usage
 
