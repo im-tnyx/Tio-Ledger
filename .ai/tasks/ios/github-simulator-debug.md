@@ -32,7 +32,8 @@ Last Updated: `2026-11-12`
 - [x] Created an isolated local branch from cached `origin/main`.
 - [x] Added iOS host and simulator workflow source.
 - [x] Added unsigned iPhone IPA packaging for AltServer and Windows install instructions.
-- [ ] Run macOS CI build, simulator launch, and device IPA packaging on GitHub.
+- [x] First macOS run reached Xcode and found the checkout's Gradle wrapper was not executable; added an explicit chmod step.
+- [ ] Re-run macOS CI build, simulator launch, and device IPA packaging on GitHub.
 - [ ] Review exact CI result and fix any build or launch failures.
 
 ## Validation Evidence
@@ -40,6 +41,7 @@ Last Updated: `2026-11-12`
 - Checks executed: Combined PUSH_TEMPLATE Gradle command for metadata, critical tests, migration verification, ktlint and detekt completed `BUILD SUCCESSFUL`; YAML and plist parsing PASS; `git diff --check` PASS.
 - Task outcomes: critical tests, ktlint and detekt completed; metadata compilation and SQLDelight migration verification were reported `SKIPPED` by Gradle on this Windows run.
 - Checks incomplete / unavailable: Xcode device/simulator builds and simulator launch require macOS; pending GitHub Actions run is the platform validation.
+- GitHub run `43189289597` on `19f088a` failed during the simulator Xcode build because `./gradlew` was not executable; no IPA or simulator artifacts were produced.
 
 ## Changed Files
 
