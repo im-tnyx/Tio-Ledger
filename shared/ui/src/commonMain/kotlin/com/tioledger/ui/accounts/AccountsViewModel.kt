@@ -221,10 +221,11 @@ private fun AccountsBalanceOverview.toAccountGroupUiModels(
 
 private fun List<AccountBalanceSummary>.toGroupTotals(): List<String> =
     groupBy { it.account.currencyCode }
-        .toSortedMap()
-        .map { (currencyCode, summaries) ->
-            val currency = CurrencyCode(currencyCode)
-            val total = summaries.fold(Money.zero(currency)) { sum, summary -> sum + summary.balance }
+        .entries
+        .sortedBy { it.key }
+        .map { entry ->
+            val currency = CurrencyCode(entry.key)
+            val total = entry.value.fold(Money.zero(currency)) { sum, summary -> sum + summary.balance }
             total.toDisplayAmount()
         }
 
