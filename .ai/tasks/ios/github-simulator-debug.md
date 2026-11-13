@@ -36,20 +36,24 @@ Last Updated: `2026-11-13`
 - [x] Second macOS run exposed a JVM-only `toSortedMap()` call in common UI code; replaced it with common collection sorting.
 - [x] Third macOS run passed Kotlin/Native compilation but exposed unresolved `sqlite3_*` symbols in the Xcode app link; added the native SQLite linker flag to the generated app project settings.
 - [x] Added an Android/iOS manual platform selector and a separate Android debug APK artifact job; automatic push/PR iOS validation remains enabled.
-- [ ] Re-run macOS CI build, simulator launch, and device IPA packaging on GitHub.
-- [ ] Run and verify the manually selected Android APK build on GitHub.
+- [x] Ran the manual Android selection; APK build and upload passed on GitHub.
+- [x] Fourth macOS run built and uploaded the iPhone IPA but exposed missing `CFBundleExecutable` during simulator installation; added that plist key and executable checks for device and simulator app bundles.
+- [ ] Re-run macOS CI build, simulator launch, and device IPA packaging on GitHub after the bundle metadata fix.
 - [ ] Review exact CI result and fix any build or launch failures.
 
 ## Validation Evidence
 
 - Checks executed before the Kotlin/Native compile fix: Combined PUSH_TEMPLATE Gradle command for metadata, critical tests, migration verification, ktlint and detekt completed `BUILD SUCCESSFUL`; YAML and plist parsing PASS; `git diff --check` PASS.
 - Task outcomes from that run: critical tests, ktlint and detekt completed; metadata compilation and SQLDelight migration verification were reported `SKIPPED` by Gradle on this Windows run.
-- Current fix validation: the manual workflow YAML parses, its `android`/`ios` choices, job conditions, and APK artifact path were checked, and `git diff --check` passes. The PUSH_TEMPLATE Gradle command could not start because the sandbox could not resolve `services.gradle.org` to download Gradle 8.10.2; GitHub Actions must validate the new workflow and Android APK.
-- Checks incomplete / unavailable: Xcode device/simulator builds and simulator launch require macOS; Android APK packaging requires a GitHub Android SDK runner.
+- Current fix validation: the manual workflow YAML and iOS Info.plist parse; `CFBundleExecutable`, the `android`/`ios` choices, job conditions, APK artifact path, and app-executable checks were inspected. `git diff --check` passes. Manual Android workflow run `43422634476` succeeded on `4c23e74`; artifact `tio-ledger-android-debug-apk-8-1` is available until `2026-11-20`.
+- The PUSH_TEMPLATE Gradle command could not start locally because the sandbox could not resolve `services.gradle.org` to download Gradle 8.10.2; GitHub Actions supplies the platform build validation.
+- Checks incomplete / unavailable: Xcode simulator install/launch and validation of the IPA on a physical iPhone are not complete.
 - GitHub run `43189289597` on `19f088a` failed during the simulator Xcode build because `./gradlew` was not executable; no IPA or simulator artifacts were produced.
 - GitHub run `43189549677` on `badf766` reached Kotlin/Native compilation but failed in `shared/ui/.../AccountsViewModel.kt` because `toSortedMap()` is unavailable in common code; replacing it with sorted map entries is the scoped fix and awaits local plus macOS validation.
 - GitHub run `43191905124` on `411fe4a` passed the Kotlin/Native framework build but failed the app executable link because the static framework's SQLDelight native driver requires Xcode `-lsqlite3`; device IPA and simulator launch steps were skipped.
-- GitHub run `43420799441` on `995661e` remained in progress at the last check while its simulator build step was running; its final status must be checked separately from this workflow revision.
+- GitHub run `43420799441` on `995661e` built and uploaded the unsigned device IPA but failed simulator install because `TioLedger.app/Info.plist` had no valid `CFBundleExecutable`; the workflow's simulator-app and screenshot uploads were skipped.
+- GitHub manual Android run `43422634476` on `4c23e74` passed the APK build and upload; the iOS job was skipped as selected.
+- GitHub automatic iOS run `43422395663` on `4c23e74` is running with the pre-fix iOS app; check its final result separately from the upcoming plist-fix run.
 
 ## Changed Files
 
@@ -58,10 +62,10 @@ Last Updated: `2026-11-13`
 - `apps/android/README.md`
 - `.github/workflows/ios-debug.yml`
 - `apps/ios/README.md`
+- `apps/ios/iosApp/Info.plist`
 - `apps/ios/project.yml`
 - `shared/ui/src/commonMain/kotlin/com/tioledger/ui/accounts/AccountsViewModel.kt`
 - `.gitignore`
-- `apps/ios/iosApp/Info.plist`
 - `apps/ios/iosApp/TioLedgerApp.swift`
 - `apps/ios/build.gradle.kts`
 - `apps/ios/src/iosMain/kotlin/com/tioledger/apps/ios/IosApp.kt`
@@ -70,9 +74,9 @@ Last Updated: `2026-11-13`
 
 - Review Status: REVIEW_PENDING
 - Independent Reviewer: None yet
-- Remaining risks: latest macOS app linking, simulator launch, unsigned iPhone IPA packaging, and the manually selected Android APK artifact remain unverified.
+- Remaining risks: macOS simulator launch and IPA rebuild remain unverified after adding `CFBundleExecutable`; the unsigned IPA has not been installed on a physical iPhone.
 
 ## Next Action And Handoff
 
 - Owner: Codex
-- Next Action: Publish the manual Android/iOS platform selector and inspect the exact iOS run; then run Android and verify its separate APK artifact.
+- Next Action: Publish the iOS `CFBundleExecutable` metadata fix and inspect the latest macOS simulator launch and unsigned IPA artifacts.

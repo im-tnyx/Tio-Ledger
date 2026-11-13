@@ -8,7 +8,7 @@ PR: none
 Base SHA: `30ad6d07a990018db4d8ef26de71fec06b511723` (verified against `origin/main` after fetch)
 Current HEAD: resolve from Git; do not cache a mutable head SHA here.
 Last Updated: `2026-11-13`
-Next Action: `Add a manual Android/iOS platform choice with a separate Android APK artifact, then verify the iOS and Android builds.`
+Next Action: `Publish the iOS CFBundleExecutable metadata fix, then verify simulator launch and the unsigned IPA on GitHub.`
 
 ## Usage
 

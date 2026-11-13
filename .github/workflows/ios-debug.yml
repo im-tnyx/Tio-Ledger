@@ -106,8 +106,11 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/TioLedgerDeviceDerivedData" \
             CODE_SIGNING_ALLOWED=NO \
             build
+          device_app="$RUNNER_TEMP/TioLedgerDeviceDerivedData/Build/Products/Debug-iphoneos/TioLedger.app"
+          device_executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$device_app/Info.plist")"
+          test -x "$device_app/$device_executable"
           mkdir -p "$RUNNER_TEMP/TioLedgerUnsignedPayload/Payload"
-          cp -R "$RUNNER_TEMP/TioLedgerDeviceDerivedData/Build/Products/Debug-iphoneos/TioLedger.app" \
+          cp -R "$device_app" \
             "$RUNNER_TEMP/TioLedgerUnsignedPayload/Payload/TioLedger.app"
           ditto -c -k --sequesterRsrc --keepParent \
             "$RUNNER_TEMP/TioLedgerUnsignedPayload/Payload" \
@@ -120,10 +123,13 @@ jobs:
           if-no-files-found: error
       - name: Launch on iPhone simulator
         run: |
+          simulator_app="$RUNNER_TEMP/TioLedgerDerivedData/Build/Products/Debug-iphonesimulator/TioLedger.app"
+          simulator_executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$simulator_app/Info.plist")"
+          test -x "$simulator_app/$simulator_executable"
           device_id="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; devices=json.load(sys.stdin)["devices"]; print(next(device["udid"] for group in devices.values() for device in group if device["name"].startswith("iPhone")))')"
           xcrun simctl boot "$device_id"
           xcrun simctl bootstatus "$device_id" -b
-          xcrun simctl install "$device_id" "$RUNNER_TEMP/TioLedgerDerivedData/Build/Products/Debug-iphonesimulator/TioLedger.app"
+          xcrun simctl install "$device_id" "$simulator_app"
           xcrun simctl launch "$device_id" com.tioledger.ios
           xcrun simctl io "$device_id" screenshot "$RUNNER_TEMP/tio-ledger-ios-launch.png"
       - name: Upload simulator app
