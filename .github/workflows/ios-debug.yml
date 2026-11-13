@@ -1,7 +1,15 @@
-name: iOS simulator and iPhone debug
+name: Mobile debug build
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Choose which phone platform to build for testing
+        required: true
+        type: choice
+        options:
+          - android
+          - ios
   push:
     paths:
       - .github/workflows/ios-debug.yml
@@ -21,12 +29,51 @@ on:
       - build.gradle.kts
       - settings.gradle.kts
 
+permissions:
+  contents: read
+
 jobs:
-  simulator-debug:
+  android-debug:
+    name: Build Android debug APK
+    if: github.event_name == 'workflow_dispatch' && inputs.platform == 'android'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: Build Android debug APK
+        run: ./gradlew :apps:android:assembleDebug --no-daemon --console=plain --stacktrace
+      - name: Upload Android debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tio-ledger-android-debug-apk-${{ github.run_number }}-${{ github.run_attempt }}
+          path: apps/android/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  ios-debug:
     runs-on: macos-15
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'ios'
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
       - uses: actions/setup-java@v4

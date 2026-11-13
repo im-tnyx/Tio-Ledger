@@ -4,14 +4,17 @@
 project is generated from `project.yml` with XcodeGen. The host starts the
 shared bootstrap with `IosDatabaseDriverFactory` and displays `TioAppShell`.
 
-The `iOS simulator and iPhone debug` GitHub Actions workflow builds a Debug app for the
-iOS Simulator on a macOS runner, launches it, and uploads `TioLedger.app` and
-a launch screenshot as artifacts.
-That artifact is for the simulator; it cannot be installed on a physical
-iPhone. The workflow also builds an unsigned device IPA. On Windows, install
-AltServer and its Windows requirements, download the IPA artifact, connect the
-iPhone by USB, unlock it, and accept Trust. In AltServer's tray menu, hold
-Shift while clicking and select `Sideload .ipa…`; choose the downloaded IPA
+The `Mobile debug build` GitHub Actions workflow has a manual `platform` choice.
+Choose `ios` to build a Debug app for the iOS Simulator on a macOS runner, launch
+it, and upload `TioLedger.app`, a launch screenshot, and an unsigned device IPA.
+Choose `android` to build a separate Android debug APK artifact. Push and pull
+request events continue to build and launch the iOS simulator app.
+
+The simulator `.app` artifact cannot be installed on a physical iPhone. On
+Windows, install AltServer and its Windows requirements, download the IPA
+artifact, connect the iPhone by USB, unlock it, and accept Trust. In AltServer's
+tray menu, hold Shift while clicking and select `Sideload .ipa…`; choose the
+downloaded IPA
 and enter your Apple Account when prompted. AltServer signs and installs the
 app. On iOS 16+, enable Developer Mode on the iPhone. A free Apple Account
 signature expires after seven days, so directly sideloaded apps need to be
