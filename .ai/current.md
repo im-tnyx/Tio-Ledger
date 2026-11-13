@@ -7,8 +7,8 @@ Platform Scope: `iOS simulator and iPhone sideload`
 PR: none
 Base SHA: `30ad6d07a990018db4d8ef26de71fec06b511723` (verified against `origin/main` after fetch)
 Current HEAD: resolve from Git; do not cache a mutable head SHA here.
-Last Updated: `2026-11-12`
-Next Action: `Publish the shared UI Kotlin/Native compile fix, then inspect the exact macOS run for simulator launch and unsigned IPA artifacts.`
+Last Updated: `2026-11-13`
+Next Action: `Publish the iOS host SQLite linker flag, then inspect the exact macOS run for simulator launch and unsigned IPA artifacts.`
 
 ## Usage
 
