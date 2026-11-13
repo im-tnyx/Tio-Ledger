@@ -1,14 +1,14 @@
 # Active Task
 
-Status: In Progress
-Active Task: `.ai/tasks/ios/github-simulator-debug.md`
+Status: Complete
+Active Task: none
 Branch: `feat/ios-github-debug`
 Platform Scope: `Android debug APK and iOS simulator/iPhone sideload`
 PR: none
 Base SHA: `30ad6d07a990018db4d8ef26de71fec06b511723` (verified against `origin/main` after fetch)
 Current HEAD: resolve from Git; do not cache a mutable head SHA here.
 Last Updated: `2026-11-13`
-Next Action: `Publish the iOS CFBundleExecutable metadata fix, then verify simulator launch and the unsigned IPA on GitHub.`
+Next Action: `Download the Android APK or iOS IPA/simulator artifacts from the verified GitHub Actions runs; physical iPhone installation remains user-side.`
 
 ## Usage
 
