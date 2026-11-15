@@ -13,10 +13,8 @@ import com.tioledger.application.usecase.account.UpdateAccountCommand
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.account.withSearchQuery
 import com.tioledger.application.usecase.loan.ListLoansUseCase
-import com.tioledger.application.usecase.transaction.RecordExpenseCommand
-import com.tioledger.application.usecase.transaction.RecordExpenseUseCase
-import com.tioledger.application.usecase.transaction.RecordIncomeCommand
-import com.tioledger.application.usecase.transaction.RecordIncomeUseCase
+import com.tioledger.application.usecase.transaction.RecordAdjustmentCommand
+import com.tioledger.application.usecase.transaction.RecordAdjustmentUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
@@ -44,8 +42,7 @@ class AccountsViewModel(
     private val currencyPreferenceStore: CurrencyPreferenceStore? = null,
     private val listLoansUseCase: ListLoansUseCase? = null,
     private val updateAccountUseCase: UpdateAccountUseCase? = null,
-    private val recordIncomeUseCase: RecordIncomeUseCase? = null,
-    private val recordExpenseUseCase: RecordExpenseUseCase? = null,
+    private val recordAdjustmentUseCase: RecordAdjustmentUseCase? = null,
 ) {
     private val _uiState =
         MutableStateFlow(
@@ -282,15 +279,6 @@ class AccountsViewModel(
     private fun createAccount() {
         val current = _uiState.value
         if (current.isSaving) return
-        val openingBalanceMinor = parseAmountToMinor(current.draftCurrentBalance)
-        if (openingBalanceMinor == null) {
-            _uiState.value = current.copy(createErrorMessage = "Enter a valid balance with up to 2 decimal places.")
-            return
-        }
-        if (openingBalanceMinor < 0L) {
-            _uiState.value = current.copy(createErrorMessage = "Initial balance cannot be negative.")
-            return
-        }
         _uiState.value = current.copy(isSaving = true, createErrorMessage = null)
         val group = accountGroupStore.groupForId(current.draftGroupId)
         if (group == null) {
@@ -304,10 +292,6 @@ class AccountsViewModel(
                 type = group.policy.accountType,
                 currencyCode = current.draftCurrencyCode,
                 createdAt = nowProvider(),
-                openingBalance =
-                    openingBalanceMinor.takeIf { it > 0L }?.let {
-                        Money(it, CurrencyCode(current.draftCurrencyCode))
-                    },
             )
         when (accountGroupStore.prepareAccountAssignment(command.id, group.id, command.type)) {
             is AccountGroupAssignmentResult.Prepared -> Unit
@@ -359,35 +343,19 @@ class AccountsViewModel(
         val amount = Money(kotlin.math.abs(delta), CurrencyCode(account.currencyCode))
         val now = nowProvider()
         val assetAccount = account.type.ledgerClass == LedgerClass.ASSET
-        val isIncome = (assetAccount && delta > 0L) || (!assetAccount && delta < 0L)
+        val isDebit = if (assetAccount) delta > 0L else delta < 0L
+        val useCase = recordAdjustmentUseCase ?: return "Balance adjustment is unavailable."
         val result =
-            if (isIncome) {
-                val useCase = recordIncomeUseCase ?: return "Income posting is unavailable."
-                useCase(
-                    RecordIncomeCommand(
-                        timestamp = now,
-                        description = "Account balance correction",
-                        amount = amount,
-                        accountId = account.id,
-                        categoryId = null,
-                        merchantId = null,
-                        createdAt = now,
-                    ),
-                )
-            } else {
-                val useCase = recordExpenseUseCase ?: return "Expense posting is unavailable."
-                useCase(
-                    RecordExpenseCommand(
-                        timestamp = now,
-                        description = "Account balance correction",
-                        amount = amount,
-                        accountId = account.id,
-                        categoryId = null,
-                        merchantId = null,
-                        createdAt = now,
-                    ),
-                )
-            }
+            useCase(
+                RecordAdjustmentCommand(
+                    timestamp = now,
+                    description = "Account balance correction",
+                    amount = amount,
+                    accountId = account.id,
+                    isDebit = isDebit,
+                    createdAt = now,
+                ),
+            )
         return when (result) {
             is ApplicationResult.Success -> null
             is ApplicationResult.Failure -> result.error.toCreateMessage()

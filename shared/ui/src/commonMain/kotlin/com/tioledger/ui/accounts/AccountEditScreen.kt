@@ -461,7 +461,13 @@ fun AccountEditScreen(
                 )
             },
             text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState()),
+                ) {
                     state.availableGroups
                         .filter { isAddMode || it.policy.accountType == accountRow?.accountType }
                         .forEach { group ->

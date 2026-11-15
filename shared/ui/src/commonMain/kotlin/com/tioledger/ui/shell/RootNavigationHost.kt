@@ -159,20 +159,6 @@ fun RootNavigationHost(
                                 onNavigate(RootRoute.Main(MainRoute.AccountSettings))
                             },
                         )
-                    MainRoute.AccountAdd ->
-                        AccountEditRoute(
-                            accountId = null,
-                            onNavigateBack = {
-                                onNavigate(RootRoute.Main(MainRoute.AccountManager))
-                            },
-                        )
-                    MainRoute.AccountQuickAdd ->
-                        AccountEditRoute(
-                            accountId = null,
-                            onNavigateBack = {
-                                onNavigate(RootRoute.Main(MainRoute.Accounts))
-                            },
-                        )
                     is MainRoute.AccountEdit ->
                         AccountEditRoute(
                             accountId = destination.accountId,

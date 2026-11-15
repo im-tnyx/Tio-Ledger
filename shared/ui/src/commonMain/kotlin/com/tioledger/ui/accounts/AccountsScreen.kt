@@ -4,7 +4,6 @@ package com.tioledger.ui.accounts
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -83,7 +83,7 @@ fun AccountsScreen(
                         Text("Loans")
                     }
                     IconButton(
-                        onClick = { onNavigate(MainRoute.AccountQuickAdd) },
+                        onClick = { onAction(AccountsAction.AddClicked) },
                         modifier = Modifier.semantics { contentDescription = "Add account" },
                     ) {
                         TioAddIcon()
@@ -133,6 +133,10 @@ fun AccountsScreen(
             }
         }
     }
+
+    if (state.isCreateDialogVisible) {
+        AddAccountDialog(state = state, onAction = onAction)
+    }
 }
 
 @Composable
@@ -153,9 +157,13 @@ internal fun AddAccountDialog(
                     enabled = !state.isSaving,
                 )
                 Text("Account Group", style = MaterialTheme.typography.labelLarge)
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(TioSpacing.sm),
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(TioSpacing.sm),
                 ) {
                     state.availableGroups.forEach { group ->
                         TioFilterChip(

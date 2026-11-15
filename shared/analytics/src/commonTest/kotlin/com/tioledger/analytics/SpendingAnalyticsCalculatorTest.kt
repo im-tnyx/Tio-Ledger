@@ -88,7 +88,7 @@ class SpendingAnalyticsCalculatorTest {
     }
 
     @Test
-    fun balanceCorrectionIncomeAndExpenseAreCurrentlyCountedAsCashFlow() {
+    fun balanceAdjustmentsDoNotAffectIncomeExpenseOrCashFlowTotals() {
         val result =
             calculator.calculate(
                 period = SpendingAnalyticsPeriod.MONTHLY,
@@ -97,24 +97,36 @@ class SpendingAnalyticsCalculatorTest {
                 transactions =
                     listOf(
                         record(
-                            id = "balance-increase",
+                            id = "salary",
                             timestamp = JULY_19_2026_UTC,
                             type = TransactionType.INCOME,
+                            split = split("bank", "Bank", "INR", 10_000L),
+                        ),
+                        record(
+                            id = "groceries",
+                            timestamp = JULY_19_2026_UTC,
+                            type = TransactionType.EXPENSE,
+                            split = split("wallet", "Wallet", "INR", 3_000L),
+                        ),
+                        record(
+                            id = "balance-increase",
+                            timestamp = JULY_19_2026_UTC,
+                            type = TransactionType.ADJUSTMENT,
                             split = split("bank", "Bank", "INR", 5_000L),
-                        ).copy(description = "Account balance correction"),
+                        ),
                         record(
                             id = "balance-decrease",
                             timestamp = JULY_19_2026_UTC,
-                            type = TransactionType.EXPENSE,
+                            type = TransactionType.ADJUSTMENT,
                             split = split("bank", "Bank", "INR", 2_000L),
-                        ).copy(description = "Account balance correction"),
+                        ),
                     ),
             )
 
         val inr = result.currencySummaries.single()
-        assertEquals(Money(5_000L, CurrencyCode("INR")), inr.incomeTotal)
-        assertEquals(Money(2_000L, CurrencyCode("INR")), inr.expenseTotal)
-        assertEquals(Money(3_000L, CurrencyCode("INR")), inr.netTotal)
+        assertEquals(Money(10_000L, CurrencyCode("INR")), inr.incomeTotal)
+        assertEquals(Money(3_000L, CurrencyCode("INR")), inr.expenseTotal)
+        assertEquals(Money(7_000L, CurrencyCode("INR")), inr.netTotal)
     }
 
     @Test

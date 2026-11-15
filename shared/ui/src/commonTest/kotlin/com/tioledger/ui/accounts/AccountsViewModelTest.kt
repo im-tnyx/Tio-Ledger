@@ -7,8 +7,7 @@ import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.currency.GetMainCurrencyConfigUseCase
 import com.tioledger.application.usecase.currency.SaveMainCurrencyConfigUseCase
 import com.tioledger.application.usecase.loan.ListLoansUseCase
-import com.tioledger.application.usecase.transaction.RecordExpenseUseCase
-import com.tioledger.application.usecase.transaction.RecordIncomeUseCase
+import com.tioledger.application.usecase.transaction.RecordAdjustmentUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.LedgerError
 import com.tioledger.core.model.LedgerResult
@@ -16,7 +15,6 @@ import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
-import com.tioledger.domain.model.Category
 import com.tioledger.domain.model.LedgerEntry
 import com.tioledger.domain.model.LedgerEntryType
 import com.tioledger.domain.model.LedgerSourceType
@@ -25,7 +23,6 @@ import com.tioledger.domain.model.PostingTarget
 import com.tioledger.domain.model.SYSTEM_SUPPORTED_CURRENCIES
 import com.tioledger.domain.model.TransactionRecord
 import com.tioledger.domain.repository.AccountRepository
-import com.tioledger.domain.repository.CategoryRepository
 import com.tioledger.domain.repository.CurrencyPreferenceRepository
 import com.tioledger.domain.repository.LedgerRepository
 import com.tioledger.domain.repository.TransactionRepository
@@ -234,52 +231,23 @@ class AccountsViewModelTest {
     }
 
     @Test
-    fun creatingAccountWithCurrentBalancePersistsOpeningLedgerPostingAtomically() {
+    fun accountCreationDoesNotAcceptAnOpeningBalance() {
         val accounts = FakeAccountRepository(emptyList())
-        val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("funded-account"))
-
+        val ledger = FakeLedgerRepository()
+        val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("zero-opening-account"))
         viewModel.onAction(AccountsAction.AddClicked)
-        viewModel.onAction(AccountsAction.NameChanged("Funded bank"))
+        viewModel.onAction(AccountsAction.NameChanged("Empty wallet"))
         viewModel.onAction(AccountsAction.CurrentBalanceChanged("125.00"))
         viewModel.onAction(AccountsAction.SaveClicked)
 
         assertEquals(1, accounts.created.size)
-        assertEquals(1, accounts.openingBalanceRecords.size)
-        assertEquals(12_500L, accounts.openingBalanceRecords.single().splits.single().amount.amount)
-        assertEquals("ADJUSTMENT", accounts.openingBalanceRecords.single().transaction.type.name)
-    }
-
-    @Test
-    fun repeatedSaveAfterOpeningBalanceCreationDoesNotDuplicatePosting() {
-        val accounts = FakeAccountRepository(emptyList())
-        val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("once-only-account"))
-        viewModel.onAction(AccountsAction.AddClicked)
-        viewModel.onAction(AccountsAction.NameChanged("Savings"))
-        viewModel.onAction(AccountsAction.CurrentBalanceChanged("10.01"))
-
-        viewModel.onAction(AccountsAction.SaveClicked)
-        viewModel.onAction(AccountsAction.SaveClicked)
-
-        assertEquals(1, accounts.created.size)
-        assertEquals(1, accounts.openingBalanceRecords.size)
-        assertEquals(1_001L, accounts.openingBalanceRecords.single().splits.single().amount.amount)
-    }
-
-    @Test
-    fun explicitZeroOpeningBalanceCreatesAccountWithoutPosting() {
-        val accounts = FakeAccountRepository(emptyList())
-        val viewModel = testViewModel(accounts, FakeLedgerRepository(), FixedIdGenerator("zero-opening-account"))
-        viewModel.onAction(AccountsAction.AddClicked)
-        viewModel.onAction(AccountsAction.NameChanged("Empty wallet"))
-        viewModel.onAction(AccountsAction.CurrentBalanceChanged("0.00"))
-        viewModel.onAction(AccountsAction.SaveClicked)
-
-        assertEquals(1, accounts.created.size)
         assertTrue(accounts.openingBalanceRecords.isEmpty())
+        assertTrue(ledger.entriesByAccount.values.flatten().isEmpty())
+        assertEquals("INR 0.00", viewModel.uiState.value.groups.single().accounts.single().balance)
     }
 
     @Test
-    fun editingAssetBalanceRecordsOnlyIncomeDifferenceAndPreservesOldEntries() {
+    fun editingAssetBalanceRecordsOnlyAdjustmentDifferenceAndPreservesOldEntries() {
         val bank = account("bank", "Main bank", AccountType.BANK).copy(displayOrder = 7)
         val originalEntry = entry("original", bank, 1_000L)
         val accounts = FakeAccountRepository(listOf(bank))
@@ -293,9 +261,10 @@ class AccountsViewModelTest {
         viewModel.onAction(AccountsAction.SaveClicked)
 
         val posted = transactions.records.single()
-        assertEquals("INCOME", posted.transaction.type.name)
+        assertEquals("ADJUSTMENT", posted.transaction.type.name)
         assertEquals(500L, posted.splits.single().amount.amount)
         assertEquals(null, posted.splits.single().categoryId)
+        assertEquals(LedgerEntryType.DEBIT, posted.ledgerEntries.filterIsInstance<LedgerEntry>().first().entryType)
         assertEquals(originalEntry, ledger.entriesByAccount[bank.id]?.first())
         assertEquals(7, (accounts.findById(bank.id) as LedgerResult.Success).value.displayOrder)
         assertEquals("USD 15.00", viewModel.uiState.value.groups.single().accounts.single().balance)
@@ -303,7 +272,7 @@ class AccountsViewModelTest {
     }
 
     @Test
-    fun editingAssetBalanceDownwardPostsOnlyExactExpenseDelta() {
+    fun editingAssetBalanceDownwardPostsOnlyExactAdjustmentDelta() {
         val bank = account("bank", "Main bank", AccountType.BANK)
         val originalEntry = entry("original", bank, 1_001L)
         val ledger = FakeLedgerRepository().apply { entriesByAccount[bank.id] = listOf(originalEntry) }
@@ -315,14 +284,15 @@ class AccountsViewModelTest {
         viewModel.onAction(AccountsAction.SaveClicked)
 
         val correction = transactions.records.single()
-        assertEquals("EXPENSE", correction.transaction.type.name)
+        assertEquals("ADJUSTMENT", correction.transaction.type.name)
         assertEquals(251L, correction.splits.single().amount.amount)
+        assertEquals(LedgerEntryType.CREDIT, correction.ledgerEntries.filterIsInstance<LedgerEntry>().first().entryType)
         assertEquals(listOf(originalEntry), ledger.entriesByAccount[bank.id]?.take(1))
         assertEquals("USD 7.50", viewModel.uiState.value.groups.single().accounts.single().balance)
     }
 
     @Test
-    fun editingLiabilityBalanceIncreaseRecordsExpenseAndDecreaseRecordsIncome() {
+    fun editingLiabilityBalanceIncreaseAndDecreaseUseNormalBalanceDirections() {
         val card = account("card", "Credit card", AccountType.CREDIT_CARD)
         val accounts = FakeAccountRepository(listOf(card))
         val ledger =
@@ -339,8 +309,12 @@ class AccountsViewModelTest {
         viewModel.onAction(AccountsAction.CurrentBalanceChanged("7.00"))
         viewModel.onAction(AccountsAction.SaveClicked)
 
-        assertEquals(listOf("EXPENSE", "INCOME"), transactions.records.map { it.transaction.type.name })
+        assertEquals(listOf("ADJUSTMENT", "ADJUSTMENT"), transactions.records.map { it.transaction.type.name })
         assertEquals(listOf(500L, 800L), transactions.records.map { it.splits.single().amount.amount })
+        assertEquals(
+            listOf(LedgerEntryType.CREDIT, LedgerEntryType.DEBIT),
+            transactions.records.map { record -> record.ledgerEntries.filterIsInstance<LedgerEntry>().first().entryType },
+        )
         assertEquals(1_000L, ledger.entriesByAccount[card.id]?.first()?.amount?.amount)
         assertEquals("USD 7.00", viewModel.uiState.value.groups.single().accounts.single().balance)
     }
@@ -916,8 +890,7 @@ private fun testViewModel(
     currencyPreferenceStore: CurrencyPreferenceStore? = null,
     listLoansUseCase: ListLoansUseCase? = null,
     updateAccountUseCase: UpdateAccountUseCase? = UpdateAccountUseCase(accounts),
-    recordIncomeUseCase: RecordIncomeUseCase? = null,
-    recordExpenseUseCase: RecordExpenseUseCase? = null,
+    recordAdjustmentUseCase: RecordAdjustmentUseCase? = null,
 ): AccountsViewModel =
     AccountsViewModel(
         listAccountSummariesUseCase = ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
@@ -929,8 +902,7 @@ private fun testViewModel(
         currencyPreferenceStore = currencyPreferenceStore,
         listLoansUseCase = listLoansUseCase,
         updateAccountUseCase = updateAccountUseCase,
-        recordIncomeUseCase = recordIncomeUseCase,
-        recordExpenseUseCase = recordExpenseUseCase,
+        recordAdjustmentUseCase = recordAdjustmentUseCase,
     )
 
 private fun testViewModelWithPosting(
@@ -938,13 +910,11 @@ private fun testViewModelWithPosting(
     ledger: FakeLedgerRepository,
     transactions: RecordingTransactionRepository,
 ): AccountsViewModel {
-    val categories = EmptyCategoryRepository()
     val postingEngine = PostingEngine(SequenceIdGenerator())
     return testViewModel(
         accounts = accounts,
         ledger = ledger,
-        recordIncomeUseCase = RecordIncomeUseCase(accounts, categories, transactions, postingEngine),
-        recordExpenseUseCase = RecordExpenseUseCase(accounts, categories, transactions, postingEngine),
+        recordAdjustmentUseCase = RecordAdjustmentUseCase(accounts, transactions, postingEngine),
     )
 }
 
@@ -1023,16 +993,6 @@ private class RecordingTransactionRepository(private val ledger: FakeLedgerRepos
         }
         return LedgerResult.Success(record)
     }
-}
-
-private class EmptyCategoryRepository : CategoryRepository {
-    override fun findAll(): LedgerResult<List<Category>> = LedgerResult.Success(emptyList())
-
-    override fun findById(categoryId: String): LedgerResult<Category> = LedgerResult.Failure(LedgerError.CategoryNotFound(categoryId))
-
-    override fun create(category: Category): LedgerResult<Category> = LedgerResult.Success(category)
-
-    override fun update(category: Category): LedgerResult<Category> = LedgerResult.Success(category)
 }
 
 private class FakeAccountRepository(initialAccounts: List<Account>) : AccountRepository {

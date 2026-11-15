@@ -51,6 +51,7 @@ data class ArchivedAccountsUiState(
 class ArchivedAccountsViewModel(
     private val listAccountSummariesUseCase: ListAccountSummariesUseCase,
     private val accountGroupStore: AccountGroupStore,
+    private val currencyPreferenceStore: CurrencyPreferenceStore? = null,
 ) {
     private val mutableState = MutableStateFlow(ArchivedAccountsUiState())
     val uiState: StateFlow<ArchivedAccountsUiState> = mutableState.asStateFlow()
@@ -74,7 +75,9 @@ class ArchivedAccountsViewModel(
                                 id = summary.account.id,
                                 name = summary.account.name,
                                 groupName = group?.title ?: summary.account.type.archivedGroupTitle(),
-                                balance = summary.balance.toDisplayAmount(),
+                                balance = summary.balance.toDisplayAmount(
+                                    currencyPreferenceStore?.symbolFor(summary.account.currencyCode),
+                                ),
                             )
                         }
                         .sortedWith(

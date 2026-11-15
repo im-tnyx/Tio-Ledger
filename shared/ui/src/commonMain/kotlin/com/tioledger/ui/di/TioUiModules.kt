@@ -38,11 +38,10 @@ fun tioUiModule(): Module =
                 currencyPreferenceStore = get(),
                 listLoansUseCase = getOrNull(),
                 updateAccountUseCase = getOrNull(),
-                recordIncomeUseCase = getOrNull(),
-                recordExpenseUseCase = getOrNull(),
+                recordAdjustmentUseCase = getOrNull(),
             )
         }
-        factory { ArchivedAccountsViewModel(get(), get()) }
+        factory { ArchivedAccountsViewModel(get(), get(), get()) }
         factory { BudgetsViewModel(get(), get(), get(), get(), get()) }
         factory { CategoriesViewModel(get(), get(), get()) }
         factory { LoansViewModel(get(), get(), get(), get()) }

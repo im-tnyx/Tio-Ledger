@@ -13,22 +13,6 @@ class AccountScreensSeparationTest {
         val route = MainRoute.AccountEdit("acc-123")
         assertEquals("settings/accounts/edit/acc-123", route.path)
         assertEquals("Edit Account", route.title)
-    }
-
-    @Test
-    fun accountAddRouteContractIsDefined() {
-        val route = MainRoute.AccountAdd
-        assertEquals("settings/accounts/add", route.path)
-        assertEquals("Add Account", route.title)
-        assertTrue(route in TioNavigationGraphs.main.routes)
-        assertFalse(route in TioNavigationGraphs.main.bottomNavigationRoutes)
-    }
-
-    @Test
-    fun quickAddRouteReturnsToPrimaryAccountsDestination() {
-        val route = MainRoute.AccountQuickAdd
-        assertEquals("accounts/add", route.path)
-        assertEquals("Add Account", route.title)
         assertTrue(route in TioNavigationGraphs.main.routes)
         assertFalse(route in TioNavigationGraphs.main.bottomNavigationRoutes)
     }
