@@ -9,6 +9,15 @@ import kotlin.test.assertTrue
 
 class AccountScreensSeparationTest {
     @Test
+    fun accountAddRouteIsReachableAndNonPrimary() {
+        val route = MainRoute.AccountAdd
+        assertEquals("settings/accounts/add", route.path)
+        assertEquals("Add Account", route.title)
+        assertTrue(route in TioNavigationGraphs.main.routes)
+        assertFalse(route in TioNavigationGraphs.main.bottomNavigationRoutes)
+    }
+
+    @Test
     fun accountEditRouteContractIsDefined() {
         val route = MainRoute.AccountEdit("acc-123")
         assertEquals("settings/accounts/edit/acc-123", route.path)

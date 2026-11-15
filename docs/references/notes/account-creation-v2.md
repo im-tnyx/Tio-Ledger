@@ -83,8 +83,8 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 - **Successful refresh:** a successful creation always triggers a fresh read through `ListAccountSummariesUseCase` so the new account appears immediately.
 - **Cancel/dismiss semantics:** discards the entire draft (name, type, error) with no persistence side effect.
 - **Optional initial balance:** Add Account shows a current-balance field that defaults to zero. If left empty/zero, creation persists only the account record. If a positive amount is entered, the account and its opening-balance ledger transaction are persisted atomically.
-- **Current-balance correction is an edit workflow:** editing an existing account's current balance records only the difference as a normal `INCOME` or `EXPENSE` transaction. Asset increases and liability decreases post income; asset decreases and liability increases post expense. Category is optional and remains unset. Existing ledger entries are never rewritten. Re-saving an unchanged balance creates no transaction.
-- **Analytics limitation pending product decision:** `SpendingAnalyticsCalculator` currently includes these correction transactions in income/expense and cash-flow totals because persisted transaction data has no durable correction classification. Excluding them safely requires an approved persistent classification/contract change; using `ADJUSTMENT` instead would change the owner-approved income/expense workflow. Do not treat correction-inclusive reports as actual cash flow until that decision is made.
+- **Current-balance correction is an edit workflow:** editing an existing account's current balance records only the difference as an `ADJUSTMENT` transaction through `RecordAdjustmentUseCase`. The posting direction preserves the account's normal balance. Category remains unset, existing ledger entries are never rewritten, and saving an unchanged balance creates no transaction.
+- **Analytics treatment:** `ADJUSTMENT` transactions are excluded from income, expense, and cash-flow totals, consistent with `docs/references/notes/reports.md`.
 - **Ledger entry only for a supplied balance:** creation without a balance does not create a `LedgerEntry`; a supplied positive balance creates its opening-balance transaction as part of the same database operation.
 - **No silent financial mutation:** every state change in this flow is either a local, reversible draft edit or a single explicit user-confirmed submission through the existing use case.
 
@@ -154,7 +154,7 @@ Ordering follows the existing Tio Ledger group-then-name-then-save pattern witho
 ## Intentional Deviations
 
 1. **Full-screen Add Account form.** The owner confirmed the existing full-screen account form should remain and adapt its fields to the selected Account Group. This keeps Add and Edit as non-primary account routes and does not add bottom navigation.
-2. **Optional opening balance; ledger correction on edit.** The reference's amount/currency block implies an opening balance can be entered at creation time. Tio Ledger defaults new accounts to zero and lets the user provide a positive initial amount; account plus opening transaction are committed atomically. A later explicit current-balance edit posts only its delta through the existing income/expense transaction use cases; the account balance remains a ledger projection.
+2. **Optional opening balance; ledger correction on edit.** The reference's amount/currency block implies an opening balance can be entered at creation time. Tio Ledger defaults new accounts to zero and lets the user provide a positive initial amount; account plus opening transaction are committed atomically. A later explicit current-balance edit posts only its delta as `ADJUSTMENT`; the account balance remains a ledger projection and adjustments stay outside income, expense, and cash-flow totals.
 3. **Group policy instead of a second type picker.** The selected group supplies the stored `AccountType`; unsupported detail fields are not fabricated or silently discarded.
 4. **Currency owned by Settings.** The reference offers an account-local picker; Tio Ledger uses the existing persisted Main Currency setting so account creation has one source of truth.
 
@@ -203,7 +203,7 @@ Phone-width review covering:
 - [ ] Cancel/dismiss persists nothing and leaves Accounts state unchanged.
 - [ ] Draft fully resets (name, type, error) after both cancel and successful creation.
 - [ ] Empty/zero starting balance creates only the account; positive starting balance atomically creates the opening-balance posting with it.
-- [ ] Account edits post only the current-balance delta as income/expense; historical ledger entries remain immutable.
+- [ ] Account edits post only the current-balance delta as `ADJUSTMENT`; analytics income, expense, and cash-flow totals exclude it, and historical ledger entries remain immutable.
 - [ ] Repository/save failures show create-specific feedback, not the list-load error message.
 - [ ] Pixel review is completed.
 - [ ] Accessibility review is completed.
@@ -215,7 +215,7 @@ Phone-width review covering:
 | Area | Reference behavior/evidence | Tio Ledger v2 decision | Approval basis |
 | --- | --- | --- | --- |
 | Entry surface | Owner-supplied account form reference and `config_account_list.xml` add affordance use a dedicated full-screen entry surface | Full-screen Add Account form, with group-specific fields and disabled unsupported controls | Product-owner confirmation, 2026-11-10 |
-| Balance entry | `config_account_edit.xml` `amountBlock` implies balance entry at creation | Optional opening balance is atomic with account creation; later edits post only the delta as income/expense | Product-owner clarification, 2026-11-09; `docs/architecture.md` Ledger-First Accounting; ADR-0013 |
+| Balance entry | `config_account_edit.xml` `amountBlock` implies balance entry at creation | Optional opening balance is atomic with account creation; later edits post only the delta as `ADJUSTMENT`, outside analytics totals | Product-owner clarification, 2026-11-09 and correction-reporting decision, 2026-11-15; `docs/architecture.md` Ledger-First Accounting; ADR-0013 |
 | Account types | Reference edit surface adapts fields per type across its full type set | Selected Account Group policy supplies the stored type; unsupported detail fields are deferred | Existing `AccountGroupPolicy` and `CreateAccountCommand` contracts |
 | Currency | Reference presents currency as a visible multi-option control near the amount field | Existing persisted Main Currency setting is the single source for new-account currency | `CurrencyPreferenceStore`/`CurrencyCode` existing contracts; product-owner approval, 2026-08-30 |
 

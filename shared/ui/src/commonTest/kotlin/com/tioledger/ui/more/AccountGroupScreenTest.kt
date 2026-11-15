@@ -44,9 +44,12 @@ class AccountGroupScreenTest {
 
     @Test
     fun accountGroupPolicyOptionsSupportRequiredTypes() {
-        assertEquals(4, AccountGroupPolicyOption.entries.size)
+        assertEquals(5, AccountGroupPolicyOption.entries.size)
         assertEquals(AccountGroupPolicy.BANK, AccountGroupPolicyOption.GENERAL.policy)
         assertEquals("General", AccountGroupPolicyOption.GENERAL.label)
+
+        assertEquals(AccountGroupPolicy.OTHER, AccountGroupPolicyOption.OTHER.policy)
+        assertEquals("Wallet / Other", AccountGroupPolicyOption.OTHER.label)
 
         assertEquals(AccountGroupPolicy.CREDIT_CARD, AccountGroupPolicyOption.CARD.policy)
         assertEquals("Card", AccountGroupPolicyOption.CARD.label)

@@ -194,6 +194,7 @@ internal fun systemBackTargetOrNull(currentRoute: RootRoute): RootRoute? =
                 MainRoute.AccountGroup,
                 -> RootRoute.Main(MainRoute.AccountSettings)
                 MainRoute.DeletedAccounts -> RootRoute.Main(MainRoute.AccountSettings)
+                MainRoute.AccountAdd -> RootRoute.Main(MainRoute.Accounts)
                 MainRoute.AccountGroupAdd,
                 is MainRoute.AccountGroupEdit,
                 -> RootRoute.Main(MainRoute.AccountGroup)

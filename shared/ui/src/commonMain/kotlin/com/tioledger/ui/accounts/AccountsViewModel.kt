@@ -88,6 +88,8 @@ class AccountsViewModel(
                         draftCurrencyCode = currentCurrencyCode(),
                         currencySymbol = currentCurrencySymbol(),
                         draftCurrentBalance = "",
+                        draftSettlementDate = "",
+                        draftPaymentDate = "",
                         saveCompleted = false,
                         archiveCompleted = false,
                     )
@@ -109,8 +111,8 @@ class AccountsViewModel(
                         draftGroupId = assignedGroupId,
                         draftCurrencyCode = currency,
                         currencySymbol = currencySymbolFor(currency),
-                        draftSettlementDate = (billingDetails?.billingDay ?: 1).toString(),
-                        draftPaymentDate = (billingDetails?.paymentDueDay ?: 1).toString(),
+                        draftSettlementDate = billingDetails?.billingDay?.toString().orEmpty(),
+                        draftPaymentDate = billingDetails?.paymentDueDay?.toString().orEmpty(),
                         draftPaymentAccountId = billingDetails?.paymentAccountId,
                         draftDescription = billingDetails?.description.orEmpty(),
                         createErrorMessage = null,
@@ -201,6 +203,10 @@ class AccountsViewModel(
             _uiState.value = current.copy(isSaving = false, createErrorMessage = "Account group type cannot be changed.")
             return
         }
+        if (current.draftCurrentBalance.isBlank()) {
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Enter a valid balance with up to 2 decimal places.")
+            return
+        }
         val targetBalanceMinor = parseAmountToMinor(current.draftCurrentBalance)
         if (targetBalanceMinor == null) {
             _uiState.value =
@@ -279,6 +285,15 @@ class AccountsViewModel(
     private fun createAccount() {
         val current = _uiState.value
         if (current.isSaving) return
+        val openingBalanceMinor = parseAmountToMinor(current.draftCurrentBalance)
+        if (openingBalanceMinor == null) {
+            _uiState.value = current.copy(createErrorMessage = "Enter a valid balance with up to 2 decimal places.")
+            return
+        }
+        if (openingBalanceMinor < 0L) {
+            _uiState.value = current.copy(createErrorMessage = "Initial balance cannot be negative.")
+            return
+        }
         _uiState.value = current.copy(isSaving = true, createErrorMessage = null)
         val group = accountGroupStore.groupForId(current.draftGroupId)
         if (group == null) {
@@ -292,6 +307,10 @@ class AccountsViewModel(
                 type = group.policy.accountType,
                 currencyCode = current.draftCurrencyCode,
                 createdAt = nowProvider(),
+                openingBalance =
+                    openingBalanceMinor.takeIf { it > 0L }?.let {
+                        Money(it, CurrencyCode(current.draftCurrencyCode))
+                    },
             )
         when (accountGroupStore.prepareAccountAssignment(command.id, group.id, command.type)) {
             is AccountGroupAssignmentResult.Prepared -> Unit
@@ -685,8 +704,8 @@ private fun resetCreateDraft(
         draftCurrentBalance = "",
         draftPaymentAccountId = null,
         draftDescription = "",
-        draftSettlementDate = "1",
-        draftPaymentDate = "1",
+        draftSettlementDate = "",
+        draftPaymentDate = "",
         draftGroupId = state.availableGroups.firstOrNull()?.id.orEmpty(),
         draftCurrencyCode =
             currencyPreferenceStore?.getConfig()?.currency?.code?.normalized

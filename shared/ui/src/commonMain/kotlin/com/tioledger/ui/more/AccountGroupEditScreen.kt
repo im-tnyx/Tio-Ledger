@@ -46,6 +46,7 @@ enum class AccountGroupPolicyOption(
     val label: String,
 ) {
     GENERAL(AccountGroupPolicy.BANK, "General"),
+    OTHER(AccountGroupPolicy.OTHER, "Wallet / Other"),
     CARD(AccountGroupPolicy.CREDIT_CARD, "Card"),
     LOAN(AccountGroupPolicy.LOAN, "Loan"),
     INVESTMENT(AccountGroupPolicy.INVESTMENT, "Investment"),
@@ -164,8 +165,8 @@ fun AccountGroupEditScreen(
                     when (option) {
                         AccountGroupPolicyOption.GENERAL ->
                             selectedPolicy == AccountGroupPolicy.BANK ||
-                                selectedPolicy == AccountGroupPolicy.CASH ||
-                                selectedPolicy == AccountGroupPolicy.OTHER
+                                selectedPolicy == AccountGroupPolicy.CASH
+                        AccountGroupPolicyOption.OTHER -> selectedPolicy == AccountGroupPolicy.OTHER
                         AccountGroupPolicyOption.CARD ->
                             selectedPolicy == AccountGroupPolicy.CREDIT_CARD || selectedPolicy == AccountGroupPolicy.DEBIT_CARD
                         AccountGroupPolicyOption.LOAN ->

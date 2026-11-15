@@ -15,14 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,7 +40,6 @@ import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
-import com.tioledger.ui.components.TioFilterChip
 import com.tioledger.ui.design.TioDimensions
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
@@ -83,7 +79,7 @@ fun AccountsScreen(
                         Text("Loans")
                     }
                     IconButton(
-                        onClick = { onAction(AccountsAction.AddClicked) },
+                        onClick = { onNavigate(MainRoute.AccountAdd) },
                         modifier = Modifier.semantics { contentDescription = "Add account" },
                     ) {
                         TioAddIcon()
@@ -133,58 +129,6 @@ fun AccountsScreen(
             }
         }
     }
-
-    if (state.isCreateDialogVisible) {
-        AddAccountDialog(state = state, onAction = onAction)
-    }
-}
-
-@Composable
-internal fun AddAccountDialog(
-    state: AccountsUiState,
-    onAction: (AccountsAction) -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = { onAction(AccountsAction.CreateDismissed) },
-        title = { Text("Add account") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(TioSpacing.md)) {
-                OutlinedTextField(
-                    value = state.draftName,
-                    onValueChange = { onAction(AccountsAction.NameChanged(it)) },
-                    label = { Text("Name") },
-                    singleLine = true,
-                    enabled = !state.isSaving,
-                )
-                Text("Account Group", style = MaterialTheme.typography.labelLarge)
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp)
-                            .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(TioSpacing.sm),
-                ) {
-                    state.availableGroups.forEach { group ->
-                        TioFilterChip(
-                            label = group.title,
-                            selected = state.draftGroupId == group.id,
-                            onClick = { onAction(AccountsAction.GroupChanged(group.id)) },
-                        )
-                    }
-                }
-                state.createErrorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onAction(AccountsAction.SaveClicked) }, enabled = !state.isSaving) {
-                Text(if (state.isSaving) "Saving" else "Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = { onAction(AccountsAction.CreateDismissed) }, enabled = !state.isSaving) { Text("Cancel") }
-        },
-    )
 }
 
 @Composable

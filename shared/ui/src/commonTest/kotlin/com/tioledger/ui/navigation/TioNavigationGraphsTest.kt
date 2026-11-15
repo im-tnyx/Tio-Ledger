@@ -36,6 +36,7 @@ class TioNavigationGraphsTest {
                 MainRoute.AccountSettings,
                 MainRoute.AccountManager,
                 MainRoute.DeletedAccounts,
+                MainRoute.AccountAdd,
                 MainRoute.AccountGroup,
                 MainRoute.AccountGroupAdd,
                 MainRoute.BudgetSettings,

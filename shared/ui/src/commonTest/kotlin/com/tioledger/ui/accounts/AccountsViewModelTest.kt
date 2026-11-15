@@ -231,7 +231,7 @@ class AccountsViewModelTest {
     }
 
     @Test
-    fun accountCreationDoesNotAcceptAnOpeningBalance() {
+    fun accountCreationPersistsPositiveOpeningBalanceAtomically() {
         val accounts = FakeAccountRepository(emptyList())
         val ledger = FakeLedgerRepository()
         val viewModel = testViewModel(accounts, ledger, FixedIdGenerator("zero-opening-account"))
@@ -241,9 +241,27 @@ class AccountsViewModelTest {
         viewModel.onAction(AccountsAction.SaveClicked)
 
         assertEquals(1, accounts.created.size)
-        assertTrue(accounts.openingBalanceRecords.isEmpty())
-        assertTrue(ledger.entriesByAccount.values.flatten().isEmpty())
-        assertEquals("INR 0.00", viewModel.uiState.value.groups.single().accounts.single().balance)
+        assertEquals(1, accounts.openingBalanceRecords.size)
+        assertEquals(12_500L, accounts.openingBalanceRecords.single().splits.single().amount.amount)
+        assertEquals("ADJUSTMENT", accounts.openingBalanceRecords.single().transaction.type.name)
+    }
+
+    @Test
+    fun blankCurrentBalanceEditIsRejectedWithoutPostingOrUpdatingAccount() {
+        val bank = account("bank", "Main bank", AccountType.BANK)
+        val ledger = FakeLedgerRepository().apply { entriesByAccount[bank.id] = listOf(entry("opening", bank, 1_000L)) }
+        val accounts = FakeAccountRepository(listOf(bank))
+        val transactions = RecordingTransactionRepository(ledger)
+        val viewModel = testViewModelWithPosting(accounts, ledger, transactions)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested(bank.id))
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged(""))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertEquals(0, accounts.updateCount)
+        assertTrue(transactions.records.isEmpty())
+        assertEquals("Enter a valid balance with up to 2 decimal places.", viewModel.uiState.value.createErrorMessage)
+        assertEquals("USD 10.00", viewModel.uiState.value.groups.single().accounts.single().balance)
     }
 
     @Test
