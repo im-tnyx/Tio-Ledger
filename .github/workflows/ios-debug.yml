@@ -18,6 +18,8 @@ on:
       - build-logic/**
       - gradle/**
       - build.gradle.kts
+      - gradle.properties
+      - gradlew
       - settings.gradle.kts
   pull_request:
     paths:
@@ -27,6 +29,8 @@ on:
       - build-logic/**
       - gradle/**
       - build.gradle.kts
+      - gradle.properties
+      - gradlew
       - settings.gradle.kts
 
 permissions:
@@ -121,9 +125,28 @@ jobs:
           name: tio-ledger-ios-unsigned-ipa-for-altserver
           path: ${{ runner.temp }}/TioLedger-unsigned.ipa
           if-no-files-found: error
-      - name: Launch on iPhone simulator
+      - name: Package simulator app with executable permissions
         run: |
           simulator_app="$RUNNER_TEMP/TioLedgerDerivedData/Build/Products/Debug-iphonesimulator/TioLedger.app"
+          simulator_executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$simulator_app/Info.plist")"
+          test -x "$simulator_app/$simulator_executable"
+          tar -C "$(dirname "$simulator_app")" -czf "$RUNNER_TEMP/TioLedger-simulator.app.tar.gz" "$(basename "$simulator_app")"
+      - name: Upload simulator app archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: tio-ledger-ios-simulator-debug
+          path: ${{ runner.temp }}/TioLedger-simulator.app.tar.gz
+          if-no-files-found: error
+      - name: Download simulator app archive
+        uses: actions/download-artifact@v4
+        with:
+          name: tio-ledger-ios-simulator-debug
+          path: ${{ runner.temp }}/TioLedgerDownloaded
+      - name: Launch downloaded app on iPhone simulator
+        run: |
+          mkdir -p "$RUNNER_TEMP/TioLedgerDownloadedApp"
+          tar -xzf "$RUNNER_TEMP/TioLedgerDownloaded/TioLedger-simulator.app.tar.gz" -C "$RUNNER_TEMP/TioLedgerDownloadedApp"
+          simulator_app="$RUNNER_TEMP/TioLedgerDownloadedApp/TioLedger.app"
           simulator_executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$simulator_app/Info.plist")"
           test -x "$simulator_app/$simulator_executable"
           device_id="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; devices=json.load(sys.stdin)["devices"]; print(next(device["udid"] for group in devices.values() for device in group if device["name"].startswith("iPhone")))')"
@@ -132,12 +155,6 @@ jobs:
           xcrun simctl install "$device_id" "$simulator_app"
           xcrun simctl launch "$device_id" com.tioledger.ios
           xcrun simctl io "$device_id" screenshot "$RUNNER_TEMP/tio-ledger-ios-launch.png"
-      - name: Upload simulator app
-        uses: actions/upload-artifact@v4
-        with:
-          name: tio-ledger-ios-simulator-debug
-          path: ${{ runner.temp }}/TioLedgerDerivedData/Build/Products/Debug-iphonesimulator/TioLedger.app
-          if-no-files-found: error
       - name: Upload simulator screenshot
         uses: actions/upload-artifact@v4
         with:

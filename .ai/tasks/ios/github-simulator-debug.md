@@ -1,14 +1,15 @@
 # GitHub Android and iOS Manual Debug Builds
 
-Status: Complete (CI artifacts verified)
+Status: In Review
 Objective: Manually select Android or iOS in GitHub Actions; publish an Android debug APK or the iOS simulator and unsigned device IPA artifacts, while keeping automatic iOS push/PR validation.
 Implementation Owner: Codex
 Branch: `feat/ios-github-debug`
-Base SHA: `30ad6d07a990018db4d8ef26de71fec06b511723`
-Inspected Head SHA: `6f9f00eb3f1de2f357e6a8abbe87373c6be32261`
+Base SHA: `6642d905430000397046fd41cbd40cf88440678c` (PR base after #100 merge)
+Historical Inspected Head SHA: `6f9f00eb3f1de2f357e6a8abbe87373c6be32261` (earlier successful iOS build)
+Current PR Head: resolve from GitHub PR #101; do not cache a mutable head SHA here.
 Scope: `apps/android`, `apps/ios`, `.github/workflows/ios-debug.yml`, `.gitignore`, `.ai` continuity, targeted iOS compile/link unblocks
 Created: `2026-11-12`
-Last Updated: `2026-11-13`
+Last Updated: `2026-11-16`
 
 ## Required Context
 
@@ -40,14 +41,17 @@ Last Updated: `2026-11-13`
 - [x] Fourth macOS run built and uploaded the iPhone IPA but exposed missing `CFBundleExecutable` during simulator installation; added that plist key and executable checks for device and simulator app bundles.
 - [x] Re-ran iOS after the bundle metadata fix; simulator launched, and the unsigned IPA, simulator app, and launch screenshot uploaded successfully.
 - [x] Reviewed exact Android and iOS run results and artifact records.
+- [x] Changed the simulator artifact to a tar archive and made the simulator install the downloaded, extracted app so executable permissions are checked after artifact delivery.
+- [x] Added `gradle.properties` and `gradlew` to automatic iOS build path filters.
 
 ## Validation Evidence
 
 - Checks executed before the Kotlin/Native compile fix: Combined PUSH_TEMPLATE Gradle command for metadata, critical tests, migration verification, ktlint and detekt completed `BUILD SUCCESSFUL`; YAML and plist parsing PASS; `git diff --check` PASS.
 - Task outcomes from that run: critical tests, ktlint and detekt completed; metadata compilation and SQLDelight migration verification were reported `SKIPPED` by Gradle on this Windows run.
-- Current validation: workflow YAML and iOS Info.plist parse; `CFBundleExecutable`, the `android`/`ios` choices, job conditions, APK artifact path, and app-executable checks were inspected. `git diff --check` passes. iOS run `43423984672` on `6f9f00e` completed successfully; simulator app, launch screenshot, and unsigned IPA artifacts are available until `2027-02-11`.
+- Historical validation: workflow YAML and iOS Info.plist parse; `CFBundleExecutable`, the `android`/`ios` choices, job conditions, APK artifact path, and app-executable checks were inspected. iOS run `43423984672` on `6f9f00e` completed successfully before the simulator artifact packaging change.
+- Current PR validation: resolve the current head and its KMP/iOS workflow runs from GitHub. The iOS workflow must upload the tar archive, download it, extract it, and install the extracted app before claiming downloaded-artifact acceptance.
 - Manual Android run `43422634476` on `4c23e74` completed successfully; debug APK artifact `tio-ledger-android-debug-apk-8-1` is available until `2026-11-20`.
-- The PUSH_TEMPLATE Gradle command could not start locally because the sandbox could not resolve `services.gradle.org` to download Gradle 8.10.2; GitHub Actions supplies the platform build validation.
+- An earlier PUSH_TEMPLATE Gradle run could not start because that sandbox could not resolve `services.gradle.org`. A later local run after the #100 merge passed on the PR branch before this workflow-only follow-up; current-head macOS artifact acceptance still requires GitHub Actions.
 - Not verified: the unsigned IPA has not been installed on a physical iPhone in this workspace; use AltServer on Windows as documented in `apps/ios/README.md`.
 - GitHub run `43189289597` on `19f088a` failed during the simulator Xcode build because `./gradlew` was not executable; no IPA or simulator artifacts were produced.
 - GitHub run `43189549677` on `badf766` reached Kotlin/Native compilation but failed in `shared/ui/.../AccountsViewModel.kt` because `toSortedMap()` is unavailable in common code; replacing it with sorted map entries is the scoped fix and awaits local plus macOS validation.
@@ -74,11 +78,11 @@ Last Updated: `2026-11-13`
 
 ## Review Evidence And Findings
 
-- Review Status: REVIEW_PENDING
-- Independent Reviewer: None yet
+- Review Status: REVIEW (private source review identified artifact permissions, path filters, and stale handoff metadata)
+- Independent GitHub approval: pending on the current PR head
 - Remaining risks: physical iPhone installation has not been exercised; the delivered IPA is unsigned and must be signed by AltServer for device installation.
 
 ## Next Action And Handoff
 
 - Owner: Codex
-- Next Action: User downloads the Android APK or iOS IPA from the successful workflow run and installs on a test device.
+- Next Action: Verify current-head KMP/iOS checks and artifact round trip, obtain independent GitHub approval, then complete the merge gate. Physical iPhone installation remains user-side.

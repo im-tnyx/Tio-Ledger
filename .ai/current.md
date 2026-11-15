@@ -1,14 +1,14 @@
 # Active Task
 
-Status: Complete
+Status: In Review
 Active Task: none
 Branch: `feat/ios-github-debug`
 Platform Scope: `Android debug APK and iOS simulator/iPhone sideload`
-PR: none
-Base SHA: `30ad6d07a990018db4d8ef26de71fec06b511723` (verified against `origin/main` after fetch)
-Current HEAD: resolve from Git; do not cache a mutable head SHA here.
-Last Updated: `2026-11-13`
-Next Action: `Download the Android APK or iOS IPA/simulator artifacts from the verified GitHub Actions runs; physical iPhone installation remains user-side.`
+PR: `#101 <https://github.com/im-tnyx/Tio-Ledger/pull/101>`
+Base SHA: `6642d905430000397046fd41cbd40cf88440678c` (PR base after #100 merge)
+Current HEAD: resolve from GitHub PR #101; do not cache a mutable head SHA here.
+Last Updated: `2026-11-16`
+Next Action: `Verify exact-head KMP/iOS checks, downloaded simulator archive installation, and independent review before merge. Physical iPhone installation remains user-side.`
 
 ## Usage
 
