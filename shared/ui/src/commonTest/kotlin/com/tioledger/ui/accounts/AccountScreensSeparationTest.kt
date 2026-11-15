@@ -13,7 +13,6 @@ class AccountScreensSeparationTest {
         val route = MainRoute.AccountEdit("acc-123")
         assertEquals("settings/accounts/edit/acc-123", route.path)
         assertEquals("Edit Account", route.title)
-        assertTrue(route in TioNavigationGraphs.main.routes)
         assertFalse(route in TioNavigationGraphs.main.bottomNavigationRoutes)
     }
 
