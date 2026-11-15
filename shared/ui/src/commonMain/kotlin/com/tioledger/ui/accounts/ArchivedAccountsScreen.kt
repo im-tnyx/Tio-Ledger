@@ -75,9 +75,10 @@ class ArchivedAccountsViewModel(
                                 id = summary.account.id,
                                 name = summary.account.name,
                                 groupName = group?.title ?: summary.account.type.archivedGroupTitle(),
-                                balance = summary.balance.toDisplayAmount(
-                                    currencyPreferenceStore?.symbolFor(summary.account.currencyCode),
-                                ),
+                                balance =
+                                    summary.balance.toDisplayAmount(
+                                        currencyPreferenceStore?.symbolFor(summary.account.currencyCode),
+                                    ),
                             )
                         }
                         .sortedWith(
