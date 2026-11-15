@@ -83,6 +83,11 @@ private fun buildMoreSections(currencySubtitle: String): List<MoreSection> =
                         route = MainRoute.CurrencySettings,
                         subtitle = currencySubtitle,
                     ),
+                    MoreEntry(
+                        title = "Reminder Settings",
+                        route = MainRoute.Settings,
+                        subtitle = "Reminder and notification settings",
+                    ),
                     MoreEntry("Style", MainRoute.Style),
                 ),
         ),

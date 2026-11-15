@@ -15,6 +15,7 @@ class TioApplicationBootstrap(
 ) {
     fun start(extraModules: List<Module> = emptyList()): KoinApplication {
         return startKoin {
+            allowOverride(true)
             modules(
                 module {
                     single { DatabaseInitializer(databaseDriverFactory) }

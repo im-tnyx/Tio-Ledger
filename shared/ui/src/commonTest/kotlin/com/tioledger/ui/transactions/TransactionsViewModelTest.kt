@@ -1,5 +1,7 @@
 package com.tioledger.ui.transactions
 
+import com.tioledger.application.usecase.currency.GetMainCurrencyConfigUseCase
+import com.tioledger.application.usecase.currency.SaveMainCurrencyConfigUseCase
 import com.tioledger.application.usecase.transaction.ListTransactionsUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.LedgerError
@@ -7,10 +9,14 @@ import com.tioledger.core.model.LedgerResult
 import com.tioledger.core.model.Money
 import com.tioledger.domain.model.AccountType
 import com.tioledger.domain.model.LedgerEntryType
+import com.tioledger.domain.model.MainCurrencyConfig
+import com.tioledger.domain.model.SYSTEM_SUPPORTED_CURRENCIES
 import com.tioledger.domain.model.TransactionHistoryRecord
 import com.tioledger.domain.model.TransactionHistorySplit
 import com.tioledger.domain.model.TransactionType
+import com.tioledger.domain.repository.CurrencyPreferenceRepository
 import com.tioledger.domain.repository.TransactionHistoryRepository
+import com.tioledger.ui.more.CurrencyPreferenceStore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -108,6 +114,64 @@ class TransactionsViewModelTest {
         viewModel.onAction(TransactionsAction.Retry)
 
         assertTrue(viewModel.uiState.value.isEmpty)
+    }
+
+    @Test
+    fun preferredCurrencySymbolIsOnlyUsedForMatchingTransactionCurrency() {
+        val inr =
+            singleSplitRecord("inr", 2L, TransactionType.EXPENSE, 12_345L, "Cash INR", "Food", "Meal")
+                .copy(
+                    splits =
+                        listOf(
+                            historySplit(
+                                "split-inr",
+                                "inr",
+                                "Cash INR",
+                                AccountType.CASH,
+                                12_345L,
+                                categoryId = "food",
+                                categoryName = "Food",
+                                entryType = LedgerEntryType.CREDIT,
+                            ).copy(amount = Money(12_345L, CurrencyCode("INR"))),
+                        ),
+                )
+        val usd =
+            singleSplitRecord("usd", 1L, TransactionType.EXPENSE, 6_789L, "Cash USD", "Food", "Meal")
+                .copy(
+                    splits =
+                        listOf(
+                            historySplit(
+                                "split-usd",
+                                "usd",
+                                "Cash USD",
+                                AccountType.CASH,
+                                6_789L,
+                                categoryId = "food",
+                                categoryName = "Food",
+                                entryType = LedgerEntryType.CREDIT,
+                            ),
+                        ),
+                )
+        val repository = FakeTransactionHistoryRepository(LedgerResult.Success(listOf(inr, usd)))
+        val currencyRepository =
+            object : CurrencyPreferenceRepository {
+                override fun getConfig(): MainCurrencyConfig = MainCurrencyConfig(currency = SYSTEM_SUPPORTED_CURRENCIES.first())
+
+                override fun saveConfig(config: MainCurrencyConfig): Boolean = true
+            }
+        val currencyStore =
+            CurrencyPreferenceStore(
+                GetMainCurrencyConfigUseCase(currencyRepository),
+                SaveMainCurrencyConfigUseCase(currencyRepository),
+            )
+
+        val rows =
+            TransactionsViewModel(
+                ListTransactionsUseCase(repository),
+                currencyPreferenceStore = currencyStore,
+            ).uiState.value.transactions
+
+        assertEquals(listOf("-₹ 123.45", "-USD 67.89"), rows.map { it.amount })
     }
 }
 
