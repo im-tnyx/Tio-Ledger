@@ -491,6 +491,30 @@ class AccountsViewModelTest {
     }
 
     @Test
+    fun clearingAllCreditCardSettingsRemovesPersistedMetadata() {
+        val bank = account("bank-1", "Main bank", AccountType.BANK)
+        val card = account("card-1", "Travel Card", AccountType.CREDIT_CARD)
+        val groupStore = AccountGroupStore()
+        assertTrue(groupStore.assignAccount(bank.id, "accounts"))
+        assertTrue(groupStore.assignAccount(card.id, "credit_card"))
+        assertTrue(
+            groupStore.saveBillingDetails(
+                card.id,
+                AccountBillingDetails(paymentAccountId = bank.id, description = "Primary card"),
+            ),
+        )
+        val viewModel = testViewModel(FakeAccountRepository(listOf(bank, card)), FakeLedgerRepository(), accountGroupStore = groupStore)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested(card.id))
+        viewModel.onAction(AccountsAction.PaymentAccountChanged(null))
+        viewModel.onAction(AccountsAction.DescriptionChanged(""))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertNull(groupStore.billingDetailsForAccount(card.id))
+        assertNull(viewModel.uiState.value.createErrorMessage)
+    }
+
+    @Test
     fun archivedAccountsViewListsOnlyArchivedRecords() {
         val active = account("active", "Daily Account", AccountType.BANK)
         val archived = account("archived", "Old Card", AccountType.CREDIT_CARD).copy(isArchived = true)

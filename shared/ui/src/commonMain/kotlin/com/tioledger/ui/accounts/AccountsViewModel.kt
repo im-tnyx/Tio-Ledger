@@ -222,9 +222,15 @@ class AccountsViewModel(
         }
         val oldBillingDetails = accountGroupStore.billingDetailsForAccount(accountId)
         val newBillingDetails = current.toBillingDetailsOrNull(group)
-        if (newBillingDetails != null && !accountGroupStore.saveBillingDetails(accountId, newBillingDetails)) {
+        val billingDetailsSaved =
+            when {
+                newBillingDetails != null -> accountGroupStore.saveBillingDetails(accountId, newBillingDetails)
+                oldBillingDetails != null -> accountGroupStore.removeBillingDetails(accountId)
+                else -> true
+            }
+        if (!billingDetailsSaved) {
             restoreAccountAssignment(accountId, previousGroupId)
-            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Unable to save billing dates. Try again.")
+            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Unable to save billing settings. Try again.")
             return
         }
         val command =
