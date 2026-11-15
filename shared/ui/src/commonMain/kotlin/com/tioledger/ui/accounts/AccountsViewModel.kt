@@ -622,7 +622,7 @@ private fun List<AccountBalanceSummary>.toGroupTotals(currencyPreferenceStore: C
             total.toDisplayAmount(currencyPreferenceStore.symbolFor(currencyCode))
         }
 
-private fun CurrencyPreferenceStore?.symbolFor(currencyCode: String): String? =
+internal fun CurrencyPreferenceStore?.symbolFor(currencyCode: String): String? =
     this?.getConfig()?.currency?.takeIf { it.code.normalized == currencyCode }?.symbol
 
 private fun AccountBalanceSummary.toRow(

@@ -27,6 +27,7 @@ import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
 import com.tioledger.ui.components.TioListItem
 import com.tioledger.ui.more.AccountGroupStore
+import com.tioledger.ui.more.CurrencyPreferenceStore
 import com.tioledger.ui.navigation.MainRoute
 import com.tioledger.ui.navigation.TioNavigationGraphs
 import com.tioledger.ui.navigation.bottomNavigationModel
