@@ -7,19 +7,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -46,6 +44,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.tioledger.apps.android.R
 import com.tioledger.ui.components.TioAppBar
+import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioIconAvatar
 import com.tioledger.ui.components.TioSecondaryButton
@@ -178,7 +177,17 @@ internal fun androidReminderSettingsScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TioAppBar(title = stringResource(R.string.settings_title))
+            TioAppBar(
+                title = "Reminder Settings",
+                navigationIcon = {
+                    IconButton(
+                        onClick = { onNavigate(MainRoute.More) },
+                        modifier = Modifier.semantics { contentDescription = "Navigate back" },
+                    ) {
+                        TioBackIcon()
+                    }
+                },
+            )
         },
         bottomBar = {
             TioBottomNavigation(
@@ -193,14 +202,12 @@ internal fun androidReminderSettingsScreen(
             modifier =
                 Modifier
                     .padding(padding)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
         ) {
-            TioSectionHeader(title = stringResource(R.string.settings_reminders_section))
             Text(
                 text = stringResource(R.string.settings_reminders_description),
-                modifier = Modifier.padding(horizontal = TioSpacing.lg, vertical = TioSpacing.xs),
+                modifier = Modifier.padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

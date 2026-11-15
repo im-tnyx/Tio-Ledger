@@ -88,6 +88,48 @@ class SpendingAnalyticsCalculatorTest {
     }
 
     @Test
+    fun balanceAdjustmentsDoNotAffectIncomeExpenseOrCashFlowTotals() {
+        val result =
+            calculator.calculate(
+                period = SpendingAnalyticsPeriod.MONTHLY,
+                anchorTimestamp = JULY_19_2026_UTC,
+                timeZoneId = "UTC",
+                transactions =
+                    listOf(
+                        record(
+                            id = "salary",
+                            timestamp = JULY_19_2026_UTC,
+                            type = TransactionType.INCOME,
+                            split = split("bank", "Bank", "INR", 10_000L),
+                        ),
+                        record(
+                            id = "groceries",
+                            timestamp = JULY_19_2026_UTC,
+                            type = TransactionType.EXPENSE,
+                            split = split("wallet", "Wallet", "INR", 3_000L),
+                        ),
+                        record(
+                            id = "balance-increase",
+                            timestamp = JULY_19_2026_UTC,
+                            type = TransactionType.ADJUSTMENT,
+                            split = split("bank", "Bank", "INR", 5_000L),
+                        ),
+                        record(
+                            id = "balance-decrease",
+                            timestamp = JULY_19_2026_UTC,
+                            type = TransactionType.ADJUSTMENT,
+                            split = split("bank", "Bank", "INR", 2_000L),
+                        ),
+                    ),
+            )
+
+        val inr = result.currencySummaries.single()
+        assertEquals(Money(10_000L, CurrencyCode("INR")), inr.incomeTotal)
+        assertEquals(Money(3_000L, CurrencyCode("INR")), inr.expenseTotal)
+        assertEquals(Money(7_000L, CurrencyCode("INR")), inr.netTotal)
+    }
+
+    @Test
     fun weeklyWindowStartsOnMondayAndProducesSevenDailyBuckets() {
         val result =
             calculator.calculate(

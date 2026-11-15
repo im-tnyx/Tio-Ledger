@@ -428,7 +428,7 @@ fun TioAmountText(
         color = color,
         style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.SemiBold,
-        maxLines = 1,
+        maxLines = amount.lines().size.coerceAtLeast(1),
         overflow = TextOverflow.Ellipsis,
     )
 }
@@ -846,6 +846,61 @@ fun TioAddIcon(
             end = Offset(size.width * 0.5f, size.height * 0.78f),
             strokeWidth = stroke,
             cap = StrokeCap.Round,
+        )
+    }
+}
+
+@Composable
+fun TioEditIcon(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Canvas(modifier = modifier.size(24.dp)) {
+        val stroke = 2.dp.toPx()
+        val path =
+            Path().apply {
+                moveTo(size.width * 0.65f, size.height * 0.22f)
+                lineTo(size.width * 0.78f, size.height * 0.35f)
+                lineTo(size.width * 0.35f, size.height * 0.78f)
+                lineTo(size.width * 0.22f, size.height * 0.78f)
+                lineTo(size.width * 0.22f, size.height * 0.65f)
+                close()
+            }
+        drawPath(
+            path = path,
+            color = color,
+            style =
+                Stroke(
+                    width = stroke,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round,
+                ),
+        )
+    }
+}
+
+@Composable
+fun TioChevronRightIcon(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+) {
+    Canvas(modifier = modifier.size(18.dp)) {
+        val stroke = 2.dp.toPx()
+        val path =
+            Path().apply {
+                moveTo(size.width * 0.35f, size.height * 0.22f)
+                lineTo(size.width * 0.65f, size.height * 0.5f)
+                lineTo(size.width * 0.35f, size.height * 0.78f)
+            }
+        drawPath(
+            path = path,
+            color = color,
+            style =
+                Stroke(
+                    width = stroke,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round,
+                ),
         )
     }
 }
