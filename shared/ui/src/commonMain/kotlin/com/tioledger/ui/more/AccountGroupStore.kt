@@ -32,8 +32,8 @@ data class AccountGroupEntry(
 )
 
 data class AccountBillingDetails(
-    val billingDay: Int = 1,
-    val paymentDueDay: Int = 1,
+    val billingDay: Int? = null,
+    val paymentDueDay: Int? = null,
     val paymentAccountId: String? = null,
     val description: String = "",
 )
@@ -239,7 +239,8 @@ class AccountGroupStore(
         accountId: String,
         details: AccountBillingDetails,
     ): Boolean {
-        if (details.billingDay !in 1..31 || details.paymentDueDay !in 1..31) return false
+        if (details.billingDay != null && details.billingDay !in 1..31) return false
+        if (details.paymentDueDay != null && details.paymentDueDay !in 1..31) return false
         val updated = accountBillingDetails.toMutableMap().apply { put(accountId, details) }
         if (!persistence.saveAccountBillingDetails(updated)) return false
         accountBillingDetails.clear()

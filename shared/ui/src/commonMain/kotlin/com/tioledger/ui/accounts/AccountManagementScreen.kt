@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import com.tioledger.ui.components.TioAddIcon
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBackIcon
 import com.tioledger.ui.components.TioBottomNavigation
@@ -76,6 +77,14 @@ fun AccountManagementScreen(
                         modifier = Modifier.semantics { contentDescription = "Navigate back" },
                     ) {
                         TioBackIcon()
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { onNavigate(MainRoute.AccountAdd) },
+                        modifier = Modifier.semantics { contentDescription = "Add account" },
+                    ) {
+                        TioAddIcon()
                     }
                 },
             )

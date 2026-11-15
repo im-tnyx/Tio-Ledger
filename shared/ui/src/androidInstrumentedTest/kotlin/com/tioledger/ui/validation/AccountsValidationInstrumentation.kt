@@ -38,6 +38,9 @@ class AccountsValidationInstrumentation : Instrumentation() {
         if (safe && arguments?.getString("mode") == "loan-shortcut") {
             inspectLoanShortcut(result)
         }
+        if (safe && arguments?.getString("mode") == "account-manager-add") {
+            inspectAccountManagerAdd(result)
+        }
         finish(if (safe) Activity.RESULT_OK else Activity.RESULT_CANCELED, result)
     }
 
@@ -63,6 +66,25 @@ class AccountsValidationInstrumentation : Instrumentation() {
         waitForIdleSync()
         val finalNodes = awaitNodes(automation, "Selected route: Loans")
         result.putBoolean("loansRouteOpened", finalNodes.any { it.text?.toString() == "Selected route: Loans" })
+        result.putString("scenario", scenario)
+    }
+
+    private fun inspectAccountManagerAdd(result: Bundle) {
+        val scenario = arguments?.getString("scenario") ?: "manager-empty"
+        startActivitySync(
+            Intent(targetContext, AccountsValidationActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra("scenario", scenario),
+        )
+        waitForIdleSync()
+        val automation = getUiAutomation()
+        val initialNodes = awaitNodes(automation)
+        val addButton = initialNodes.firstOrNull { it.contentDescription?.toString() == "Add account" && it.isClickable }
+        result.putBoolean("addActionVisible", addButton != null)
+        result.putBoolean("addActionClicked", addButton?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true)
+        waitForIdleSync()
+        val finalNodes = awaitNodes(automation, "Selected route: Add Account")
+        result.putBoolean("addRouteOpened", finalNodes.any { it.text?.toString() == "Selected route: Add Account" })
         result.putString("scenario", scenario)
     }
 

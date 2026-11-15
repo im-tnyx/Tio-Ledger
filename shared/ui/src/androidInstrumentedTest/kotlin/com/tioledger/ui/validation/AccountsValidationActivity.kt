@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tioledger.domain.model.AccountType
 import com.tioledger.ui.accounts.AccountGroupUiModel
+import com.tioledger.ui.accounts.AccountManagementScreen
 import com.tioledger.ui.accounts.AccountRowUiModel
 import com.tioledger.ui.accounts.AccountsPreviewData
 import com.tioledger.ui.accounts.AccountsScreen
@@ -46,7 +47,7 @@ class AccountsValidationActivity : ComponentActivity() {
             when (intent.getStringExtra("scenario")) {
                 "zero" -> AccountsPreviewData.mixedCurrencyZero
                 "large-signed" -> AccountsPreviewData.mixedCurrencyLargeSigned
-                "loan-shortcut-fresh" -> AccountsPreviewData.empty
+                "loan-shortcut-fresh", "manager-empty" -> AccountsPreviewData.empty
                 "loan-shortcut-all-linked" -> loanShortcutWithLinkedAccounts
                 else -> AccountsPreviewData.mixedCurrency
             }
@@ -57,7 +58,17 @@ class AccountsValidationActivity : ComponentActivity() {
                 var navigationTarget by remember { mutableStateOf<MainRoute?>(null) }
                 Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                     Box(modifier = Modifier.width(width).fillMaxHeight().align(Alignment.TopCenter)) {
-                        AccountsScreen(state = state, onAction = {}, onNavigate = { navigationTarget = it })
+                        if (intent.getStringExtra("scenario")?.startsWith("manager-") == true) {
+                            AccountManagementScreen(
+                                state = state,
+                                onAction = {},
+                                onNavigate = { navigationTarget = it },
+                                onNavigateBack = {},
+                                onAccountClick = {},
+                            )
+                        } else {
+                            AccountsScreen(state = state, onAction = {}, onNavigate = { navigationTarget = it })
+                        }
                         navigationTarget?.let { target ->
                             Text("Selected route: ${target.title}", modifier = Modifier.align(Alignment.Center))
                         }

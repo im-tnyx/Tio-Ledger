@@ -38,7 +38,7 @@ fun tioUiModule(): Module =
                 currencyPreferenceStore = get(),
                 listLoansUseCase = getOrNull(),
                 updateAccountUseCase = getOrNull(),
-                recordAdjustmentUseCase = getOrNull(),
+                setAccountBalanceUseCase = getOrNull(),
             )
         }
         factory {

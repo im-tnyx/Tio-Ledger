@@ -3,6 +3,7 @@ package com.tioledger.ui.accounts
 import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.account.SetAccountBalanceUseCase
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.currency.GetMainCurrencyConfigUseCase
 import com.tioledger.application.usecase.currency.SaveMainCurrencyConfigUseCase
@@ -33,6 +34,7 @@ import com.tioledger.ui.more.AccountGroupPolicy
 import com.tioledger.ui.more.AccountGroupRemovalResult
 import com.tioledger.ui.more.AccountGroupStore
 import com.tioledger.ui.more.CurrencyPreferenceStore
+import com.tioledger.ui.more.InMemoryAccountGroupPersistence
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -40,6 +42,34 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AccountsViewModelTest {
+    @Test
+    fun cardOptionalSettingsSurviveSaveAndStoreRecreation() {
+        val scenarios =
+            listOf(
+                AccountBillingDetails(description = "Travel"),
+                AccountBillingDetails(paymentAccountId = "bank-1"),
+                AccountBillingDetails(billingDay = 12),
+                AccountBillingDetails(paymentDueDay = 25),
+            )
+        scenarios.forEachIndexed { index, expected ->
+            val persistence = InMemoryAccountGroupPersistence()
+            val store = AccountGroupStore(persistence = persistence)
+            val id = "card-$index"
+            val viewModel = testViewModel(FakeAccountRepository(emptyList()), FakeLedgerRepository(), FixedIdGenerator(id), store)
+            viewModel.onAction(AccountsAction.AddClicked)
+            viewModel.onAction(AccountsAction.GroupChanged("credit_card"))
+            viewModel.onAction(AccountsAction.NameChanged("Card $index"))
+            expected.billingDay?.let { viewModel.onAction(AccountsAction.SettlementDateChanged(it.toString())) }
+            expected.paymentDueDay?.let { viewModel.onAction(AccountsAction.PaymentDateChanged(it.toString())) }
+            expected.paymentAccountId?.let { viewModel.onAction(AccountsAction.PaymentAccountChanged(it)) }
+            if (expected.description.isNotEmpty()) viewModel.onAction(AccountsAction.DescriptionChanged(expected.description))
+            viewModel.onAction(AccountsAction.SaveClicked)
+
+            assertTrue(viewModel.uiState.value.saveCompleted)
+            assertEquals(expected, AccountGroupStore(persistence = persistence).billingDetailsForAccount(id))
+        }
+    }
+
     @Test
     fun searchUsesLoadedSnapshotAndExplicitLoadRefreshesLedgerBalances() {
         val cash = account("cash", "Travel Cash", AccountType.CASH)
@@ -307,6 +337,22 @@ class AccountsViewModelTest {
         assertEquals(LedgerEntryType.CREDIT, correction.ledgerEntries.filterIsInstance<LedgerEntry>().first().entryType)
         assertEquals(listOf(originalEntry), ledger.entriesByAccount[bank.id]?.take(1))
         assertEquals("USD 7.50", viewModel.uiState.value.groups.single().accounts.single().balance)
+    }
+
+    @Test
+    fun balanceCorrectionUsesFreshLedgerBalanceAfterEditOpened() {
+        val bank = account("bank", "Main bank", AccountType.BANK)
+        val ledger = FakeLedgerRepository().apply { entriesByAccount[bank.id] = listOf(entry("initial", bank, 1_000L)) }
+        val transactions = RecordingTransactionRepository(ledger)
+        val viewModel = testViewModelWithPosting(FakeAccountRepository(listOf(bank)), ledger, transactions)
+
+        viewModel.onAction(AccountsAction.EditAccountRequested(bank.id))
+        ledger.entriesByAccount[bank.id] = ledger.entriesByAccount.getValue(bank.id) + entry("external", bank, 500L)
+        viewModel.onAction(AccountsAction.CurrentBalanceChanged("20.00"))
+        viewModel.onAction(AccountsAction.SaveClicked)
+
+        assertEquals(500L, transactions.records.single().splits.single().amount.amount)
+        assertEquals("USD 20.00", viewModel.uiState.value.groups.single().accounts.single().balance)
     }
 
     @Test
@@ -920,7 +966,15 @@ private fun testViewModel(
         currencyPreferenceStore = currencyPreferenceStore,
         listLoansUseCase = listLoansUseCase,
         updateAccountUseCase = updateAccountUseCase,
-        recordAdjustmentUseCase = recordAdjustmentUseCase,
+        setAccountBalanceUseCase =
+            SetAccountBalanceUseCase(
+                ListAccountSummariesUseCase(accounts, ledger, BalanceCalculator()),
+                recordAdjustmentUseCase ?: RecordAdjustmentUseCase(
+                    accounts,
+                    RecordingTransactionRepository(ledger),
+                    PostingEngine(SequenceIdGenerator()),
+                ),
+            ),
     )
 
 private fun testViewModelWithPosting(

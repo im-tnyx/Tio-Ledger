@@ -11,6 +11,14 @@ import java.util.Base64
 
 class AccountBillingDetailsCodecTest {
     @Test
+    fun partialCardMetadataSurvivesEncodedStoreRecreation() {
+        val persistence = EncodedBillingPersistence()
+        val details = AccountBillingDetails(paymentDueDay = 25, paymentAccountId = "bank|main", description = "Travel")
+        assertTrue(AccountGroupStore(persistence = persistence).saveBillingDetails("card-2", details))
+        assertEquals(details, AccountGroupStore(persistence = persistence).billingDetailsForAccount("card-2"))
+    }
+
+    @Test
     fun billingDetailsSurviveStoreRecreationRoundTrip() {
         val expected =
             mapOf(

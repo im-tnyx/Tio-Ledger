@@ -5,6 +5,7 @@ import com.tioledger.analytics.SpendingAnalyticsCalculator
 import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.account.SetAccountBalanceUseCase
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.analytics.GetSpendingAnalyticsUseCase
 import com.tioledger.application.usecase.budget.CreateBudgetUseCase
@@ -101,6 +102,7 @@ fun applicationModule(): Module =
         factory { UpdateAccountUseCase(get()) }
         factory { ArchiveAccountUseCase(get()) }
         factory { ListAccountSummariesUseCase(get(), get(), get()) }
+        factory { SetAccountBalanceUseCase(get(), get()) }
         factory { GetSpendingAnalyticsUseCase(get(), get()) }
         factory { ListCategoriesUseCase(get()) }
         factory { CreateCategoryUseCase(get()) }

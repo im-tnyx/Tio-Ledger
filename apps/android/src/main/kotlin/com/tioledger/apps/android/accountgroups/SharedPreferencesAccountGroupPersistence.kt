@@ -131,8 +131,8 @@ internal object AccountBillingDetailsCodec {
         details.entries.joinToString("\n") { (accountId, detail) ->
             listOf(
                 accountId,
-                detail.billingDay.toString(),
-                detail.paymentDueDay.toString(),
+                detail.billingDay?.toString().orEmpty(),
+                detail.paymentDueDay?.toString().orEmpty(),
                 detail.paymentAccountId.orEmpty(),
                 detail.description,
             ).joinToString(FIELD_SEPARATOR, transform = ::encodeField)
@@ -144,12 +144,16 @@ internal object AccountBillingDetailsCodec {
             if (fields.size != BILLING_DETAILS_FIELD_COUNT && fields.size != EXTENDED_BILLING_DETAILS_FIELD_COUNT) {
                 null
             } else {
-                val billingDay =
-                    decodeField(fields[BILLING_DAY_INDEX]).toIntOrNull()?.takeIf(::isValidBillingDay)
-                        ?: return@mapNotNull null
-                val paymentDueDay =
-                    decodeField(fields[PAYMENT_DUE_DAY_INDEX]).toIntOrNull()?.takeIf(::isValidBillingDay)
-                        ?: return@mapNotNull null
+                val billingText = decodeField(fields[BILLING_DAY_INDEX])
+                val paymentText = decodeField(fields[PAYMENT_DUE_DAY_INDEX])
+                val billingDay = billingText.takeIf { it.isNotBlank() }?.toIntOrNull()
+                val paymentDueDay = paymentText.takeIf { it.isNotBlank() }?.toIntOrNull()
+                if (billingText.isNotBlank() && (billingDay == null || !isValidBillingDay(billingDay))) {
+                    return@mapNotNull null
+                }
+                if (paymentText.isNotBlank() && (paymentDueDay == null || !isValidBillingDay(paymentDueDay))) {
+                    return@mapNotNull null
+                }
                 decodeField(fields[ACCOUNT_ID_INDEX]) to
                     AccountBillingDetails(
                         billingDay = billingDay,

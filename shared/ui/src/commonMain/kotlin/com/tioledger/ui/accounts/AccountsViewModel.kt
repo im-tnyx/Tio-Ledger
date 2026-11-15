@@ -9,18 +9,17 @@ import com.tioledger.application.usecase.account.ArchiveAccountUseCase
 import com.tioledger.application.usecase.account.CreateAccountCommand
 import com.tioledger.application.usecase.account.CreateAccountUseCase
 import com.tioledger.application.usecase.account.ListAccountSummariesUseCase
+import com.tioledger.application.usecase.account.SetAccountBalanceCommand
+import com.tioledger.application.usecase.account.SetAccountBalanceUseCase
 import com.tioledger.application.usecase.account.UpdateAccountCommand
 import com.tioledger.application.usecase.account.UpdateAccountUseCase
 import com.tioledger.application.usecase.account.withSearchQuery
 import com.tioledger.application.usecase.loan.ListLoansUseCase
-import com.tioledger.application.usecase.transaction.RecordAdjustmentCommand
-import com.tioledger.application.usecase.transaction.RecordAdjustmentUseCase
 import com.tioledger.core.model.CurrencyCode
 import com.tioledger.core.model.Money
 import com.tioledger.core.util.IdGenerator
 import com.tioledger.domain.model.Account
 import com.tioledger.domain.model.AccountType
-import com.tioledger.domain.model.LedgerClass
 import com.tioledger.ui.more.AccountBillingDetails
 import com.tioledger.ui.more.AccountGroupAssignmentResult
 import com.tioledger.ui.more.AccountGroupEntry
@@ -42,7 +41,7 @@ class AccountsViewModel(
     private val currencyPreferenceStore: CurrencyPreferenceStore? = null,
     private val listLoansUseCase: ListLoansUseCase? = null,
     private val updateAccountUseCase: UpdateAccountUseCase? = null,
-    private val recordAdjustmentUseCase: RecordAdjustmentUseCase? = null,
+    private val setAccountBalanceUseCase: SetAccountBalanceUseCase? = null,
 ) {
     private val _uiState =
         MutableStateFlow(
@@ -216,18 +215,6 @@ class AccountsViewModel(
                 )
             return
         }
-        if (
-            (existingSummary.balance.amount < 0L && targetBalanceMinor > Long.MAX_VALUE + existingSummary.balance.amount) ||
-            (existingSummary.balance.amount > 0L && targetBalanceMinor < Long.MIN_VALUE + existingSummary.balance.amount)
-        ) {
-            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Balance difference is too large to record.")
-            return
-        }
-        val safeDelta = targetBalanceMinor - existingSummary.balance.amount
-        if (safeDelta == Long.MIN_VALUE) {
-            _uiState.value = current.copy(isSaving = false, createErrorMessage = "Balance difference is too large to record.")
-            return
-        }
         val previousGroupId = accountGroupStore.groupIdForAccount(accountId)
         if (!accountGroupStore.assignAccount(accountId, group.id)) {
             _uiState.value = current.copy(isSaving = false, createErrorMessage = "Unable to save the account group assignment. Try again.")
@@ -250,12 +237,7 @@ class AccountsViewModel(
         if (updateAccountUseCase != null) {
             when (val result = updateAccountUseCase.invoke(command)) {
                 is ApplicationResult.Success -> {
-                    val balanceError =
-                        if (safeDelta == 0L) {
-                            null
-                        } else {
-                            recordBalanceDifference(existingAccount, safeDelta)
-                        }
+                    val balanceError = recordBalanceDifference(existingAccount, targetBalanceMinor)
                     when {
                         balanceError != null -> {
                             _uiState.value =
@@ -357,22 +339,15 @@ class AccountsViewModel(
 
     private fun recordBalanceDifference(
         account: Account,
-        delta: Long,
+        targetBalanceMinor: Long,
     ): String? {
-        val amount = Money(kotlin.math.abs(delta), CurrencyCode(account.currencyCode))
-        val now = nowProvider()
-        val assetAccount = account.type.ledgerClass == LedgerClass.ASSET
-        val isDebit = if (assetAccount) delta > 0L else delta < 0L
-        val useCase = recordAdjustmentUseCase ?: return "Balance adjustment is unavailable."
+        val useCase = setAccountBalanceUseCase ?: return "Balance adjustment is unavailable."
         val result =
             useCase(
-                RecordAdjustmentCommand(
-                    timestamp = now,
-                    description = "Account balance correction",
-                    amount = amount,
+                SetAccountBalanceCommand(
                     accountId = account.id,
-                    isDebit = isDebit,
-                    createdAt = now,
+                    targetBalance = Money(targetBalanceMinor, CurrencyCode(account.currencyCode)),
+                    timestamp = nowProvider(),
                 ),
             )
         return when (result) {
@@ -622,8 +597,9 @@ private fun AccountType.toSectionLabel(): String =
 
 private fun AccountsUiState.toBillingDetailsOrNull(group: AccountGroupEntry): AccountBillingDetails? {
     if (group.policy != AccountGroupPolicy.CREDIT_CARD) return null
-    val billingDay = draftSettlementDate.toIntOrNull() ?: return null
-    val paymentDay = draftPaymentDate.toIntOrNull() ?: return null
+    val billingDay = draftSettlementDate.toIntOrNull()
+    val paymentDay = draftPaymentDate.toIntOrNull()
+    if (billingDay == null && paymentDay == null && draftPaymentAccountId == null && draftDescription.isBlank()) return null
     return AccountBillingDetails(
         billingDay = billingDay,
         paymentDueDay = paymentDay,

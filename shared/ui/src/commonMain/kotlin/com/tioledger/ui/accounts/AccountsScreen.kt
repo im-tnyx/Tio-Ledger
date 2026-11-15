@@ -40,6 +40,7 @@ import com.tioledger.ui.components.TioAmountTone
 import com.tioledger.ui.components.TioAppBar
 import com.tioledger.ui.components.TioBottomNavigation
 import com.tioledger.ui.components.TioEmptyState
+import com.tioledger.ui.components.TioSearchField
 import com.tioledger.ui.design.TioDimensions
 import com.tioledger.ui.design.TioSpacing
 import com.tioledger.ui.navigation.MainRoute
@@ -103,6 +104,12 @@ fun AccountsScreen(
                     .fillMaxSize(),
         ) {
             AccountsSummaryRow(state.summary)
+            TioSearchField(
+                value = state.searchQuery,
+                onValueChange = { onAction(AccountsAction.SearchChanged(it)) },
+                modifier = Modifier.padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
+                placeholder = "Search accounts",
+            )
             HorizontalDivider()
             when {
                 state.isLoading -> AccountsLoading()
@@ -379,8 +386,7 @@ private fun AccountRow(
                 .heightIn(min = TioDimensions.accountRowHeight)
                 .clickable(enabled = account.isLoan, onClick = onClick)
                 .semantics {
-                    val billing =
-                        account.billingDay?.let { "Billing day $it, payment due day ${account.paymentDueDay}" }.orEmpty()
+                    val billing = account.billingLabel()
                     contentDescription = "${account.name}, ${account.typeLabel}, ${account.balance}, $billing"
                 }
                 .padding(horizontal = TioSpacing.lg, vertical = TioSpacing.sm),
@@ -392,9 +398,9 @@ private fun AccountRow(
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
             )
-            account.billingDay?.let { billingDay ->
+            account.billingLabel().takeIf { it.isNotEmpty() }?.let { label ->
                 Text(
-                    text = "Billing day $billingDay · Payment due day ${account.paymentDueDay}",
+                    text = label,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -414,6 +420,12 @@ private fun AccountRow(
         }
     }
 }
+
+private fun AccountRowUiModel.billingLabel(): String =
+    listOfNotNull(
+        billingDay?.let { "Billing day $it" },
+        paymentDueDay?.let { "Payment due day $it" },
+    ).joinToString(" · ")
 
 @Composable
 internal fun AccountsLoading() {
