@@ -3,6 +3,8 @@
 `apps/ios` contains the Kotlin framework and a minimal SwiftUI host. The Xcode
 project is generated from `project.yml` with XcodeGen. The host starts the
 shared bootstrap with `IosDatabaseDriverFactory` and displays `TioAppShell`.
+The host `Info.plist` enables `CADisableMinimumFrameDurationOnPhone`, which
+Compose Multiplatform 1.7.3 requires before opening its iOS UI.
 
 The `Mobile debug build` GitHub Actions workflow has a manual `platform` choice.
 Choose `ios` to build a Debug app for the iOS Simulator on a macOS runner, launch

@@ -44,14 +44,17 @@ Last Updated: `2026-11-16`
 - [x] Changed the simulator artifact to a tar archive and made the simulator install the downloaded, extracted app so executable permissions are checked after artifact delivery.
 - [x] Added `gradle.properties` and `gradlew` to automatic iOS build path filters.
 - [x] Replaced the remaining `AccountsScreen` JVM-only `toSortedMap()` call with common collection sorting after an exact-head simulator compile failure.
+- [x] Added `CADisableMinimumFrameDurationOnPhone` to the iOS host plist after review found that Compose Multiplatform 1.7.3 requires it to avoid a launch-time crash.
 
 ## Validation Evidence
 
+- After adding the mandatory Compose plist key: Python `plistlib` parsed the host plist and confirmed the key is Boolean `true`; `git diff --check` passed; the PUSH_TEMPLATE Gradle metadata, critical tests, migration verification, ktlint and detekt suite completed `BUILD SUCCESSFUL` locally. Windows-skipped KMP metadata and migration tasks still require hosted CI evidence.
 - Checks executed before the Kotlin/Native compile fix: Combined PUSH_TEMPLATE Gradle command for metadata, critical tests, migration verification, ktlint and detekt completed `BUILD SUCCESSFUL`; YAML and plist parsing PASS; `git diff --check` PASS.
 - Task outcomes from that run: critical tests, ktlint and detekt completed; metadata compilation and SQLDelight migration verification were reported `SKIPPED` by Gradle on this Windows run.
 - Historical validation: workflow YAML and iOS Info.plist parse; `CFBundleExecutable`, the `android`/`ios` choices, job conditions, APK artifact path, and app-executable checks were inspected. iOS run `43423984672` on `6f9f00e` completed successfully before the simulator artifact packaging change.
 - Current PR validation: resolve the current head and its KMP/iOS workflow runs from GitHub. The iOS workflow must upload the tar archive, download it, extract it, and install the extracted app before claiming downloaded-artifact acceptance.
 - Historical PR iOS run `43756293728` on `49d0823` failed at `:shared:ui:compileKotlinIosSimulatorArm64` because `AccountsScreen.kt` still used `toSortedMap()`; the common-code fix requires a new exact-head macOS run.
+- PR-head iOS runs `43757501106` and `43757498013` on `4c07970` passed simulator/device builds, archive upload/download, extracted-app install/launch, and screenshot upload before the plist runtime fix. Their `simctl launch` result alone does not verify that the shared UI remained running; re-run the workflow on the plist-fix head.
 - Manual Android run `43422634476` on `4c23e74` completed successfully; debug APK artifact `tio-ledger-android-debug-apk-8-1` is available until `2026-11-20`.
 - An earlier PUSH_TEMPLATE Gradle run could not start because that sandbox could not resolve `services.gradle.org`. A later local run after the #100 merge passed on the PR branch before this workflow-only follow-up; current-head macOS artifact acceptance still requires GitHub Actions.
 - Not verified: the unsigned IPA has not been installed on a physical iPhone in this workspace; use AltServer on Windows as documented in `apps/ios/README.md`.
@@ -80,7 +83,7 @@ Last Updated: `2026-11-16`
 
 ## Review Evidence And Findings
 
-- Review Status: CHANGES_REQUESTED on historical head `49d0823`; the GitHub reviewer also found the simulator compile blocker.
+- Review Status: CHANGES_REQUESTED on historical head `49d0823`; the GitHub reviewer also found the simulator compile blocker. A later Codex review of `4c07970` found the missing mandatory Compose iOS plist key; the source fix requires new exact-head validation and independent review.
 - Independent GitHub approval: pending on the current PR head after these fixes
 - Remaining risks: physical iPhone installation has not been exercised; the delivered IPA is unsigned and must be signed by AltServer for device installation.
 
