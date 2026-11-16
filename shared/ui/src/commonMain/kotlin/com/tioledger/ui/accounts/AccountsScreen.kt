@@ -227,7 +227,7 @@ private fun AccountsGroupedList(
             if (group.type == AccountType.CREDIT_CARD) {
                 group.accounts
                     .groupBy { it.billingDay }
-                    .toSortedMap(compareBy<Int?> { it ?: 32 })
+                    .entries.sortedBy { it.key ?: 32 }
                     .forEach { (billingDay, cards) ->
                         if (billingDay != null) {
                             item(key = "billing-${group.id}-$billingDay") {

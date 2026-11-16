@@ -1,16 +1,14 @@
 # Active Task
 
-Status: Idle
+Status: In Review
 Active Task: none
-Branch: `main`
-Platform Scope: `none`
-PR: `#92 <https://github.com/im-tnyx/Tio-Ledger/pull/92>`
-Base SHA: `b55569a8d39db675655b82c3faf82fd7dddb8b58`
-Stage A Status: merged into `main` through PR `#92`.
-Historical Merge SHA: `d0ecd608ebc264876b49d9dd28435e3980f84ea2` (historical evidence only; resolve current `main` HEAD from GitHub).
-Current HEAD: resolve from GitHub `origin/main`; do not cache a mutable head SHA here.
-Last Updated: `2026-11-01`
-Next Action: `Issue #56 reminder acceptance audit is the next documented roadmap gate, subject to separate owner authorization. Transactions Daily Stage B has not started.`
+Branch: `feat/ios-github-debug`
+Platform Scope: `Android debug APK and iOS simulator/iPhone sideload`
+PR: `#101 <https://github.com/im-tnyx/Tio-Ledger/pull/101>`
+Base SHA: `6642d905430000397046fd41cbd40cf88440678c` (PR base after #100 merge)
+Current HEAD: resolve from GitHub PR #101; do not cache a mutable head SHA here.
+Last Updated: `2026-11-16`
+Next Action: `Verify exact-head KMP/iOS checks, downloaded simulator archive installation, and independent review before merge. Physical iPhone installation remains user-side.`
 
 ## Usage
 

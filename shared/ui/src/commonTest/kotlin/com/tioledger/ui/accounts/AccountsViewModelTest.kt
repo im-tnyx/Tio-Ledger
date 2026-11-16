@@ -104,6 +104,11 @@ class AccountsViewModelTest {
         assertEquals(AccountType.CASH, state.groups.single().type)
         assertEquals(listOf("INR 0.00", "USD 0.00"), state.groups.single().totals)
         assertEquals(listOf("usd-cash", "inr-cash"), state.groups.single().accounts.map { it.id })
+        val inrStore = currencyPreferenceStore("INR")
+        val preferredTotals =
+            testViewModel(accounts, FakeLedgerRepository(), currencyPreferenceStore = inrStore)
+                .uiState.value.groups.single().totals
+        assertEquals(listOf("${inrStore.getConfig().currency.symbol} 0.00", "USD 0.00"), preferredTotals)
         assertTrue(accounts.created.isEmpty())
     }
 
